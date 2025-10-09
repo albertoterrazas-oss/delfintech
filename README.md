@@ -11,7 +11,7 @@
 
 ## 🌟 Visión General del Proyecto
 
-El Sistema de Control de Acceso de Unidades (SCAU) tiene como objetivo la **digitalización completa** del proceso de registro de entradas y salidas en la caseta. Reemplazaremos la bitácora física por una herramienta digital que garantice la **disponibilidad de información en tiempo real**, eliminando errores y acelerando la generación de reportes (especialmente para el cálculo de horas extra).
+El Sistema de Control de Acceso de Unidades (DELFIN) tiene como objetivo la **digitalización completa** del proceso de registro de entradas y salidas en la caseta. Reemplazaremos la bitácora física por una herramienta digital que garantice la **disponibilidad de información en tiempo real**, eliminando errores y acelerando la generación de reportes (especialmente para el cálculo de horas extra).
 
 ---
 

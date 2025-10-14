@@ -8,4 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class UserxMenu extends Model
 {
     use HasFactory;
+    public $timestamps = false;
+    protected $table = 'dbo.usuarioxmenu';
+    protected $primaryKey = 'usuarioxmenu_id';
+    protected $fillable = [
+        'usuarioxmenu_idusuario',
+        'usuarioxmenu_idmenu',
+        'usuarioxmenu_alta',
+        'usuarioxmenu_consulta',
+        'usuarioxmenu_especial',
+        'usuarioxmenu_cambio',
+    ];
 }

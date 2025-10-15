@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Admin\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -31,11 +31,15 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'Personas_nombres' => 'required|string|max:255',
             'Personas_apPaterno' => 'required|string|max:255',
-            'Personas_correo' => 'required|string|email|max:255|unique:dbo.Personas,Personas_correo',
+            // VALIDACIÓN UNIQUE REMOVIDA
+            'Personas_correo' => 'required|string|email|max:255',
             'Personas_contrasena' => 'required|string|min:8',
+            // VALIDACIÓN UNIQUE REMOVIDA
+            'Personas_usuario' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
+            // Retorna 400 Bad Request con los errores de validación
             return response()->json($validator->errors(), 400);
         }
 
@@ -51,11 +55,12 @@ class UserController extends Controller
             'Personas_licencia' => $request->Personas_licencia,
             'Personas_vigenciaLicencia' => $request->Personas_vigenciaLicencia,
             'Personas_usuario' => $request->Personas_usuario,
-            // The password will be hashed automatically by the model's `casts` property
+            // La contraseña se hasheará automáticamente por la propiedad 'casts' del modelo
             'Personas_contrasena' => $request->Personas_contrasena,
-            'Personas_esEmpleado' => $request->Personas_esEmpleado,
+            'Personas_esEmpleado' => $request->Personas_esEmpleado ?? false, // Default to false if not provided
         ]);
 
+        // Retorna 201 Created
         return response()->json($user, 201);
     }
 
@@ -70,7 +75,8 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            // Retorna 404 Not Found
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
         return response()->json($user);
@@ -88,29 +94,39 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            // Retorna 404 Not Found
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
+        // Reglas de validación para la actualización
         $validator = Validator::make($request->all(), [
             'Personas_nombres' => 'sometimes|required|string|max:255',
             'Personas_apPaterno' => 'sometimes|required|string|max:255',
+            // VALIDACIÓN UNIQUE REMOVIDA
             'Personas_correo' => 'sometimes|required|string|email|max:255',
+            // VALIDACIÓN UNIQUE REMOVIDA
+            'Personas_usuario' => 'sometimes|required|string|max:255',
             'Personas_contrasena' => 'sometimes|nullable|string|min:8',
         ]);
 
         if ($validator->fails()) {
+            // Retorna 400 Bad Request con los errores de validación
             return response()->json($validator->errors(), 400);
         }
-        
-        // Handle password update separately
+
+        // Manejar la actualización de la contraseña por separado para que el 'casts' la hashee
         if ($request->filled('Personas_contrasena')) {
             $user->Personas_contrasena = $request->Personas_contrasena;
         }
 
+        // Llenar el resto de los campos excluyendo la contraseña (ya manejada)
         $user->fill($request->except('Personas_contrasena'));
         $user->save();
 
-        return response()->json($user);
+        return response()->json([
+            'message' => 'Usuario actualizado exitosamente',
+            'user' => $user
+        ], 200); // Retorna 200 OK
     }
 
     /**
@@ -124,11 +140,13 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            // Retorna 404 Not Found
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
         $user->delete();
 
-        return response()->json(['message' => 'User deleted successfully']);
+        // Retorna 200 OK
+        return response()->json(['message' => 'Usuario eliminado exitosamente']);
     }
 }

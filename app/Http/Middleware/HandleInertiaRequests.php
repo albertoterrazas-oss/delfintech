@@ -32,7 +32,19 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                // Al usar only(), solo compartimos los campos esenciales con la interfaz
+                // usando los nombres de columna correctos de la tabla dbo.Personas.
+                'user' => $request->user()
+                    ? $request->user()->only([
+                        'Personas_usuarioID',
+                        'Personas_nombres',
+                        'Personas_apPaterno',
+                        'Personas_usuario', // Nombre de usuario (login)
+                        'Personas_correo',
+                        'Personas_esEmpleado',
+                        // Agrega otros campos esenciales aquí si son necesarios para la interfaz.
+                    ])
+                    : null,
             ],
         ];
     }

@@ -1,6 +1,9 @@
 <?php
 
-use App\Http\Controllers\UserController;
+// use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Auth\Admin\UserController ;
+use App\Http\Controllers\Catalogs\UnidadesController;
+use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +23,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::apiResource('users', UserController::class);
+
+// Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
+Route::resource('unidades', UnidadesController::class)->only([
+    'index', 'store', 'show', 'update', 'destroy'
+]);
+
 

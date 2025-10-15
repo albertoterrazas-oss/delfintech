@@ -8,15 +8,17 @@ import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
+    // 1. CAMBIO CLAVE: Usar Personas_usuario y Personas_contrasena en lugar de email y password
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
+        Personas_usuario: '', // Corresponde al campo del backend
+        Personas_contrasena: '', // Corresponde al campo del backend
         remember: false,
     });
 
     useEffect(() => {
         return () => {
-            reset('password');
+            // Asegura que la contraseña se borre al salir
+            reset('Personas_contrasena');
         };
     }, []);
 
@@ -28,67 +30,59 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title="Iniciar Sesión" />
 
             {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    {/* 2. CAMBIO: Etiqueta para Personas_usuario */}
+                    <InputLabel htmlFor="Personas_usuario" value="Usuario" />
 
                     <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
+                        id="Personas_usuario"
+                        type="text"
+                        // 3. CAMBIO: Nombre del campo
+                        name="Personas_usuario"
+                        // 4. CAMBIO: Valor del estado
+                        value={data.Personas_usuario}
                         className="mt-1 block w-full"
                         autoComplete="username"
                         isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
+                        // 5. CAMBIO: Manejo del cambio de estado
+                        onChange={(e) => setData('Personas_usuario', e.target.value)}
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
+                    {/* 6. CAMBIO: Mensaje de error asociado */}
+                    <InputError message={errors.Personas_usuario} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    {/* 7. CAMBIO: Etiqueta para Personas_contrasena */}
+                    <InputLabel htmlFor="Personas_contrasena" value="Contraseña" />
 
                     <TextInput
-                        id="password"
+                        id="Personas_contrasena"
                         type="password"
-                        name="password"
-                        value={data.password}
+                        // 8. CAMBIO: Nombre del campo
+                        name="Personas_contrasena"
+                        // 9. CAMBIO: Valor del estado
+                        value={data.Personas_contrasena}
                         className="mt-1 block w-full"
                         autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
+                        // 10. CAMBIO: Manejo del cambio de estado
+                        onChange={(e) => setData('Personas_contrasena', e.target.value)}
                     />
 
-                    <InputError message={errors.password} className="mt-2" />
+                    {/* 11. CAMBIO: Mensaje de error asociado */}
+                    <InputError message={errors.Personas_contrasena} className="mt-2" />
                 </div>
 
-                {/* <div className="block mt-4">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) => setData('remember', e.target.checked)}
-                        />
-                        <span className="ms-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                </div> */}
+                {/* Se mantienen comentadas las secciones de 'Remember me' y 'Forgot password' como en tu código original */}
 
                 <div className="flex items-center justify-end mt-4">
-                    {/* {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )} */}
-
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
+                        Iniciar Sesión
                     </PrimaryButton>
                 </div>
             </form>

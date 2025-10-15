@@ -4,6 +4,7 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserxMenu extends Model
 {
@@ -19,4 +20,9 @@ class UserxMenu extends Model
         'usuarioxmenu_especial',
         'usuarioxmenu_cambio',
     ];
+
+    public function Menu(): BelongsTo
+    {
+        return $this->belongsTo(Menu::class, 'usuarioxmenu_idmenu', 'menu_id');
+    }
 }

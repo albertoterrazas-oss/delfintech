@@ -1,7 +1,9 @@
 <?php
 
 // use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Auth\Admin\UserController ;
+
+use App\Http\Controllers\Auth\Admin\RolesController;
+use App\Http\Controllers\Auth\Admin\UserController;
 use App\Http\Controllers\Catalogs\UnidadesController;
 use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
@@ -26,7 +28,16 @@ Route::apiResource('users', UserController::class);
 
 // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
 Route::resource('unidades', UnidadesController::class)->only([
-    'index', 'store', 'show', 'update', 'destroy'
+    'index',
+    'store',
+    'show',
+    'update',
+    'destroy'
 ]);
 
 
+Route::resource('roles', RolesController::class)->only([
+    'index', // GET /api/admin/roles
+    'store', // POST /api/admin/roles
+    'update' // PUT/PATCH /api/admin/roles/{role}
+]);

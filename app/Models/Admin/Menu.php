@@ -4,6 +4,9 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Menu extends Model
 {
@@ -24,4 +27,18 @@ class Menu extends Model
         'menu_tooltip',
         'estatus',
     ];
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Roles::class, 'menusxrole', 'menusxrole_idmenu', 'menusxrole_idrole');
+    }
+
+    public function menuPadre(): BelongsTo
+    {
+        return $this->belongsTo(Menu::class, 'menu_idPadre', 'menu_id');
+    }
+    public function childs(): HasMany
+    {
+        return $this->hasMany(Menu::class, 'menu_idPadre', 'menu_id');
+    }
 }

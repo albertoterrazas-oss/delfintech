@@ -4,6 +4,7 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Roles extends Model
 {
@@ -21,4 +22,10 @@ class Roles extends Model
         'roles_descripcion',
         'roles_menuInicio'
     ];
+
+     public function menus(): BelongsToMany
+    {
+        return $this->belongsToMany(Menu::class, 'menusxrole', 'menusxrole_idrole', 'menusxrole_idmenu')
+        ->withPivot( 'menusxrole_idmenu', 'menusxrole_idrole');
+    }
 }

@@ -59,16 +59,14 @@ return [
     |
     */
 
+    // config/auth.php
+
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            // ¡DEBE APUNTAR A LA UBICACIÓN DE TU MODELO!
+            'model' => App\Models\Admin\User::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*

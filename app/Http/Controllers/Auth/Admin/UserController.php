@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Menu;
 use App\Models\Admin\User;
+use App\Models\Connection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -149,4 +151,12 @@ class UserController extends Controller
         // Retorna 200 OK
         return response()->json(['message' => 'Usuario eliminado exitosamente']);
     }
+
+    public function menus(Request $request)
+    {
+        $menus = Menu::get();
+
+        return response()->json($menus);
+    }
+
 }

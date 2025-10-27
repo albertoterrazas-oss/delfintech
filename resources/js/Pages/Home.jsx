@@ -24,20 +24,17 @@ export default function Home({ auth, token }) {
     const location = useLocation();
     const {
         userMenus,
+        showMenu,
+        searchMenuTerm,
         setUserMenus,
         setLoggedUser,
         setSelectedMenu,
-        setSearchMenuTerm,
         setFilteredMenus
     } = useStore()
 
     const [menuSelected, setMenuSelected] = useState('')
-    const [showMenu, setShowMenu] = useState(true)
+    // const [showMenu, setShowMenu] = useState(true)
     const containerClass = showMenu ? "body-container" : "body-container open"
-
-    const MenuFunction = () => {
-        setShowMenu(!showMenu);
-    };
 
     const getUserMenus = async () => {
         const response = await fetch(route("user.menus"), {
@@ -50,6 +47,28 @@ export default function Home({ auth, token }) {
         setUserMenus(data)
     };
 
+    const filterMenus = (menuList, calc = []) => {
+        const regex = new RegExp(state.searchMenuTerm.replace(/[^a-zA-ZÑñ\s]/g, '').toLowerCase(), 'u');
+        const obj = {}
+        menuList.forEach(menu => {
+            if (menu.childs && menu.childs.length > 0) {
+                filterMenus(menu.childs, calc);
+            } else {
+                const objKeys = Object.keys(menu);
+                const child = {};
+
+                for (const key of objKeys) {
+                    child[key] = menu[key];
+                }
+
+                if (child.menu_nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(regex)) {
+                    calc.push(child);
+                }
+            }
+        });
+        return calc
+    };
+
     useEffect(() => {
         console.log(userMenus)
         // console.log(token)
@@ -58,6 +77,19 @@ export default function Home({ auth, token }) {
             setLoggedUser(auth.user);
         }
     }, [userMenus, token]);
+
+    useEffect(() => {
+        if (searchMenuTerm !== '' && searchMenuTerm) {
+            const filtered = filterMenus(userMenus)
+            setFilteredMenus(filtered);
+            // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
+            // setFilteredMenus(filtered);
+        } else {
+            setFilteredMenus(userMenus);
+            // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })
+            // setFilteredMenus(userMenus);
+        }
+    }, [searchMenuTerm, userMenus]);
 
     useEffect(() => {
         if (userMenus) {
@@ -100,7 +132,7 @@ export default function Home({ auth, token }) {
             {!auth.user && <Loading />}
             {auth.user &&
                 <div className={containerClass}>
-                    <LeftMenu MenuFunction={MenuFunction} showMenu={showMenu} auth={auth} />
+                    <LeftMenu auth={auth} />
                     <div className="content sm:overflow-auto md:overflow-hidden">
                         <Header user={auth.user} />
                         <div className="scrollable-content styled-scroll">

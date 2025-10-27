@@ -40,14 +40,7 @@ const LeftMenu = ({ auth }) => {
     const { post } = useForm();
     const savedColor = localStorage.getItem('COLORMENU') || '#2F0F0F';
     const [user, setUser] = useState();
-    const [states, setState] = useState({ empresa: '', centro: '' });
     const [color, setColor] = useState('#FFFFFF');
-
-    const GetUser = async () => {
-        const response = await fetch(route("profileUser"));
-        const data = await response.json();
-        setUser(data);
-    };
 
     const logout = (e) => {
         const keysToRemove = ['empresaData', 'title', 'token'];
@@ -80,77 +73,77 @@ const LeftMenu = ({ auth }) => {
         localStorage.setItem('title', JSON.stringify(title))
     }
 
-    // function renderMenu(menu, selectedMenu) {
-    //     const handleClick = (menu) => {
-    //         if (typeof menu !== "string") {
-    //             SetSelectedMenuFunc(menu);
-    //             setPageTitle(menu.menu_nombre);
-    //             localStorage.setItem("selectedMenu", JSON.stringify(menu))
-    //             // console.log("selectedMenu", JSON.stringify(menu.menu_id));
-    //             ClickMenu(JSON.stringify(menu.menu_id));
-    //         }
-    //     };
+    function renderMenu(menu, selectedMenu) {
+        const handleClick = (menu) => {
+            if (typeof menu !== "string") {
+                setSelectedMenu(menu);
+                setPageTitle(menu.menu_nombre);
+                localStorage.setItem("selectedMenu", JSON.stringify(menu))
+                // console.log("selectedMenu", JSON.stringify(menu.menu_id));
+                // ClickMenu(JSON.stringify(menu.menu_id));
+            }
+        };
 
-    //     const renderTooltipIcon = (tooltip) => {
-    //         // Verifica si el ícono existe en Icons
-    //         const IconComponent = tooltip && tooltip !== "-" && Icons[tooltip];
-    //         return IconComponent ? <IconComponent /> : null; // Si existe el ícono, lo renderiza
-    //     };
+        // const renderTooltipIcon = (tooltip) => {
+        //     // Verifica si el ícono existe en Icons
+        //     const IconComponent = tooltip && tooltip !== "-" && Icons[tooltip];
+        //     return IconComponent ? <IconComponent /> : null; // Si existe el ícono, lo renderiza
+        // };
 
-    //     return (
-    //         <React.Fragment>
-    //             {menu.childs && menu.childs.length !== 0 ? (
-    //                 <div className={`leftmenu-item accordion`} onClick={() => handleClick(menu.menu_nombre)}>
-    //                     <a className="text-white ">
-    //                         {renderTooltipIcon(menu.menu_tooltip) && <span className="mr-1 w-6 h-6 ">{renderTooltipIcon(menu.menu_tooltip)}</span>}
-    //                         {menu.menu_nombre}
-    //                     </a>
-    //                 </div>
-    //             ) : (
-    //                 <Link
-    //                     to={menu.menu_url}
-    //                     onClick={() => handleClick(menu)}
-    //                     className={`leftmenu-item ${selectedMenu?.menu_nombre === menu.menu_nombre ? "item-selected" : ""}`}
-    //                 >
-    //                     <span className="flex relative items-center text-white">
-    //                         {renderTooltipIcon(menu.menu_tooltip) && <span className="mr-2 w-6 h-6">{renderTooltipIcon(menu.menu_tooltip)}</span>}
-    //                         {menu.menu_nombre}
-    //                     </span>
+        return (
+            <React.Fragment>
+                {menu.childs && menu.childs.length !== 0 ? (
+                    <div className={`leftmenu-item accordion`} onClick={() => handleClick(menu.menu_nombre)}>
+                        <a className="text-white ">
+                            {/* {renderTooltipIcon(menu.menu_tooltip) && <span className="mr-1 w-6 h-6 ">{renderTooltipIcon(menu.menu_tooltip)}</span>} */}
+                            {menu.menu_nombre}
+                        </a>
+                    </div>
+                ) : (
+                    <Link
+                        to={menu.menu_url}
+                        onClick={() => handleClick(menu)}
+                        className={`leftmenu-item ${selectedMenu?.menu_nombre === menu.menu_nombre ? "item-selected" : ""}`}
+                    >
+                        <span className="flex relative items-center text-white">
+                            {/* {renderTooltipIcon(menu.menu_tooltip) && <span className="mr-2 w-6 h-6">{renderTooltipIcon(menu.menu_tooltip)}</span>} */}
+                            {menu.menu_nombre}
+                        </span>
 
-    //                     {state.selectedMenu?.menu_nombre === menu.menu_nombre && (
-    //                         <svg
-    //                             width="24"
-    //                             height="24"
-    //                             viewBox="0 0 32 32"
-    //                             xmlns="http://www.w3.org/2000/svg"
-    //                             className="absolute -left-8 top-1/2 transform -translate-y-1/2"
-    //                         >
-    //                             <path
-    //                                 d="M10 8 L24 16 L10 24 Z"
-    //                                 fill={`${color}`}
-    //                                 style={{ background: color }}
-    //                             />
-    //                         </svg>
-    //                     )}
-    //                 </Link>
+                        {selectedMenu?.menu_nombre === menu.menu_nombre && (
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 32 32"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="absolute -left-8 top-1/2 transform -translate-y-1/2"
+                            >
+                                <path
+                                    d="M10 8 L24 16 L10 24 Z"
+                                    fill={`${color}`}
+                                    style={{ background: color }}
+                                />
+                            </svg>
+                        )}
+                    </Link>
 
-    //             )}
+                )}
 
-    //             {menu.childs && menu.childs.length !== 0 && (
-    //                 <div className="submenu-panel">
-    //                     <ul className="leftmenu-list">
-    //                         {menu.childs.map((submenu, index2) => (
-    //                             <li key={index2}>
-    //                                 {renderMenu(submenu, selectedMenu)}
-    //                             </li>
-    //                         ))}
-    //                     </ul>
-    //                 </div>
-    //             )}
-    //         </React.Fragment>
-    //     );
+                {menu.childs && menu.childs.length !== 0 && (
+                    <div className="submenu-panel">
+                        <ul className="leftmenu-list">
+                            {menu.childs.map((submenu, index2) => (
+                                <li key={index2}>
+                                    {renderMenu(submenu, selectedMenu)}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </React.Fragment>
+        );
 
-    // }
+    }
 
     // useEffect(() => {
     //     if (!user) {
@@ -161,88 +154,86 @@ const LeftMenu = ({ auth }) => {
     //     }
     // }, [user]); // se ejecuta cuando cambia `user`
 
+    useEffect(() => {
+        if (filteredMenus) {
+            const handleClick = function () {
+                const subPanel = this.nextElementSibling;
+                if (activeMenu === this) {
+                    this.classList.remove("active");
+                    subPanel.style.maxHeight = null;
+                    setActiveMenu(null);
+                } else {
+                    if (activeMenu) {
+                        activeMenu.classList.remove("active");
+                        subPanel.style.maxHeight = null;
+                        // activeMenu.nextElementSibling.style.maxHeight = null;
+                    }
+                    this.classList.add("active");
+                    subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
+                    setActiveMenu(this);
+                }
+            };
+            const handleClick2 = function () {
+                const subPanel = this.nextElementSibling;
+                if (activeMenu2 === this) {
+                    this.classList.remove("active2");
+                    subPanel.style.maxHeight = null;
+                    setActiveMenu2(null);
+                } else {
+                    if (activeMenu2) {
+                        activeMenu2.classList.remove("active2");
+                        subPanel.style.maxHeight = null;
+                        // activeMenu.nextElementSibling.style.maxHeight = null;
+                    }
+                    this.classList.add("active2");
+                    subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
+                    setActiveMenu2(this);
+                }
+            };
+            const handleClick3 = function () {
+                const subPanel = this.nextElementSibling;
+                if (activeMenu3 === this) {
+                    this.classList.remove("active3");
+                    subPanel.style.maxHeight = null;
+                    setActiveMenu3(null);
+                } else {
+                    if (activeMenu3) {
+                        activeMenu3.classList.remove("active3");
+                        // activeMenu.nextElementSibling.style.maxHeight = null;
+                        subPanel.style.maxHeight = null;
+                    }
+                    this.classList.add("active3");
+                    subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
+                    setActiveMenu3(this);
+                }
+            };
 
+            const accordions = document.querySelectorAll(".accordion");
+            accordions.forEach((accordion) => {
+                accordion.addEventListener("click", handleClick);
+            });
+            const accordions2 = document.querySelectorAll(".accordion2");
+            accordions2.forEach((accordion) => {
+                accordion.addEventListener("click", handleClick2);
+            });
+            const accordions3 = document.querySelectorAll(".accordion3");
+            accordions3.forEach((accordion) => {
+                accordion.addEventListener("click", handleClick3);
+            });
 
-    // useEffect(() => {
-    //     if (state.filteredMenus) {
-    //         const handleClick = function () {
-    //             const subPanel = this.nextElementSibling;
-    //             if (activeMenu === this) {
-    //                 this.classList.remove("active");
-    //                 subPanel.style.maxHeight = null;
-    //                 setActiveMenu(null);
-    //             } else {
-    //                 if (activeMenu) {
-    //                     activeMenu.classList.remove("active");
-    //                     subPanel.style.maxHeight = null;
-    //                     // activeMenu.nextElementSibling.style.maxHeight = null;
-    //                 }
-    //                 this.classList.add("active");
-    //                 subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
-    //                 setActiveMenu(this);
-    //             }
-    //         };
-    //         const handleClick2 = function () {
-    //             const subPanel = this.nextElementSibling;
-    //             if (activeMenu2 === this) {
-    //                 this.classList.remove("active2");
-    //                 subPanel.style.maxHeight = null;
-    //                 setActiveMenu2(null);
-    //             } else {
-    //                 if (activeMenu2) {
-    //                     activeMenu2.classList.remove("active2");
-    //                     subPanel.style.maxHeight = null;
-    //                     // activeMenu.nextElementSibling.style.maxHeight = null;
-    //                 }
-    //                 this.classList.add("active2");
-    //                 subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
-    //                 setActiveMenu2(this);
-    //             }
-    //         };
-    //         const handleClick3 = function () {
-    //             const subPanel = this.nextElementSibling;
-    //             if (activeMenu3 === this) {
-    //                 this.classList.remove("active3");
-    //                 subPanel.style.maxHeight = null;
-    //                 setActiveMenu3(null);
-    //             } else {
-    //                 if (activeMenu3) {
-    //                     activeMenu3.classList.remove("active3");
-    //                     // activeMenu.nextElementSibling.style.maxHeight = null;
-    //                     subPanel.style.maxHeight = null;
-    //                 }
-    //                 this.classList.add("active3");
-    //                 subPanel.style.maxHeight = subPanel.scrollHeight + "vh";
-    //                 setActiveMenu3(this);
-    //             }
-    //         };
-
-    //         const accordions = document.querySelectorAll(".accordion");
-    //         accordions.forEach((accordion) => {
-    //             accordion.addEventListener("click", handleClick);
-    //         });
-    //         const accordions2 = document.querySelectorAll(".accordion2");
-    //         accordions2.forEach((accordion) => {
-    //             accordion.addEventListener("click", handleClick2);
-    //         });
-    //         const accordions3 = document.querySelectorAll(".accordion3");
-    //         accordions3.forEach((accordion) => {
-    //             accordion.addEventListener("click", handleClick3);
-    //         });
-
-    //         return () => {
-    //             accordions.forEach((accordion) => {
-    //                 accordion.removeEventListener("click", handleClick);
-    //             });
-    //             accordions2.forEach((accordion) => {
-    //                 accordion.removeEventListener("click", handleClick2);
-    //             });
-    //             accordions3.forEach((accordion) => {
-    //                 accordion.removeEventListener("click", handleClick3);
-    //             });
-    //         };
-    //     }
-    // }, [state.filteredMenus, activeMenu, activeMenu2, activeMenu3, SetSelectedMenuFunc]);
+            return () => {
+                accordions.forEach((accordion) => {
+                    accordion.removeEventListener("click", handleClick);
+                });
+                accordions2.forEach((accordion) => {
+                    accordion.removeEventListener("click", handleClick2);
+                });
+                accordions3.forEach((accordion) => {
+                    accordion.removeEventListener("click", handleClick3);
+                });
+            };
+        }
+    }, [filteredMenus, activeMenu, activeMenu2, activeMenu3, setSelectedMenu]);
 
     // useEffect(() => {
     //     if (empresas) {
@@ -334,7 +325,7 @@ const LeftMenu = ({ auth }) => {
                             className={`search-input-leftmenu ${isInputFocused ? 'focused' : ''}`}
                             type="text"
                             value={searchMenuTerm}
-                            // onChange={e => { dispatch({ type: 'SET_SEARCH_MENU_TERM', payload: e.target.value }) }}
+                            onChange={e => setSearchMenuTerm(e.target.value)}
                             onFocus={() => setIsInputFocused(true)}
                             onBlur={() => setIsInputFocused(false)}
                         />

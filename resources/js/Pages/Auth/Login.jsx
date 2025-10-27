@@ -6,7 +6,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
-import Loading from '@/Components/Loading';
+import Loading from '@/Components/LoadingDiv';
 
 export default function Login({ status, canResetPassword }) {
     // 1. CAMBIO CLAVE: Usar Personas_usuario y Personas_contrasena en lugar de email y password

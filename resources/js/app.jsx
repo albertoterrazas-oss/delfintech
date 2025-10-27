@@ -1,6 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
-
+import 'devextreme/dist/css/dx.light.css'; // or dx.material.teal.light.css, etc.
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

@@ -1,6 +1,6 @@
 import Header from '@/Components/Header';
 import LeftMenu from '@/Components/LeftMenu';
-import Loading from '@/Components/Loading';
+import Loading from '@/Components/LoadingDiv';
 import useStore from '@/Stores/useStore'
 import { Link, Head, router } from '@inertiajs/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
@@ -16,6 +16,10 @@ const routes = [
     {
         path: "/dashboard",
         import: lazy(() => import('./Dashboard'))
+    },
+    {
+        path: "/administracion",
+        import: lazy(() => import('./Catalogos/Usuarios'))
     }
 ]
 

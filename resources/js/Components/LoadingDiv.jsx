@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Loading = () => {
+const LoadingDiv = () => {
     return (
         <div className='load-wrapp'>
                 <div className="line"></div>
@@ -10,4 +10,4 @@ const Loading = () => {
     )
 }
 
-export default Loading
+export default LoadingDiv

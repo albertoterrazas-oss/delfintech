@@ -18,3 +18,14 @@ export function findMenuByUrl(menus, url) {
     }
     return null;
 }
+
+export function numberFormat(number) {
+    return new Intl.NumberFormat('es-MX').format(parseFloat(number))
+}
+
+export function moneyFormat(number) {
+    return new Intl.NumberFormat('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(number)
+}

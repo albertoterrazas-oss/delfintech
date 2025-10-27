@@ -24,7 +24,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::apiResource('users', UserController::class);
+// Route::apiResource('users', UserController::class);
+
+Route::resource('users', UserController::class)->only([
+    'index', // GET /api/admin/users
+    'store', // POST /api/admin/users
+    'show',  // GET /api/admin/users/{user}
+    'update', // PUT/PATCH /api/admin/users/{user}
+    'destroy' // DELETE /api/admin/users/{user}
+]);
 
 // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
 Route::resource('unidades', UnidadesController::class)->only([

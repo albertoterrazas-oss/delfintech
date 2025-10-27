@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from '@headlessui/react';
 // Importamos Sonner
 import { toast } from 'sonner';
+import Datatable from "@/Components/Datatable";
 
 // Reemplaza esto con tu componente real
 const LoadingDiv = () => (
@@ -40,7 +41,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
             ...prevData,
             [name]: type === 'checkbox' ? checked : value
         }));
-        
+
         // Limpiar error al cambiar el campo
         if (errors[name]) {
             setErrors(prevErrors => {
@@ -50,7 +51,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
             });
         }
     };
-    
+
     // Función de validación simple
     const validate = () => {
         let formErrors = {};
@@ -68,16 +69,16 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validate()) {
             toast.error("Por favor, corrige los errores en el formulario.");
             return;
         }
-        
+
         setLoading(true);
         try {
             // Llama a la función onSubmit pasada por props
-            await onSubmit(personData); 
+            await onSubmit(personData);
             // Limpia y cierra al éxito
             setPersonData(initialPersonData);
             closeModal();
@@ -98,7 +99,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
             {/* Contenedor del Modal */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
                 <Dialog.Panel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
-                    
+
                     {/* Indicador de carga */}
                     {loading && <LoadingDiv />}
 
@@ -228,7 +229,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
                                 <span className="ml-2 text-sm font-medium text-gray-700">¿Es Empleado?</span>
                             </label>
                         </div>
-                        
+
                         {/* Fecha de Nacimiento y Licencia - se mantienen divididas en 2 columnas */}
                         <label className="block">
                             <span className="text-sm font-medium text-gray-700">Fecha de Nacimiento:</span>
@@ -282,15 +283,16 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit }) {
 
 export default function Usuarios() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [users, setUsers] = useState();
 
     const openModal = () => setIsDialogOpen(true);
     // Limpia el formulario y cierra el modal
-    const closeModal = () => setIsDialogOpen(false); 
+    const closeModal = () => setIsDialogOpen(false);
 
     // Función que maneja la petición POST real
     const handleCreatePerson = async (data) => {
         const url = 'http://localhost:8000/api/users'; // Tu endpoint
-        
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -308,7 +310,7 @@ export default function Usuarios() {
                 // Si la respuesta no es 2xx, lanza un error con un mensaje útil
                 const errorMsg = result.message || result.error || `Error HTTP: ${response.status}`;
                 toast.error(`Error al registrar: ${errorMsg}`);
-                throw new Error(errorMsg); 
+                throw new Error(errorMsg);
             }
 
             console.log('Respuesta del servidor:', result);
@@ -325,16 +327,39 @@ export default function Usuarios() {
             // Si el error no fue manejado con toast.error dentro del try, se puede poner un catch-all aquí.
             // Si ya se notificó arriba, esto previene una doble notificación.
             if (!error.message.includes('Error HTTP')) {
-                 toast.error("Ocurrió un error inesperado. Revisa la conexión o la consola.");
+                toast.error("Ocurrió un error inesperado. Revisa la conexión o la consola.");
             }
             // Re-lanza el error para que el formulario sepa que falló y pueda manejar su estado
-            throw error; 
+            throw error;
         }
     };
 
+    const getUsers = async () => {
+        try {
+            const url = 'users.index'
+            const response = await fetch(route(url), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Asegúrate de incluir la autenticación (Bearer Token) si es necesario
+                }
+            });
+            const data = await response.json();
+            setUsers(data);
+        } catch (error) {
+            console.error('Error al obtener los usuarios:', error);
+        } finally {
+
+        }
+    }
+
+    useEffect(() => {
+        getUsers()
+    }, [])
+
     return (
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
-            
+
             <div className="flex justify-between items-center p-3 border-b mb-4">
                 <h2 className="text-3xl font-bold text-gray-800">Gestión de Usuarios</h2>
                 <button
@@ -344,11 +369,23 @@ export default function Usuarios() {
                     + Nuevo Usuario
                 </button>
             </div>
-            
+
             {/* Aquí iría tu Datatable u otro contenido */}
             <div className="p-3 bg-white rounded-lg shadow-md min-h-[500px]">
                 <p className="text-gray-500">Contenido principal de la tabla de usuarios...</p>
                 {/* Por ejemplo, un componente <UsuariosTable /> */}
+                {users && 
+                <Datatable
+                    data={users}
+                    columns={[
+                        // { header: 'ID', accessor: 'id' },
+                        { header: 'Nombre', accessor: 'Personas_nombres' },
+                        { header: 'Usuario', accessor: 'Personas_usuario' },
+                        { header: 'Correo', accessor: 'Personas_correo' },
+                        // Agrega más columnas según sea necesario
+                    ]}
+                />
+                }
             </div>
 
             {/* Componente Modal de Headless UI */}
@@ -357,7 +394,7 @@ export default function Usuarios() {
                 closeModal={closeModal}
                 onSubmit={handleCreatePerson}
             />
-            
+
             {/* NOTA IMPORTANTE: 
                 Para que Sonner funcione, necesitas renderizar el componente 'Toaster' 
                 en un nivel superior (ej. en tu layout o App.js).

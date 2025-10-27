@@ -62,4 +62,18 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Rutas de autenticación y API específicas primero
+// Route::middleware(['auth'])->group(function () {
+//     // Rutas específicas de API o backend...
+// });
+
+// Captura todas las demás rutas y las envía a React Router
+Route::get('{path?}', function () {
+    return Inertia::render('Home', [
+        'auth' => [
+            'user' => auth()->user()
+        ]
+    ]);
+})->where('path', '.*')->middleware(['auth']);
+
 require __DIR__ . '/auth.php';

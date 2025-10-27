@@ -15,12 +15,13 @@ import UserMenusContext from "@/Context/UserMenusContext";
 // import { Button, Tooltip } from '@mui/material';
 // import e from 'cors';
 // import _ from 'lodash';
-import request, { disabledColor, findMenuByUrl, moneyFormat, normalizeUrl, noty, numberFormat } from '@/utils';
+import /* request,  */ { findMenuByUrl, moneyFormat, normalizeUrl, numberFormat } from '@/utils';
 import moment from 'moment';
 import { useImperativeHandle } from 'react';
 import { useCallback } from 'react';
 import ColumnChooserDialog from './ColumnChooserDialog';
 import LoadingDiv from './LoadingDiv';
+import useStore from '@/Stores/useStore';
 
 
 /*  PROPS 
@@ -46,6 +47,9 @@ data: Array = Datos que muestra la tabla
 
 const Datatable = (props) => {
     const location = useLocation();
+    const {
+        userMenus
+    } = useStore()
     const tableRef = useRef();
     const localRef = useRef(null);
     const filterButtonRef = useRef(null);
@@ -58,7 +62,6 @@ const Datatable = (props) => {
     const [postPermission, setPostPermission] = useState(false);
     const [putPermission, setPutPermission] = useState(false);
     const [specialPermission, setSpecialPermission] = useState(false);
-    const { state, selectedMenu } = useContext(UserMenusContext);
     const [empresa, setEmpresa] = useState();
     const savedColor = localStorage.getItem('COLORMENU') || '#1B2654';
 
@@ -249,8 +252,8 @@ const Datatable = (props) => {
 
     const allVisible = () => {
         var table = document.getElementById("datatable")
-        var tr = table.getElementsByTagName("tr")
-        for (let i = 0; i < tr.length; i++) {
+        var tr = table?.getElementsByTagName("tr")
+        for (let i = 0; i < tr?.length; i++) {
             tr[i].style.display = "";
         }
         []
@@ -289,53 +292,53 @@ const Datatable = (props) => {
             return { mode: 'none' }
     }
 
-    const loadUserPreferences = async () => {
-        const menu = JSON.parse(localStorage.getItem('selectedMenu'))
-        try {
-            const response = await request(route('get-column-preferences'), "POST", { menu_id: menu.menu_id, columns: props.columns }, { enabled: true })
-            setInternalColumns(response.columns.map(col => ({ ...col })))
-            props.onColumnVisibilityChange(response.columns.map(col => ({ ...col })))
-        } catch (error) {
-            console.error(error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    // const loadUserPreferences = async () => {
+    //     const menu = JSON.parse(localStorage.getItem('selectedMenu'))
+    //     try {
+    //         const response = await request(route('get-column-preferences'), "POST", { menu_id: menu.menu_id, columns: props.columns }, { enabled: true })
+    //         setInternalColumns(response.columns.map(col => ({ ...col })))
+    //         props.onColumnVisibilityChange(response.columns.map(col => ({ ...col })))
+    //     } catch (error) {
+    //         console.error(error)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
-    const saveUserPreferences = async () => {
-        const menu = JSON.parse(localStorage.getItem('selectedMenu'))
-        setLoadingApply(true)
-        try {
-            await request(route('save-column-preferences'), "POST", { menu_id: menu.menu_id, columns: internalColumns }, { enabled: true })
-        } catch (error) {
-            console.error(error)
-            noty('Ocurrió un error al guardar la configuración.', 'error')
-        } finally {
-            props.onColumnVisibilityChange(internalColumns.map(col => ({ ...col })))
-            setLoadingApply(false)
-        }
-    }
+    // const saveUserPreferences = async () => {
+    //     const menu = JSON.parse(localStorage.getItem('selectedMenu'))
+    //     setLoadingApply(true)
+    //     try {
+    //         await request(route('save-column-preferences'), "POST", { menu_id: menu.menu_id, columns: internalColumns }, { enabled: true })
+    //     } catch (error) {
+    //         console.error(error)
+    //         noty('Ocurrió un error al guardar la configuración.', 'error')
+    //     } finally {
+    //         props.onColumnVisibilityChange(internalColumns.map(col => ({ ...col })))
+    //         setLoadingApply(false)
+    //     }
+    // }
+
+    // useEffect(() => {
+    //     if (!props.columnChooser || props.columnChooser === false) {
+    //         setInternalColumns(props.columns.map(col => ({ ...col, visible: true })));
+    //     } else {
+    //         loadUserPreferences()
+    //     }
+    // }, []);
 
     useEffect(() => {
-        if (!props.columnChooser || props.columnChooser === false) {
-            setInternalColumns(props.columns.map(col => ({ ...col, visible: true })));
-        } else {
-            loadUserPreferences()
-        }
-    }, []);
-
-    useEffect(() => {
-        if (Array.isArray(state.userMenus)) {
+        if (Array.isArray(userMenus)) {
             const url = normalizeUrl(location.pathname)
-            const result = findMenuByUrl(state.userMenus, url)
+            const result = findMenuByUrl(userMenus, url)
 
             if (result !== null) {
-                setPostPermission(result.pivot.usuarioxmenu_alta == 1 ? true : false)
-                setPutPermission(result.pivot.usuarioxmenu_cambio == 1 ? true : false)
-                setSpecialPermission(result.pivot.usuarioxmenu_especial == 1 ? true : false)
+                setPostPermission(result.pivot?.usuarioxmenu_alta == 1 ? true : false)
+                setPutPermission(result.pivot?.usuarioxmenu_cambio == 1 ? true : false)
+                setSpecialPermission(result.pivot?.usuarioxmenu_especial == 1 ? true : false)
             }
         }
-    }, [state.userMenus]);
+    }, [userMenus]);
 
     useEffect(() => {
         if (!props.virtual) {
@@ -414,7 +417,7 @@ const Datatable = (props) => {
                                                     <div className='grid justify-items-end' >
                                                         <input id='search-input-datatable' className='h-12 search-input-datatable' type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                                         <label htmlFor="search-input-datatable" className='non-selectable'>
-                                                            {/* <SearchIcon className={'search-icon-datatable'} />*/}</label> 
+                                                            {/* <SearchIcon className={'search-icon-datatable'} />*/}</label>
                                                     </div>
                                                 )
                                             }
@@ -449,7 +452,7 @@ const Datatable = (props) => {
                                 onContentReady={props.onContentReady}
                                 onRowRemoving={props.handleRowRemoving}
                                 hoverStateEnabled={true}
-                                elementAttr={{ class: `data-table ${props.tableClassName}`  }}
+                                elementAttr={{ class: `data-table ${props.tableClassName}` }}
                                 onCellPrepared={(e) => {
                                     if (props.onCellPrepared) props.onCellPrepared(e)
                                     e.cellElement.setAttribute('data-label', e.column.caption);
@@ -614,7 +617,7 @@ const Datatable = (props) => {
                                                                     {
                                                                         ((putPermission && col.edit) || (specialPermission && col.custom)) &&
                                                                         <>
-                                                                          
+
                                                                             {(specialPermission && col.custom) && <col.custom item={{ ...reg }} {...props} />}
                                                                         </>
                                                                     }
@@ -626,7 +629,7 @@ const Datatable = (props) => {
                                                                                 (
                                                                                     Array.isArray(col.accessor) ?
                                                                                         (col.accessor.map((item) => reg[item] + ' '))
-                                                                                        : _.get(reg, col.accessor) /* (reg[col.accessor] ?? "-") */
+                                                                                        : /* _.get(reg, col.accessor) */ (reg[col.accessor] ?? "-")
                                                                                 )
                                                                             }
                                                                         </>
@@ -682,7 +685,7 @@ const Datatable = (props) => {
                             </table>
                         }
                     </div >
-                    {(internalColumns && props.columnChooser) &&
+                    {/* {(internalColumns && props.columnChooser) &&
                         <ColumnChooserDialog
                             open={open}
                             anchorRef={filterButtonRef}
@@ -696,7 +699,7 @@ const Datatable = (props) => {
                             onApplyAndSave={saveUserPreferences}
                             loadingApply={loadingApply}
                         />
-                    }
+                    } */}
                 </>
             }
         </>

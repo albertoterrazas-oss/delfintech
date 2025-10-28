@@ -23,13 +23,13 @@ class UnidadesController extends Controller
             // El año es un entero y ahora es requerido
             'Unidades_ano' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             // AJUSTADO: Debe ser 'integer' para coincidir con la columna INT de SQL Server
-            'Unidades_kilometraje' => 'required|integer|min:0', 
+            'Unidades_kilometraje' => 'required|integer|min:0',
             // CAMBIADO: Ahora es requerido y debe ser 'integer'
-            'Unidades_mantenimiento' => 'required|integer', 
+            'Unidades_mantenimiento' => 'required|integer',
             // REQUERIDO y debe ser string
             'Unidades_estatus' => 'required|string|max:50',
             // CAMBIADO: Ahora es requerido y debe tener formato datetime completo para SQL Server
-            'Unidades_fechaCreacion' => 'required|date_format:Y-m-d H:i:s', 
+            'Unidades_fechaCreacion' => 'required|date_format:Y-m-d H:i:s',
             'Unidades_usuarioID' => 'required|integer',
         ];
     }
@@ -43,7 +43,7 @@ class UnidadesController extends Controller
             'required' => 'El campo :attribute es obligatorio.',
             'string' => 'El campo :attribute debe ser texto.',
             // Mensaje más específico para los campos INT
-            'integer' => 'El campo :attribute debe ser un número entero (no se aceptan decimales).', 
+            'integer' => 'El campo :attribute debe ser un número entero (no se aceptan decimales).',
             'numeric' => 'El campo :attribute debe ser un número válido.',
             'date_format' => 'El campo :attribute no tiene el formato de fecha y hora esperado (YYYY-MM-DD HH:MM:SS).',
             'max' => 'El campo :attribute no debe exceder los :max caracteres.',
@@ -85,45 +85,36 @@ class UnidadesController extends Controller
         $rules = $this->getValidationRules();
         $messages = $this->getValidationMessages();
 
+        // 1. Asegúrate de que tu validación NO requiere Unidades_fechaCreacion
+        // ya que será provista por el servidor.
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            // Retorna 400 Bad Request con los errores de validación
             return response()->json($validator->errors(), 400);
         }
 
         try {
+            // Obtenemos todos los datos (incluyendo, si es necesario, 'Unidades_usuarioID')
             $data = $request->all();
 
-            // **AJUSTE CRÍTICO PARA SQL SERVER DATETIME:**
-            // Forzamos el re-formateo a la notación ISO (con 'T' y milisegundos '.v') 
-            // que es el formato más robusto para SQL Server/ODBC.
-            if (isset($data['Unidades_fechaCreacion'])) {
-                // Leer el formato de entrada esperado por la validación: YYYY-MM-DD HH:MM:SS
-                $date = \DateTime::createFromFormat('Y-m-d H:i:s', $data['Unidades_fechaCreacion']);
-                if ($date) {
-                     // Formatear al formato ISO que SQL Server acepta mejor: YYYY-MM-DDTHH:MM:SS.mmm
-                    $data['Unidades_fechaCreacion'] = $date->format('Y-m-d\TH:i:s.v'); 
-                }
-            }
-            
-            // Crear la nueva unidad 
+            // Si el cliente accidentalmente manda 'Unidades_fechaCreacion',
+            // Eloquent lo ignorará porque el campo no está en $fillable. 
+            // No se necesita el unset() en este caso, pero puede ser una capa de seguridad extra.
+
+            // 2. Crear la unidad: Eloquent establecerá automáticamente Unidades_fechaCreacion
             $unidad = Unidades::create($data);
 
-            // Retorna 201 Created con mensaje de éxito
             return response()->json([
                 'message' => 'Unidad creada exitosamente',
                 'unidad' => $unidad
             ], 201);
         } catch (\Exception $e) {
-            // Manejo de errores de base de datos, como los errores de conversión SQLSTATE
             return response()->json([
-                'message' => 'Error al guardar la unidad. Verifique que los datos cumplan estrictamente con los tipos INT/DATETIME de su base de datos.',
+                'message' => 'Error al guardar la unidad. Verifique los tipos de datos.',
                 'error_detail' => $e->getMessage()
             ], 500);
         }
     }
-
     /**
      * Muestra el recurso (Unidad) especificado.
      *
@@ -158,22 +149,28 @@ class UnidadesController extends Controller
             return response()->json(['message' => 'Unidad no encontrada'], 404);
         }
 
-        // Reglas de validación para la actualización (todos los campos son 'sometimes')
+        // 1. Obtener reglas de validación base
         $rules = $this->getValidationRules();
-        // Aplicar 'sometimes' a todas las reglas para la actualización
-        $updateRules = array_map(function($rule) {
-            // Mantener la lógica de required, pero si está presente, debe pasar la regla
-            $modifiedRule = str_replace('required', 'sometimes|required', $rule);
-            
-            // Ajuste para el update: si Unidades_fechaCreacion se envía, también debe re-formatearse.
-            if (str_contains($rule, 'date_format:Y-m-d H:i:s')) {
-                // Mantenemos la regla estricta de formato. El re-formateo se hará después de la validación.
+
+        // **AJUSTE CRÍTICO 1:** Eliminar la regla de validación de la fecha de creación.
+        // Este campo es gestionado por el servidor y no debe ser actualizado por el cliente.
+        if (isset($rules['Unidades_fechaCreacion'])) {
+            unset($rules['Unidades_fechaCreacion']);
+        }
+
+        // 2. Aplicar 'sometimes' a todas las reglas restantes para la actualización parcial
+        $updateRules = array_map(function ($rule) {
+            // Reemplaza 'required' con 'sometimes', o asegura que 'sometimes' esté al inicio
+            $modifiedRule = str_replace('required', 'sometimes', $rule);
+
+            if (!str_contains($modifiedRule, 'sometimes')) {
+                $modifiedRule = 'sometimes|' . $modifiedRule;
             }
             return $modifiedRule;
         }, $rules);
 
         $messages = $this->getValidationMessages();
-        
+
         $validator = Validator::make($request->all(), $updateRules, $messages);
 
         if ($validator->fails()) {
@@ -184,18 +181,18 @@ class UnidadesController extends Controller
         try {
             $data = $request->all();
 
-            // **AJUSTE CRÍTICO para el UPDATE:**
-            // Se realiza el re-formateo de la fecha, igual que en el método store
+            // **AJUSTE CRÍTICO 2:** Eliminar cualquier intento de actualizar la fecha de creación.
+            // Esto asegura que el campo no se envíe a Eloquent si el cliente lo incluyó.
             if (isset($data['Unidades_fechaCreacion'])) {
-                $date = \DateTime::createFromFormat('Y-m-d H:i:s', $data['Unidades_fechaCreacion']);
-                if ($date) {
-                    $data['Unidades_fechaCreacion'] = $date->format('Y-m-d\TH:i:s.v'); 
-                }
+                unset($data['Unidades_fechaCreacion']);
             }
+            // NOTA: Toda la lógica de re-formateo de fechas con \DateTime se ELIMINÓ
+            // ya que Unidades_fechaCreacion no se actualiza, y Unidades_fechaModificacion
+            // (UPDATED_AT) es manejado automáticamente por Eloquent.
 
             // Llenar y guardar la unidad. Solo se actualizan los campos presentes en el request.
             $unidad->fill($data);
-            $unidad->save();
+            $unidad->save(); // Eloquent establece Unidades_fechaModificacion (UPDATED_AT) automáticamente.
 
             // Retorna 200 OK con mensaje de éxito
             return response()->json([
@@ -203,9 +200,9 @@ class UnidadesController extends Controller
                 'unidad' => $unidad
             ], 200);
         } catch (\Exception $e) {
-             // Manejo de errores de base de datos
+            // Manejo de errores de base de datos
             return response()->json([
-                'message' => 'Error al actualizar la unidad. Verifique que los datos cumplan estrictamente con los tipos INT/DATETIME de su base de datos.',
+                'message' => 'Error al actualizar la unidad. Ocurrió un error en la base de datos.',
                 'error_detail' => $e->getMessage()
             ], 500);
         }

@@ -4,6 +4,7 @@
 
 use App\Http\Controllers\Auth\Admin\RolesController;
 use App\Http\Controllers\Auth\Admin\UserController;
+use App\Http\Controllers\Catalogs\MotivosController;
 use App\Http\Controllers\Catalogs\UnidadesController;
 use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
@@ -49,6 +50,14 @@ Route::resource('roles', RolesController::class)->only([
     'store', // POST /api/admin/roles
     'update' // PUT/PATCH /api/admin/roles/{role}
 ]);
+
+Route::resource('motivos', MotivosController::class)->only([
+    'index',  // Registra el método index (GET)
+    'store',  // Registra el método store (POST)
+    'update'  // Registra el método update (PUT/PATCH)
+    // No incluyas 'show', 'destroy', 'create', 'edit'
+]);
+
 
 Route::post('user/menus', [UserController::class, 'menus'])->name('user.menus');
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');

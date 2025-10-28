@@ -17,9 +17,18 @@ const routes = [
         path: "/dashboard",
         import: lazy(() => import('./Dashboard'))
     },
+
     {
-        path: "/administracion",
+        path: "/unidades",
+        import: lazy(() => import('./Catalogos/Unidades'))
+    },
+    {
+        path: "/usuarios",
         import: lazy(() => import('./Catalogos/Usuarios'))
+    },
+    {
+        path: "/motivos",
+        import: lazy(() => import('./Catalogos/Motivos'))
     }
 ]
 

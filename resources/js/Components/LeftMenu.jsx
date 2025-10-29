@@ -38,7 +38,7 @@ const LeftMenu = ({ auth }) => {
     const [isInputFocused, setIsInputFocused] = useState(false);
     const navigate = useNavigate();
     const { post } = useForm();
-    const savedColor = localStorage.getItem('COLORMENU') || '#2F0F0F';
+    const savedColor = '#053AA7';
     const [user, setUser] = useState();
     const [color, setColor] = useState('#FFFFFF');
 
@@ -317,7 +317,7 @@ const LeftMenu = ({ auth }) => {
                         </div>
                     </div>
                 </div>
-                <div className='relative pt-2'>
+                {/* <div className='relative pt-2'>
                     <div className='flex justify-end min-h-[3rem] mr-5 mt-2 mb-3'>
                         <input
                             ref={menuSearcherRef}
@@ -329,9 +329,9 @@ const LeftMenu = ({ auth }) => {
                             onFocus={() => setIsInputFocused(true)}
                             onBlur={() => setIsInputFocused(false)}
                         />
-                        <label htmlFor="search-input-leftmenu" className='non-selectable'>{/* <SearchIcon ref={menuSearcherIconRef} className={`search-icon-leftmenu ${isInputFocused ? 'focused' : ''}`} /> */}a</label>
+                        <label htmlFor="search-input-leftmenu" className='non-selectable'>{/* <SearchIcon ref={menuSearcherIconRef} className={`search-icon-leftmenu ${isInputFocused ? 'focused' : ''}`} /> }a</label>
                     </div>
-                </div>
+                </div> */}
                 <div className="containerMenu grow pt-1 blue-scroll" >
                     <ul id="menus-list" className="leftmenu-list">
                         {filteredMenus && filteredMenus.length > 0 &&

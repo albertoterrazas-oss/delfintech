@@ -17,7 +17,10 @@ const routes = [
         path: "/dashboard",
         import: lazy(() => import('./Dashboard'))
     },
-
+    {
+        path: "/login",
+        import: lazy(() => import('./Auth/Login'))
+    },
     {
         path: "/unidades",
         import: lazy(() => import('./Catalogos/Unidades'))
@@ -146,7 +149,7 @@ export default function Home({ auth, token }) {
             {auth.user &&
                 <div className={containerClass}>
                     <LeftMenu auth={auth} />
-                    <div className="content sm:overflow-auto md:overflow-hidden">
+                    <div className="content sm:overflow-auto md:overflow-hidden relative h-[100%] pb-4 px-3 overflow-auto ">{/* blue-scroll */}
                         <Header user={auth.user} />
                         <div className="scrollable-content styled-scroll">
                             <Routes>

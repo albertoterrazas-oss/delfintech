@@ -61,7 +61,7 @@ const TextInput = ({ icon, type = 'text', name, value, onChange, placeholder, er
 const PrimaryButton = ({ children, disabled, className = '', processing, ...props }) => (
     <button
         {...props}
-        className={`w-full flex items-center justify-center px-4 py-3 bg-blue-500 border border-transparent rounded-lg font-semibold text-base text-white uppercase tracking-widest hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-300 transition ease-in-out duration-150 ${
+        className={`w-full flex items-center justify-center px-4 py-3 bg-[#66C0FF] border border-transparent rounded-lg font-semibold text-base uppercase tracking-widest hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-300 transition ease-in-out duration-150 ${
             disabled && 'opacity-60 cursor-not-allowed'
         } ${className}`}
         disabled={disabled}

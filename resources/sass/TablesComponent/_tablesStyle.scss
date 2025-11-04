@@ -17,13 +17,13 @@ $tl: 0.6s; //Transition length
         position: sticky;
         top: 0;
         overflow-x: hidden;
-        box-shadow: rgba(0, 0, 0, 0.35) 0px 2px 5px;
-        border: 1px solid #1B2654;
+        box-shadow: rgba(0, 0, 0, 0.089) 0px 2px 5px;
+        border: 1px solid #E9F6FF;
         z-index: 9;
 
         th {
             padding: 1vh 0vh;
-            background-color: #1B2654;
+            background-color: #E9F6FF;
             color: white;
         }
     }
@@ -248,7 +248,7 @@ tfoot {
                 float: left;
                 font-weight: bold;
                 text-transform: uppercase;
-                color: #1B2654;
+                color: #E9F6FF;
 
             }
 

@@ -18,10 +18,6 @@ const routes = [
         import: lazy(() => import('./Dashboard'))
     },
     {
-        path: "/login",
-        import: lazy(() => import('./Auth/Login'))
-    },
-    {
         path: "/unidades",
         import: lazy(() => import('./Catalogos/Unidades'))
     },
@@ -149,24 +145,26 @@ export default function Home({ auth, token }) {
             {auth.user &&
                 <div className={containerClass}>
                     <LeftMenu auth={auth} />
-                    <div className="content sm:overflow-auto md:overflow-hidden relative h-[100%] pb-4 px-3 overflow-auto ">{/* blue-scroll */}
+                    <div className="content sm:overflow-auto md:overflow-hidden  ">{/* blue-scroll */}
                         <Header user={auth.user} />
                         <div className="scrollable-content styled-scroll">
-                            <Routes>
-                                {
-                                    routes.map((route, index) => (
-                                        <Route key={index} lazy={route.import} path={route.path} element={(
-                                            <Suspense fallback={
-                                                <div className="h-full">
-                                                    <Loading />
-                                                </div>
-                                            }>
-                                                <route.import auth={auth} />
-                                            </Suspense>
-                                        )} />
-                                    ))
-                                }
-                            </Routes>
+                            {/* <div className='relative h-[100%] pb-4 px-3 overflow-auto'> */}
+                                <Routes>
+                                    {
+                                        routes.map((route, index) => (
+                                            <Route key={index} lazy={route.import} path={route.path} element={(
+                                                <Suspense fallback={
+                                                    <div className="h-full">
+                                                        <Loading />
+                                                    </div>
+                                                }>
+                                                    <route.import auth={auth} />
+                                                </Suspense>
+                                            )} />
+                                        ))
+                                    }
+                                </Routes>
+                            {/* </div> */}
                         </div>
                     </div>
                 </div>

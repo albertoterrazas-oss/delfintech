@@ -23,13 +23,13 @@ $tl: 0.6s;
     max-height: 80dvh;
     overflow: auto;
     // margin-top: 2vh;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 2px 5px;
+    box-shadow: rgba(0, 0, 0, 0.226) 0px 1px 15px;
     border-radius: 8px;
     transition: .5s;
     display: block;
 
     .data-table {
-        background-color: #1B2654;
+        background-color: #b9cfdf;
     }
 
     .dx-datagrid {
@@ -41,8 +41,9 @@ $tl: 0.6s;
 
             .dx-datagrid-table {
                 .dx-header-row {
-                    background-color: #1B2654;   //aqui
-                    color: white;
+                    background-color: #e3edf5;   //aqui
+                    font-weight: 600;
+                    color: black;
                 }
             }
         }
@@ -65,8 +66,8 @@ $tl: 0.6s;
         }
 
         .dx-datagrid-content .dx-header-row:hover {
-            background-color: #1B2654;
-            color: white;
+            background-color: #e3edf5;
+            color: black;
         }
     }
 }

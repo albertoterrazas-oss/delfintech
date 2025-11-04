@@ -7,6 +7,7 @@ import { DataGrid, Column, Scrolling, Selection, Export, Lookup, MasterDetail, G
 import 'devextreme/dist/css/dx.common.css';
 import 'devextreme/dist/css/dx.light.css';
 import '../../sass/TablesComponent/_tablesStyle.scss'
+import '../../sass/TablesComponent/_tableEditDropStyle.scss'
 // import SearchIcon from '@mui/icons-material/Search';
 import { useLocation } from "react-router-dom";
 import { useContext } from "react";
@@ -22,6 +23,8 @@ import { useCallback } from 'react';
 import ColumnChooserDialog from './ColumnChooserDialog';
 import LoadingDiv from './LoadingDiv';
 import useStore from '@/Stores/useStore';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from './ui/input-group';
+import { SearchIcon } from 'lucide-react';
 
 
 /*  PROPS 
@@ -63,7 +66,7 @@ const Datatable = (props) => {
     const [putPermission, setPutPermission] = useState(false);
     const [specialPermission, setSpecialPermission] = useState(false);
     const [empresa, setEmpresa] = useState();
-    const savedColor = localStorage.getItem('COLORMENU') || '#1B2654';
+    const savedColor = '#f5f5f5';
 
     const search = () => {
         var input = document.getElementById("search-input-datatable")
@@ -412,15 +415,25 @@ const Datatable = (props) => {
                                             </button>
                                         }
                                         <div className='flex justify-end min-h-[3rem]' >
-                                            {
+                                            {/* {
                                                 (props.searcher === false) ? null : (
                                                     <div className='grid justify-items-end' >
                                                         <input id='search-input-datatable' className='h-12 search-input-datatable' type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                                         <label htmlFor="search-input-datatable" className='non-selectable'>
-                                                            {/* <SearchIcon className={'search-icon-datatable'} />*/}</label>
+                                                            {/* <SearchIcon className={'search-icon-datatable'} />}
+                                                        </label>
                                                     </div>
                                                 )
-                                            }
+                                            } */}
+                                            <InputGroup>
+                                                <InputGroupInput placeholder="Buscar..." />
+                                                <InputGroupAddon>
+                                                    <SearchIcon />
+                                                </InputGroupAddon>
+                                                {/* <InputGroupAddon align="inline-end">
+                                                    <InputGroupButton>Search</InputGroupButton>
+                                                </InputGroupAddon> */}
+                                            </InputGroup>
                                         </div>
                                     </div>
                                 </>
@@ -588,7 +601,7 @@ const Datatable = (props) => {
                                         {props.columns &&
                                             props.columns.map((head, index) => {
                                                 return (
-                                                    <th key={index} style={{ backgroundColor: savedColor }}>
+                                                    <th key={index} style={{ backgroundColor: '#E9F6FF', color: 'black' }} className={`table-header table-header-${index}`} >
                                                         {(!head.edit && !head.custom) ? head.header : null}
                                                         {
                                                             ((putPermission && head.edit) || (specialPermission && head.custom)) && head.header

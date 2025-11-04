@@ -53,7 +53,7 @@ Route::get('/login', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Home', [
-            'initialPage' => 'Dashboard'
+            'initialPage' => '/dashboard'
         ]);
     })->name('dashboard');
 

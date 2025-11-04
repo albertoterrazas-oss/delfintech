@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://192.168.139.46:5173'],
+    'allowed_origins' => ['*', 'https://192.168.139.46:5173'], /* <-- IP y puerto locales */
 
     'allowed_origins_patterns' => [],
 

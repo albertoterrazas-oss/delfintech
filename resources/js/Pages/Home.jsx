@@ -144,15 +144,15 @@ export default function Home({ auth, token }) {
         localStorage.setItem('lastPath', location.pathname);
     }, [userMenus, location.pathname])
 
-    useEffect(() => {
-        // Verificar si el usuario está autenticado
-        if (!loggedUser) {
-            router.visit('/login');
-            return;
-        } else {
+    // useEffect(() => {
+    //     // Verificar si el usuario está autenticado
+    //     if (!loggedUser) {
+    //         router.visit('/login');
+    //         return;
+    //     } else {
 
-        }
-    }, [loggedUser]);
+    //     }
+    // }, [loggedUser]);
 
     // if (!auth.user) return null
 

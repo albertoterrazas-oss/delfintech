@@ -15,9 +15,9 @@ use Illuminate\Validation\ValidationException;
 use App\Models\Admin\User; 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse; 
-use Illuminate\Support\Facades\DB; // NUEVO: Para transacciones
-use Illuminate\Support\Facades\Log; // NUEVO: Para registrar errores
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException; // NUEVO: Para lanzar el 409
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Log; // MANTENER
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException; 
 
 class AuthenticatedSessionController extends Controller
 {
@@ -52,7 +52,7 @@ class AuthenticatedSessionController extends Controller
             throw new ValidationException($validator);
         }
 
-        // 2. Intentar encontrar al usuario
+        // 2. Intentar encontrar al usuario (Asegúrate de que 'Personas_usuario' esté indexado en DB)
         $user = User::where('Personas_usuario', $request->Personas_usuario)->first();
 
         // 3. Verificar si el usuario existe Y si la contraseña coincide con el hash
@@ -66,10 +66,11 @@ class AuthenticatedSessionController extends Controller
         $token = null;
 
         try {
-            // Inicia la transacción para garantizar la atomicidad (prevención de 409 Conflict)
+            // Inicia la transacción para garantizar la atomicidad
             DB::beginTransaction();
 
             // 4. Eliminar tokens existentes para evitar acumulación
+            // IMPORTANTE: Asegúrate de que el modelo App\Models\Admin\User use el trait HasApiTokens.
             $user->tokens()->delete();
 
             // 5. Generar el nuevo token
@@ -82,21 +83,23 @@ class AuthenticatedSessionController extends Controller
             // Si algo falla, revierte los cambios de la transacción
             DB::rollBack();
 
-            // Registra el error interno para diagnóstico
-            Log::error('Error al generar token de acceso para el usuario ID: ' . $user->id . ' - ' . $e->getMessage());
+            // *** CAMBIO CLAVE PARA DEPURACIÓN ***
+            // Registra el error interno (incluyendo el stack trace) para diagnóstico
+            Log::error('Error FATAL al generar token de acceso para el usuario ID: ' . $user->Personas_usuarioID . ':', [
+                'exception' => $e
+            ]);
+            // **********************************
 
             // Lanza una excepción 409 Conflict explícitamente
-            throw new ConflictHttpException('Hubo un conflicto al intentar generar su sesión de acceso. Intente nuevamente.');
+            throw new ConflictHttpException('Hubo un conflicto al intentar generar su sesión de acceso. Por favor, revise los logs del servidor para detalles del error. Intente nuevamente.');
         }
 
         // 6. Retornar el token y los datos del usuario en una respuesta JSON
         return response()->json([
             'id' => $user->Personas_usuarioID,
             'Personas_usuario' => $user->Personas_usuario,
-            // 'user' => [
-            // ],
             'access_token' => $token,
-            'token_type' => 'Bearer', // Añadido para seguir el estándar de API
+            'token_type' => 'Bearer', 
             'redirect_to' => RouteServiceProvider::HOME,
         ], 200);
     }

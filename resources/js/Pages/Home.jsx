@@ -29,10 +29,10 @@ const routes = [
         path: "/motivos",
         import: lazy(() => import('./Catalogos/Motivos'))
     },
-    {
-        path: "/destino",
-        import: lazy(() => import('./Catalogos/Destinos'))
-    }
+    // {
+    //     path: "/destino",
+    //     import: lazy(() => import('./Catalogos/Destinos'))
+    // }
 ]
 
 export default function Home({ auth, token }) {
@@ -99,7 +99,7 @@ export default function Home({ auth, token }) {
             const filtered = filterMenus(userMenus)
             setFilteredMenus(filtered);
             // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
-            // setFilteredMenus(filtered);
+            // setFilsteredMenus(filtered);
         } else {
             setFilteredMenus(userMenus);
             // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })

@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Dialog, Transition } from '@headlessui/react';
-// Importamos Sonner
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 
 import request from "@/utils";
+import DialogComp from "@/Components/ui/Dialog";
 // Supongo que `route` y `validateInputs` existen en tu entorno.
 
 // DUMMY FUNCTIONS (Reemplazar con tus implementaciones reales)
@@ -130,188 +129,190 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
     const dialogTitle = action === 'create' ? 'Crear Nuevo Usuario/Persona' : 'Editar Usuario/Persona';
 
     return (
-        <Transition show={isOpen}>
-            <Dialog open={isOpen} onClose={closeModal} className="relative z-50">
-                {/* Overlay de fondo */}
-                <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        // <Transition appear show={isOpen}>
+        // <Dialog open={isOpen} onClose={closeModal} className="relative z-50">
+        //     {/* Overlay de fondo */}
+        //     <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-                {/* Contenedor del Modal */}
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <Dialog.Panel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
+        //     {/* Contenedor del Modal */}
+        //     <div className="fixed inset-0 flex items-center justify-center p-4">
+        //         <DialogPanel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
 
-                        {/* Indicador de carga */}
-                        {loading && <LoadingDiv />}
+        //             {/* Indicador de carga */}
+        //             {loading && <LoadingDiv />}
 
-                        <Dialog.Title className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
-                            {dialogTitle}
-                        </Dialog.Title>
+        //             <DialogTitle className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
+        //                 {dialogTitle}
+        //             </DialogTitle>
 
-                        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-                            {/* Columna 1 */}
-                            <div className="space-y-3">
-                                {/* Input Nombre */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Nombre: <span className="text-red-500">*</span></span>
-                                    <input
-                                        type="text"
-                                        name="Personas_nombres"
-                                        value={personData.Personas_nombres}
-                                        onChange={handleChange}
-                                        className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_nombres ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                    />
-                                    {errors.Personas_nombres && <p className="text-red-500 text-xs mt-1">{errors.Personas_nombres}</p>}
-                                </label>
-                                {/* Input Apellido Paterno - (Resto de inputs de Columna 1...) */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Apellido Paterno:</span>
-                                    <input
-                                        type="text"
-                                        name="Personas_apPaterno"
-                                        value={personData.Personas_apPaterno}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                </label>
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Apellido Materno:</span>
-                                    <input
-                                        type="text"
-                                        name="Personas_apMaterno"
-                                        value={personData.Personas_apMaterno}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                </label>
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Teléfono:</span>
-                                    <input
-                                        type="text"
-                                        name="Personas_telefono"
-                                        value={personData.Personas_telefono}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                </label>
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Dirección:</span>
-                                    <input
-                                        type="text"
-                                        name="Personas_direccion"
-                                        value={personData.Personas_direccion}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                </label>
-                            </div>
-
-                            {/* Columna 2 */}
-                            <div className="space-y-3">
-                                {/* Input Correo */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Correo:</span>
-                                    <input
-                                        type="email"
-                                        name="Personas_correo"
-                                        value={personData.Personas_correo}
-                                        onChange={handleChange}
-                                        className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_correo ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                    />
-                                    {errors.Personas_correo && <p className="text-red-500 text-xs mt-1">{errors.Personas_correo}</p>}
-                                </label>
-                                {/* Input Puesto */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Puesto:</span>
-                                    <input
-                                        type="text"
-                                        name="Personas_puesto"
-                                        value={personData.Personas_puesto}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                </label>
-                                {/* Input Usuario (Username) */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Usuario (Username): <span className="text-red-500">*</span></span>
-                                    <input
-                                        type="text"
-                                        name="Personas_usuario"
-                                        value={personData.Personas_usuario}
-                                        onChange={handleChange}
-                                        className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_usuario ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                    />
-                                    {errors.Personas_usuario && <p className="text-red-500 text-xs mt-1">{errors.Personas_usuario}</p>}
-                                </label>
-                                {/* Input Contraseña */}
-                                <label className="block">
-                                    <span className="text-sm font-medium text-gray-700">Contraseña: {action === 'create' && <span className="text-red-500">*</span>}</span>
-                                    <input
-                                        type="password"
-                                        name="Personas_contrasena"
-                                        value={personData.Personas_contrasena}
-                                        onChange={handleChange}
-                                        // Solo validamos la contraseña si estamos creando o si el campo tiene valor
-                                        className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_contrasena ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                    />
-                                    {errors.Personas_contrasena && <p className="text-red-500 text-xs mt-1">{errors.Personas_contrasena}</p>}
-                                </label>
-                                {/* Checkbox Es Empleado */}
-                                <label className="flex items-center pt-2">
-                                    <input
-                                        type="checkbox"
-                                        name="Personas_esEmpleado"
-                                        checked={personData.Personas_esEmpleado}
-                                        onChange={handleChange}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <span className="ml-2 text-sm font-medium text-gray-700">¿Es Empleado?</span>
-                                </label>
-                            </div>
-
-                            {/* Fecha de Nacimiento y Licencia - se mantienen divididas en 2 columnas */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Fecha de Nacimiento:</span>
-                                <input
-                                    type="date"
-                                    name="Personas_fechaNacimiento"
-                                    value={personData.Personas_fechaNacimiento}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </label>
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Vigencia Licencia:</span>
-                                <input
-                                    type="date"
-                                    name="Personas_vigenciaLicencia"
-                                    value={personData.Personas_vigenciaLicencia}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </label>
-
-                            {/* Botones */}
-                            <div className="col-span-2 flex justify-end gap-3 pt-4 border-t mt-4">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    disabled={loading}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? (action === 'create' ? 'Registrando...' : 'Actualizando...') : (action === 'create' ? 'Guardar Usuario' : 'Actualizar Usuario')}
-                                </button>
-                            </div>
-                        </form>
-                    </Dialog.Panel>
+        //         </DialogPanel>
+        //     </div>
+        // </Dialog>
+        <DialogComp open={isOpen} onClose={closeModal} title={dialogTitle} loadingContent={loading}>
+            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+                {/* Columna 1 */}
+                <div className="space-y-3">
+                    {/* Input Nombre */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Nombre: <span className="text-red-500">*</span></span>
+                        <input
+                            type="text"
+                            name="Personas_nombres"
+                            value={personData.Personas_nombres}
+                            onChange={handleChange}
+                            className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_nombres ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                        />
+                        {errors.Personas_nombres && <p className="text-red-500 text-xs mt-1">{errors.Personas_nombres}</p>}
+                    </label>
+                    {/* Input Apellido Paterno - (Resto de inputs de Columna 1...) */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Apellido Paterno:</span>
+                        <input
+                            type="text"
+                            name="Personas_apPaterno"
+                            value={personData.Personas_apPaterno}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </label>
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Apellido Materno:</span>
+                        <input
+                            type="text"
+                            name="Personas_apMaterno"
+                            value={personData.Personas_apMaterno}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </label>
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Teléfono:</span>
+                        <input
+                            type="text"
+                            name="Personas_telefono"
+                            value={personData.Personas_telefono}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </label>
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Dirección:</span>
+                        <input
+                            type="text"
+                            name="Personas_direccion"
+                            value={personData.Personas_direccion}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </label>
                 </div>
-            </Dialog>
-        </Transition>
+
+                {/* Columna 2 */}
+                <div className="space-y-3">
+                    {/* Input Correo */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Correo:</span>
+                        <input
+                            type="email"
+                            name="Personas_correo"
+                            value={personData.Personas_correo}
+                            onChange={handleChange}
+                            className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_correo ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                        />
+                        {errors.Personas_correo && <p className="text-red-500 text-xs mt-1">{errors.Personas_correo}</p>}
+                    </label>
+                    {/* Input Puesto */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Puesto:</span>
+                        <input
+                            type="text"
+                            name="Personas_puesto"
+                            value={personData.Personas_puesto}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </label>
+                    {/* Input Usuario (Username) */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Usuario (Username): <span className="text-red-500">*</span></span>
+                        <input
+                            type="text"
+                            name="Personas_usuario"
+                            value={personData.Personas_usuario}
+                            onChange={handleChange}
+                            className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_usuario ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                        />
+                        {errors.Personas_usuario && <p className="text-red-500 text-xs mt-1">{errors.Personas_usuario}</p>}
+                    </label>
+                    {/* Input Contraseña */}
+                    <label className="block">
+                        <span className="text-sm font-medium text-gray-700">Contraseña: {action === 'create' && <span className="text-red-500">*</span>}</span>
+                        <input
+                            type="password"
+                            name="Personas_contrasena"
+                            value={personData.Personas_contrasena}
+                            onChange={handleChange}
+                            // Solo validamos la contraseña si estamos creando o si el campo tiene valor
+                            className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Personas_contrasena ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                        />
+                        {errors.Personas_contrasena && <p className="text-red-500 text-xs mt-1">{errors.Personas_contrasena}</p>}
+                    </label>
+                    {/* Checkbox Es Empleado */}
+                    <label className="flex items-center pt-2">
+                        <input
+                            type="checkbox"
+                            name="Personas_esEmpleado"
+                            checked={personData.Personas_esEmpleado}
+                            onChange={handleChange}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">¿Es Empleado?</span>
+                    </label>
+                </div>
+
+                {/* Fecha de Nacimiento y Licencia - se mantienen divididas en 2 columnas */}
+                <label className="block">
+                    <span className="text-sm font-medium text-gray-700">Fecha de Nacimiento:</span>
+                    <input
+                        type="date"
+                        name="Personas_fechaNacimiento"
+                        value={personData.Personas_fechaNacimiento}
+                        onChange={handleChange}
+                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                </label>
+                <label className="block">
+                    <span className="text-sm font-medium text-gray-700">Vigencia Licencia:</span>
+                    <input
+                        type="date"
+                        name="Personas_vigenciaLicencia"
+                        value={personData.Personas_vigenciaLicencia}
+                        onChange={handleChange}
+                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                </label>
+
+                {/* Botones */}
+                <div className="col-span-2 flex justify-end gap-3 pt-4 border-t mt-4">
+                    <button
+                        type="button"
+                        onClick={closeModal}
+                        disabled={loading}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (action === 'create' ? 'Registrando...' : 'Actualizando...') : (action === 'create' ? 'Guardar Usuario' : 'Actualizar Usuario')}
+                    </button>
+                </div>
+            </form>
+        </DialogComp>
+        // </Transition>
     )
 }
 

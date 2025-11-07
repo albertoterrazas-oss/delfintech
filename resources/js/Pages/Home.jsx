@@ -28,6 +28,10 @@ const routes = [
     {
         path: "/motivos",
         import: lazy(() => import('./Catalogos/Motivos'))
+    },
+    {
+        path: "/destino",
+        import: lazy(() => import('./Catalogos/Destinos'))
     }
 ]
 
@@ -145,7 +149,7 @@ export default function Home({ auth, token }) {
             {auth.user &&
                 <div className={containerClass}>
                     <LeftMenu auth={auth} />
-                    <div className="content sm:overflow-auto md:overflow-hidden  ">{/* blue-scroll */}
+                    <div className="content sm:overflow-auto md:overflow-hidden">{/* blue-scroll */}
                         <Header user={auth.user} />
                         <div className="scrollable-content styled-scroll">
                             {/* <div className='relative h-[100%] pb-4 px-3 overflow-auto'> */}

@@ -5,6 +5,8 @@
 use App\Http\Controllers\Auth\Admin\RolesController;
 use App\Http\Controllers\Auth\Admin\UserController;
 use App\Http\Controllers\Catalogs\DestinosController;
+use App\Http\Controllers\Catalogs\ListaVerificacionController;
+use App\Http\Controllers\Catalogs\MenuController;
 use App\Http\Controllers\Catalogs\MotivosController;
 use App\Http\Controllers\Catalogs\UnidadesController;
 use App\Models\Catalogos\Unidades;
@@ -69,13 +71,34 @@ Route::middleware('auth:sanctum')->group(function () {
         'update'  // Registra el método update (PUT/PATCH)
         // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
+
+
+    Route::resource('menus', MenuController::class)->only([
+        'index',  // Registra el método index (GET)
+        'store',  // Registra el método store (POST)
+        'update'  // Registra el método update (PUT/PATCH)
+        // No incluyas 'show', 'destroy', 'create', 'edit'
+    ]);
+
+
+    Route::resource('listaverificacion', ListaVerificacionController::class)->only([
+        'index',  // Registra el método index (GET)
+        'store',  // Registra el método store (POST)
+        'update'  // Registra el método update (PUT/PATCH)
+        // No incluyas 'show', 'destroy', 'create', 'edit'
+    ]);
+
+
+
     // Opcional: Ruta para obtener el usuario autenticado
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+
+    Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
 });
 
-Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
 Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
 Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');

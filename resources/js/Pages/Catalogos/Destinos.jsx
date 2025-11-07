@@ -318,7 +318,7 @@ export default function Destinos() {
                     data={destinations}
                     virtual={true}
                     columns={[
-                        { header: 'ID', accessor: 'Destinos_Id' },
+                        // { header: 'ID', accessor: 'Destinos_Id' },
                         { header: 'Nombre', accessor: 'Destinos_Nombre' },
                         { header: 'Latitud', accessor: 'Destinos_Latitud' },
                         { header: 'Longitud', accessor: 'Destinos_Longitud' },

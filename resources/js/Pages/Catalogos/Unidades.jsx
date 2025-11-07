@@ -26,7 +26,7 @@ const validateInputs = (validations, data) => {
     if (validations.Unidades_numeroEconomico && !data.Unidades_numeroEconomico?.trim()) formErrors.Unidades_numeroEconomico = 'El número económico es obligatorio.';
     if (validations.Unidades_numeroSerie && !data.Unidades_numeroSerie?.trim()) formErrors.Unidades_numeroSerie = 'El número de serie es obligatorio.';
     if (validations.Unidades_modelo && !data.Unidades_modelo?.trim()) formErrors.Unidades_modelo = 'El modelo es obligatorio.';
-    
+
     // Validación de año (simple)
     if (validations.Unidades_ano && data.Unidades_ano && (isNaN(parseInt(data.Unidades_ano)) || data.Unidades_ano.length !== 4)) {
         formErrors.Unidades_ano = 'El año debe ser un número de 4 dígitos.';
@@ -370,43 +370,38 @@ export default function Unidades() {
                 </button>
             </div>
 
-            {/* Contenido de la tabla de Unidades */}
-            <div className="p-3 bg-white rounded-lg shadow-md min-h-[500px]">
-                <p className="text-gray-500">Listado y gestión de vehículos de la flota...</p>
-                {units && units.length > 0 ? (
-                    <Datatable
-                        data={units}
-                        columns={[
-                            { header: 'No. Económico', accessor: 'Unidades_numeroEconomico' },
-                            { header: 'Modelo', accessor: 'Unidades_modelo' },
-                            { header: 'Año', accessor: 'Unidades_ano' },
-                            { header: 'Placa', accessor: 'Unidades_placa' },
-                            { header: 'Estatus', accessor: 'Unidades_estatus' },
-                            {
-                                header: 'Mantenimiento',
-                                accessor: 'Unidades_mantenimiento',
-                                cell: (eprops) => (
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Unidades_mantenimiento ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                        {eprops.item.Unidades_mantenimiento ? 'Sí' : 'No'}
-                                    </span>
-                                )
-                            },
-                            {
-                                header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                                    <button
-                                        onClick={() => openEditModal(eprops.item)}
-                                        className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
-                                    >
-                                        Editar
-                                    </button>
-                                </>)
-                            },
-                        ]}
-                    />
-                ) : (
-                    <p className="text-gray-400 mt-4">No hay unidades registradas.</p>
-                )}
-            </div>
+
+            <Datatable
+                data={units}
+                virtual={true}
+                columns={[
+                    { header: 'No. Económico', accessor: 'Unidades_numeroEconomico' },
+                    { header: 'Modelo', accessor: 'Unidades_modelo' },
+                    { header: 'Año', accessor: 'Unidades_ano' },
+                    { header: 'Placa', accessor: 'Unidades_placa' },
+                    { header: 'Estatus', accessor: 'Unidades_estatus' },
+                    {
+                        header: 'Mantenimiento',
+                        accessor: 'Unidades_mantenimiento',
+                        cell: (eprops) => (
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Unidades_mantenimiento ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                {eprops.item.Unidades_mantenimiento ? 'Sí' : 'No'}
+                            </span>
+                        )
+                    },
+                    {
+                        header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                            <button
+                                onClick={() => openEditModal(eprops.item)}
+                                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                            >
+                                Editar
+                            </button>
+                        </>)
+                    },
+                ]}
+            />
+
 
             {/* Componente Modal de Headless UI */}
             <UnitFormDialog // Cambiado de PersonFormDialog a UnitFormDialog

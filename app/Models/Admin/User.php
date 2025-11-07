@@ -4,7 +4,7 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 
@@ -12,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     // Usamos los traits necesarios, incluyendo HasApiTokens
-    use HasApiTokens, HasFactory, Notifiable; 
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'dbo.Personas';
     public $timestamps = false;
@@ -42,7 +42,7 @@ class User extends Authenticatable
 
     protected $casts = [
         // Esta línea asegura que la contraseña se hashee automáticamente al guardarse
-        'Personas_contrasena' => 'hashed', 
+        'Personas_contrasena' => 'hashed',
     ];
 
     /**
@@ -70,5 +70,11 @@ class User extends Authenticatable
     public function getAuthIdentifier()
     {
         return $this->getKey();
+    }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'usuarioxmenu', 'usuarioxmenu_idusuario', 'usuarioxmenu_idmenu')
+            ->withPivot('usuarioxmenu_idusuario', 'usuarioxmenu_idmenu', 'usuarioxmenu_alta', 'usuarioxmenu_consulta', 'usuarioxmenu_especial', 'usuarioxmenu_cambio', );
     }
 }

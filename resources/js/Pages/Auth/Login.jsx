@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios'; // 👈 Importamos axios para la llamada API directa
+import axios from 'axios'; 
+import logo from '../../../../public/img/logo.png'; 
 
 // ===========================================
 // UTILITY/MOCK FUNCTIONS
@@ -211,9 +212,15 @@ export default function Login() {
 
                 {/* Sección de Logo */}
                 <div className="flex justify-center mb-8">
-                    <div className="h-12 w-auto">
-                        <span className="text-2xl font-extrabold text-blue-600">Delfin Tech</span>
-                    </div>
+                    <img
+                        src={logo}
+                        alt=""
+                        style={{
+                            maxWidth: '100%',
+                            height: 'auto',
+                            display: 'block' // Recomendado para evitar espacios no deseados debajo de la imagen
+                        }}
+                    />
                 </div>
 
                 {/* Sección de Título */}

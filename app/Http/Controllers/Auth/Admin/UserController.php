@@ -154,9 +154,65 @@ class UserController extends Controller
 
     public function menus(Request $request)
     {
-        $menus = Menu::get();
+        $user = $request->user();
+        // dd($user);
+        // $menus = Menu::get();
 
-        return response()->json($menus);
+        // return response()->json($menus);
+
+        // $payload = JWTAuth::parseToken()->getPayload();
+        // $empresa = $payload['companyId'];
+        // $centro_costos = $payload['centroId'];
+
+        // $id = $request->id ?? null;
+
+        $user = User::where('Personas_usuarioID', $user->Personas_usuarioID)
+            ->with('menus') // <--- Aquí estaba el error: se necesita usar ()
+            ->first();
+
+        // dd(vars: $user);
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // Obtener y filtrar menús
+        $menusData = $user->menus()
+            ->orderBy('menu_nombre')
+            ->get()
+            // ->filter(function ($menu) use ($empresa, $centro_costos) {
+            //     return ($empresa === null || $menu->pivot->usuarioxmenu_idempresa == $empresa) &&
+            //         ($centro_costos === null || $menu->pivot->usuarioxmenu_idcentrocostos == $centro_costos);
+            // })
+            ->map(fn($menu) => $menu->toArray());
+
+        $menus = [];
+        $menusMap = [];
+        $processedMenus = []; // Array para controlar menús procesados y evitar duplicados
+
+        // Crear un mapa de menús
+        foreach ($menusData as $menu) {
+            $menu['childs'] = []; // Ahora sí podemos modificarlo porque es un array
+            $menusMap[$menu['menu_id']] = $menu;
+        }
+
+        // Construir jerarquía de menús
+        foreach ($menusData as $menu) {
+            // Verificar si el menú ya ha sido procesado para evitar duplicados
+            if (in_array($menu['menu_id'], $processedMenus)) {
+                continue; // Si ya fue procesado, lo saltamos
+            }
+
+            if ($menu['menu_idPadre'] == 0) {
+                $menus[] = &$menusMap[$menu['menu_id']];
+            } else {
+                $menusMap[$menu['menu_idPadre']]['childs'][] = &$menusMap[$menu['menu_id']];
+            }
+
+            // Marcar el menú como procesado
+            $processedMenus[] = $menu['menu_id'];
+        }
+
+        return response()->json($menus, 200);
     }
-
 }

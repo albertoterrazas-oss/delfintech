@@ -310,7 +310,7 @@ export default function Motivos() {
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
 
             <div className="flex justify-between items-center p-3 border-b mb-4">
-                <h2 className="text-3xl font-bold text-gray-800">Gestión de Motivos ✨</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Gestión de Motivos </h2>
                 <button
                     onClick={openCreateModal}
                     className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
@@ -320,41 +320,36 @@ export default function Motivos() {
             </div>
 
             {/* Contenido de la tabla de Motivos */}
-            <div className="p-3 bg-white rounded-lg shadow-md min-h-[500px]">
-                <p className="text-gray-500">Listado y gestión de motivos para diferentes procesos (mantenimiento, rechazos, etc.).</p>
-                {motivos && motivos.length > 0 ? (
-                    <Datatable
-                        data={motivos}
-                        columns={[
-                            { header: 'ID', accessor: 'Motivos_motivoID' }, // Opcional, si tienes el ID en la respuesta
-                            { header: 'Nombre', accessor: 'Motivos_nombre' },
-                            { header: 'Tipo', accessor: 'Motivos_tipo' },
-                            { header: 'Descripción', accessor: 'Motivos_descripcion' },
-                            {
-                                header: 'Estatus',
-                                accessor: 'Motivos_estatus',
-                                cell: (eprops) => (
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Motivos_estatus === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {eprops.item.Motivos_estatus}
-                                    </span>
-                                )
-                            },
-                            {
-                                header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                                    <button
-                                        onClick={() => openEditModal(eprops.item)}
-                                        className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
-                                    >
-                                        Editar
-                                    </button>
-                                </>)
-                            },
-                        ]}
-                    />
-                ) : (
-                    <p className="text-gray-400 mt-4">No hay motivos registrados.</p>
-                )}
-            </div>
+
+            <Datatable
+                data={motivos}
+                virtual={true}
+                columns={[
+                    { header: 'ID', accessor: 'Motivos_motivoID' }, // Opcional, si tienes el ID en la respuesta
+                    { header: 'Nombre', accessor: 'Motivos_nombre' },
+                    { header: 'Tipo', accessor: 'Motivos_tipo' },
+                    { header: 'Descripción', accessor: 'Motivos_descripcion' },
+                    {
+                        header: 'Estatus',
+                        accessor: 'Motivos_estatus',
+                        cell: (eprops) => (
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Motivos_estatus === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {eprops.item.Motivos_estatus}
+                            </span>
+                        )
+                    },
+                    {
+                        header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                            <button
+                                onClick={() => openEditModal(eprops.item)}
+                                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                            >
+                                Editar
+                            </button>
+                        </>)
+                    },
+                ]}
+            />
 
             {/* Componente Modal de Headless UI */}
             <MotivoFormDialog

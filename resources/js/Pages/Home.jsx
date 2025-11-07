@@ -42,7 +42,17 @@ const routes = [
         path: "/registrosalida",
         import: lazy(() => import('./Catalogos/RegistroYSalidaUnificado'))
     },
+    {
+        path: "/menus",
+        import: lazy(() => import('./Catalogos/Menus'))
+    },
 
+     {
+        path: "/listaverificacion",
+        import: lazy(() => import('./Catalogos/ListaVerificacion'))
+    },
+
+    
 
 
 ]
@@ -158,7 +168,7 @@ export default function Home({ auth, token }) {
 
     return (
         <div id="page-container">
-            <Head title="Welcome" />
+            <Head title="Delfin tecnologias" />
             {!loggedUser && <Loading />}
             {loggedUser &&
                 <div className={containerClass}>

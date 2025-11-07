@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog,DialogPanel,DialogTitle, Transition } from '@headlessui/react';
 // Importamos Sonner
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
@@ -137,14 +137,14 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
 
                 {/* Contenedor del Modal */}
                 <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <Dialog.Panel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
+                    <DialogPanel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
 
                         {/* Indicador de carga */}
                         {loading && <LoadingDiv />}
 
-                        <Dialog.Title className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
+                        <DialogTitle className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
                             {dialogTitle}
-                        </Dialog.Title>
+                        </DialogTitle>
 
                         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
                             {/* Columna 1 */}
@@ -308,7 +308,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
                                 </button>
                             </div>
                         </form>
-                    </Dialog.Panel>
+                    </DialogPanel>
                 </div>
             </Dialog>
         </Transition>

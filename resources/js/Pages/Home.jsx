@@ -28,7 +28,12 @@ const routes = [
     {
         path: "/motivos",
         import: lazy(() => import('./Catalogos/Motivos'))
-    }
+    },
+    {
+        path: "/destino",
+        import: lazy(() => import('./Catalogos/Destinos'))
+    },
+
 ]
 
 export default function Home({ auth, token }) {
@@ -149,21 +154,21 @@ export default function Home({ auth, token }) {
                         <Header user={auth.user} />
                         <div className="scrollable-content styled-scroll">
                             {/* <div className='relative h-[100%] pb-4 px-3 overflow-auto'> */}
-                                <Routes>
-                                    {
-                                        routes.map((route, index) => (
-                                            <Route key={index} lazy={route.import} path={route.path} element={(
-                                                <Suspense fallback={
-                                                    <div className="h-full">
-                                                        <Loading />
-                                                    </div>
-                                                }>
-                                                    <route.import auth={auth} />
-                                                </Suspense>
-                                            )} />
-                                        ))
-                                    }
-                                </Routes>
+                            <Routes>
+                                {
+                                    routes.map((route, index) => (
+                                        <Route key={index} lazy={route.import} path={route.path} element={(
+                                            <Suspense fallback={
+                                                <div className="h-full">
+                                                    <Loading />
+                                                </div>
+                                            }>
+                                                <route.import auth={auth} />
+                                            </Suspense>
+                                        )} />
+                                    ))
+                                }
+                            </Routes>
                             {/* </div> */}
                         </div>
                     </div>

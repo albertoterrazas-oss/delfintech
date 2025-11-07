@@ -4,14 +4,15 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
-// Importamos la clase base de autenticación de Laravel
 use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Laravel\Sanctum\HasApiTokens;
+
 
 // ¡CORRECCIÓN CRÍTICA! Debe extender Authenticatable para que Auth::login() funcione.
 class User extends Authenticatable
 {
-    // Usamos los traits necesarios
-    use HasFactory, Notifiable; 
+    // Usamos los traits necesarios, incluyendo HasApiTokens
+    use HasApiTokens, HasFactory, Notifiable; 
 
     protected $table = 'dbo.Personas';
     public $timestamps = false;

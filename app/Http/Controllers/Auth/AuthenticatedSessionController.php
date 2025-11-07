@@ -3,27 +3,28 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-// REMOVIDO: use App\Http\Requests\Auth\LoginRequest; 
 use App\Providers\RouteServiceProvider;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Inertia\Response;
-// AGREGADOS: Importar clases necesarias para la lógica manual
+use Inertia\Response as InertiaResponse;
+use Illuminate\Http\JsonResponse; 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Models\Admin\User; 
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Http\RedirectResponse; 
+use Illuminate\Support\Facades\DB; // NUEVO: Para transacciones
+use Illuminate\Support\Facades\Log; // NUEVO: Para registrar errores
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException; // NUEVO: Para lanzar el 409
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Display the login view (Mantener para la vista Inertia).
      */
-    public function create(): Response
+    public function create(): InertiaResponse
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
@@ -32,9 +33,14 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request (LÓGICA MOVIDA AQUÍ).
+     * Handle an incoming authentication request, now returning a Sanctum Token for API usage.
+     * La lógica de transacción se asegura de que el token se genere de forma segura.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse
     {
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
@@ -43,41 +49,73 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // Regresar los errores a la vista de login
             throw new ValidationException($validator);
         }
 
-        // 2. Intentar autenticar manualmente
+        // 2. Intentar encontrar al usuario
         $user = User::where('Personas_usuario', $request->Personas_usuario)->first();
 
         // 3. Verificar si el usuario existe Y si la contraseña coincide con el hash
         if (!$user || !Hash::check($request->Personas_contrasena, $user->Personas_contrasena)) {
-            // Si las credenciales fallan, lanza una excepción de validación
             throw ValidationException::withMessages([
                 'Personas_usuario' => __('Las credenciales proporcionadas no coinciden con nuestros registros.'),
             ]);
         }
 
-        // 4. Si la autenticación es exitosa, iniciar la sesión
-        Auth::login($user);
+        // --- LÓGICA DE AUTENTICACIÓN BASADA EN TOKEN (Sanctum) con Transacción ---
+        $token = null;
 
-        // Omitimos la lógica de RateLimiter (límite de intentos) aquí para simplicidad,
-        // pero es por eso que el Form Request es mejor.
-        
-        $request->session()->regenerate();
+        try {
+            // Inicia la transacción para garantizar la atomicidad (prevención de 409 Conflict)
+            DB::beginTransaction();
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+            // 4. Eliminar tokens existentes para evitar acumulación
+            $user->tokens()->delete();
+
+            // 5. Generar el nuevo token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            // Confirma la transacción
+            DB::commit();
+
+        } catch (\Exception $e) {
+            // Si algo falla, revierte los cambios de la transacción
+            DB::rollBack();
+
+            // Registra el error interno para diagnóstico
+            Log::error('Error al generar token de acceso para el usuario ID: ' . $user->id . ' - ' . $e->getMessage());
+
+            // Lanza una excepción 409 Conflict explícitamente
+            throw new ConflictHttpException('Hubo un conflicto al intentar generar su sesión de acceso. Intente nuevamente.');
+        }
+
+        // 6. Retornar el token y los datos del usuario en una respuesta JSON
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'Personas_usuario' => $user->Personas_usuario,
+            ],
+            'access_token' => $token,
+            'token_type' => 'Bearer', // Añadido para seguir el estándar de API
+            'redirect_to' => RouteServiceProvider::HOME,
+        ], 200);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Destroy an authenticated session (Log out).
+     * Maneja el cierre de sesión de la sesión web o la revocación del token de API.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|JsonResponse
     {
+        // Si el usuario está autenticado mediante la API (usando un token)
+        if ($request->user() && $request->user()->currentAccessToken()) {
+            $request->user()->currentAccessToken()->delete();
+            return response()->json(['message' => 'Token revocado exitosamente.'], 200);
+        }
+
+        // Si es una solicitud tradicional de cierre de sesión web (Inertia/Session)
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

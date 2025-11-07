@@ -1,9 +1,24 @@
-import React, { useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios'; // 👈 Importamos axios para la llamada API directa
 
 // ===========================================
-//  COMPONENTES ESTILIZADOS CON TAILWIND CSS
-//  (Replicando el diseño de la imagen)
+// UTILITY/MOCK FUNCTIONS
+// ===========================================
+
+// Mock de la función route() de Laravel/Ziggy para evitar errores de compilación.
+// En un entorno de producción Laravel/Inertia, esta función es global.
+const route = (name) => {
+    if (name === 'login') return '/login';
+    if (name === 'dashboard') return '/dashboard';
+    return `/${name}`;
+};
+
+// Componente Placeholder para <Head> (Inertia)
+const Head = ({ title }) => <title>{title}</title>;
+
+
+// ===========================================
+// COMPONENTES ESTILIZADOS CON TAILWIND CSS
 // ===========================================
 
 // 1. Componente TextInput con Icono
@@ -25,15 +40,14 @@ const TextInput = ({ icon, type = 'text', name, value, onChange, placeholder, er
         }
         return null;
     };
-    
-    // Auto-foco usando una referencia para mantener la funcionalidad Inertia
+
     const input = React.useRef();
 
     useEffect(() => {
         if (isFocused) {
             input.current.focus();
         }
-    }, []);
+    }, [isFocused]);
 
     return (
         <div className={`relative ${className}`}>
@@ -42,13 +56,12 @@ const TextInput = ({ icon, type = 'text', name, value, onChange, placeholder, er
                 ref={input}
                 type={type}
                 name={name}
-                id={name} 
+                id={name}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full py-3 ps-4 pe-12 border rounded-lg text-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400 ${
-                    error ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full py-3 ps-4 pe-12 border rounded-lg text-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400 ${error ? 'border-red-500' : 'border-gray-300'
+                    }`}
             />
             <div className="absolute inset-y-0 right-0 flex items-center pe-3 pointer-events-none">
                 <IconSVG />
@@ -61,13 +74,12 @@ const TextInput = ({ icon, type = 'text', name, value, onChange, placeholder, er
 const PrimaryButton = ({ children, disabled, className = '', processing, ...props }) => (
     <button
         {...props}
-        className={`w-full flex items-center justify-center px-4 py-3 bg-[#66C0FF] border border-transparent rounded-lg font-semibold text-base uppercase tracking-widest hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-300 transition ease-in-out duration-150 ${
-            disabled && 'opacity-60 cursor-not-allowed'
-        } ${className}`}
+        className={`w-full flex items-center justify-center px-4 py-3 bg-[#66C0FF] border border-transparent rounded-lg font-semibold text-base uppercase tracking-widest hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-300 transition ease-in-out duration-150 ${disabled && 'opacity-60 cursor-not-allowed'
+            } ${className}`}
         disabled={disabled}
     >
         {processing ? (
-            <div className="flex items-center">
+            <div className="flex items-center text-white">
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -75,7 +87,7 @@ const PrimaryButton = ({ children, disabled, className = '', processing, ...prop
                 Procesando...
             </div>
         ) : (
-            <>
+            <span className="flex items-center text-white">
                 {children}
                 <svg
                     className="w-4 h-4 ms-2"
@@ -91,90 +103,149 @@ const PrimaryButton = ({ children, disabled, className = '', processing, ...prop
                         d="M17 8l4 4m0 0l-4 4m4-4H3"
                     ></path>
                 </svg>
-            </>
+            </span>
         )}
     </button>
 );
 
 // 3. Componente InputError
 const InputError = ({ message, className = '' }) => {
-    return message ? (
-        <p className={`text-sm text-red-600 ${className}`}>{message}</p>
+    // El mensaje de error de Laravel 422 viene como un array (ej: ["El campo es requerido."])
+    const displayMessage = Array.isArray(message) ? message[0] : message;
+    return displayMessage ? (
+        <p className={`text-sm text-red-600 ${className}`}>{displayMessage}</p>
     ) : null;
 };
 
 // ===========================================
-//  COMPONENTE PRINCIPAL DE LOGIN (Inertia.js)
+// COMPONENTE PRINCIPAL DE LOGIN (Token Auth)
 // ===========================================
 
-export default function Login({ status, canResetPassword }) {
-    // 1. Mantenemos el useForm de Inertia con los campos de backend
-    const { data, setData, post, processing, errors, reset } = useForm({
-        Personas_usuario: '', // Corresponde al campo del backend
-        Personas_contrasena: '', // Corresponde al campo del backend
-        remember: false,
+// Quitamos 'status' y 'canResetPassword' ya que son props de Inertia y no se usan
+export default function Login() {
+    // 1. Usamos useState en lugar de useForm de Inertia
+    const [data, setData] = useState({
+        Personas_usuario: '',
+        Personas_contrasena: '',
     });
 
+    // Función para manejar el cambio de datos
+    const handleDataChange = (name, value) => {
+        setData(prevData => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
+
+    // Usaremos estados locales para manejar el procesamiento y los errores de la llamada AXIOS
+    const [localErrors, setLocalErrors] = useState({});
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [generalError, setGeneralError] = useState(null);
+
+
     useEffect(() => {
-        // Asegura que la contraseña se borre al salir
+        // Limpiamos la contraseña al desmontar (simulando reset)
         return () => {
-            reset('Personas_contrasena');
+            setData(prevData => ({ ...prevData, Personas_contrasena: '' }));
         };
     }, []);
 
-    // 2. Mantenemos la lógica de envío POST de Inertia
-    const submit = (e) => {
+
+    // 2. Función submit modificada para usar AXIOS
+    const submit = async (e) => {
         e.preventDefault();
-        // Usamos la función post proporcionada por useForm
-        post(route('login'));
+        setIsProcessing(true);
+        setLocalErrors({});
+        setGeneralError(null);
+
+        try {
+            // 🛑 Hacemos la llamada AJAX directa a la API de autenticación
+            const response = await axios.post(route('login'), {
+                Personas_usuario: data.Personas_usuario,
+                Personas_contrasena: data.Personas_contrasena,
+            });
+
+            const { access_token, redirect_to } = response.data;
+
+            // 3. Guardar el token en localStorage
+            if (access_token) {
+                localStorage.setItem('authToken', access_token);
+                // localStorage.setItem('tokenType', 'Bearer');
+            }
+            // 4. Redirigir al usuario (hard redirect)
+            const targetUrl = redirect_to || '/dashboard';
+            window.location.href = targetUrl; // 👈 Línea clave
+
+        } catch (error) {
+            console.error('Login error:', error);
+
+            if (error.response) {
+                const { status, data: responseData } = error.response;
+
+                if (status === 422) {
+                    // Errores de validación de Laravel (credenciales incorrectas)
+                    setLocalErrors(responseData.errors);
+                } else {
+                    // Otros errores del servidor
+                    setGeneralError(`Error ${status}: No se pudo completar la solicitud de inicio de sesión. Mensaje: ${responseData.message || 'Error desconocido'}`);
+                }
+            } else {
+                // Error de red
+                setGeneralError('Error de red. Verifica tu conexión.');
+            }
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
         // Contenedor principal responsive (simulando el layout)
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans">
             <Head title="Iniciar Sesión" />
-            
+
             {/* Contenedor del formulario (Tarjeta central y sombreada) */}
             <div className="w-full max-w-sm bg-white p-8 md:p-10 rounded-xl shadow-2xl transition duration-500">
-                
+
                 {/* Sección de Logo */}
                 <div className="flex justify-center mb-8">
-                    {/* Placeholder para el logo. Ajusta la ruta o el contenido según necesites */}
                     <div className="h-12 w-auto">
-                        {/*  */}
-                         <span className="text-2xl font-bold text-blue-600">Delfin Tech</span>
+                        <span className="text-2xl font-extrabold text-blue-600">Delfin Tech</span>
                     </div>
                 </div>
 
                 {/* Sección de Título */}
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-1">Iniciar sesión</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-1">Iniciar sesión</h2>
                     <p className="text-sm text-gray-500">Accede con tus credenciales corporativas</p>
                 </div>
-                
-                {/* Mensaje de estado (si existe) */}
-                {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
+
+                {/* Mensaje de error general */}
+                {generalError && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                        {generalError}
+                    </div>
+                )}
 
                 <form onSubmit={submit} className="space-y-6">
-                    
+
                     {/* Campo Correo electrónico (Personas_usuario) */}
                     <div>
                         <label htmlFor="Personas_usuario" className="block text-sm font-medium text-gray-700 mb-1">
-                            Correo electrónico
+                            Usuario/Correo electrónico
                         </label>
                         <TextInput
                             id="Personas_usuario"
                             type="text"
                             name="Personas_usuario"
                             value={data.Personas_usuario}
-                            onChange={(e) => setData('Personas_usuario', e.target.value)}
-                            placeholder="nombre@empresa.com"
+                            onChange={(e) => handleDataChange('Personas_usuario', e.target.value)}
+                            placeholder="nombre.usuario"
                             icon="email"
                             autoComplete="username"
                             isFocused={true}
-                            error={errors.Personas_usuario}
+                            error={localErrors.Personas_usuario}
                         />
-                         <InputError message={errors.Personas_usuario} className="mt-2" />
+                        <InputError message={localErrors.Personas_usuario} className="mt-2" />
                     </div>
 
                     {/* Campo Contraseña (Personas_contrasena) */}
@@ -187,41 +258,18 @@ export default function Login({ status, canResetPassword }) {
                             type="password"
                             name="Personas_contrasena"
                             value={data.Personas_contrasena}
-                            onChange={(e) => setData('Personas_contrasena', e.target.value)}
+                            onChange={(e) => handleDataChange('Personas_contrasena', e.target.value)}
                             placeholder="••••••••"
                             icon="lock"
                             autoComplete="current-password"
-                            error={errors.Personas_contrasena}
+                            error={localErrors.Personas_contrasena}
                         />
-                        <InputError message={errors.Personas_contrasena} className="mt-2" />
+                        <InputError message={localErrors.Personas_contrasena} className="mt-2" />
                     </div>
-
-                    {/* Sección de recordatorio y 'Forgot password' (si se requiere, descomentar/añadir) */}
-                    {/* Puedes añadir aquí la lógica si la necesitas, usando <Link> de Inertia si aplica. */}
-                    {/* <div className="flex justify-between items-center text-sm">
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                name="remember"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
-                            />
-                            <span className="ms-2 text-gray-600">Recuérdame</span>
-                        </label>
-                         {canResetPassword && (
-                            <Link
-                                href={route('password.request')}
-                                className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
-                            >
-                                ¿Olvidaste tu contraseña?
-                            </Link>
-                        )}
-                    </div> */}
 
                     {/* Botón de Ingresar */}
                     <div className="mt-6">
-                        <PrimaryButton disabled={processing} processing={processing}>
+                        <PrimaryButton disabled={isProcessing} processing={isProcessing}>
                             Ingresar
                         </PrimaryButton>
                     </div>

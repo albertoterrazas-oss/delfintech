@@ -34,6 +34,17 @@ const routes = [
         import: lazy(() => import('./Catalogos/Destinos'))
     },
 
+    {
+        path: "/reportes",
+        import: lazy(() => import('./Catalogos/Reportes'))
+    },
+    {
+        path: "/registrosalida",
+        import: lazy(() => import('./Catalogos/RegistroYSalidaUnificado'))
+    },
+
+
+
 ]
 
 export default function Home({ auth, token }) {

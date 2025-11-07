@@ -25,10 +25,10 @@ class RolesController extends Controller
 
         $rol = Roles::create($request->only('roles_descripcion'));
 
-        $eventData = (object) [
-            "Accion" => "CREACION",
-            "Descripcion" => "SE CREO UN ROL: " . "ID:" .  $rol->roles_id . ", " . "NOMBRE: " . $rol->roles_descripcion,
-        ];
+        // $eventData = (object) [
+        //     "Accion" => "CREACION",
+        //     "Descripcion" => "SE CREO UN ROL: " . "ID:" .  $rol->roles_id . ", " . "NOMBRE: " . $rol->roles_descripcion,
+        // ];
         return response()->json($rol, 201);
     }
 

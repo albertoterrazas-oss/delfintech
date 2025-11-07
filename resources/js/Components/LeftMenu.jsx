@@ -349,7 +349,7 @@ const LeftMenu = ({ auth }) => {
                             src={LogoutIcon}
                             onClick={(e) => logout()}
                             className="w-[30px] h-[30px] cursor-pointer clickeableItem"
-                        />
+                        /> 
                     </div>
                 </div>
 

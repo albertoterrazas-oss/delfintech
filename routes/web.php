@@ -50,7 +50,7 @@ Route::get('/login', function () {
     return Inertia::render('Auth/Login');
 });
 
-Route::middleware(['auth'])->group(function () {
+// Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Home', [
             'initialPage' => '/dashboard'
@@ -60,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+// });
 
 // Rutas de autenticación y API específicas primero
 // Route::middleware(['auth'])->group(function () {

@@ -29,16 +29,35 @@ const routes = [
         path: "/motivos",
         import: lazy(() => import('./Catalogos/Motivos'))
     },
-    // {
-    //     path: "/destino",
-    //     import: lazy(() => import('./Catalogos/Destinos'))
-    // }
+    {
+        path: "/destino",
+        import: lazy(() => import('./Catalogos/Destinos'))
+    },
+
+    {
+        path: "/reportes",
+        import: lazy(() => import('./Catalogos/Reportes'))
+    },
+    {
+        path: "/registrosalida",
+        import: lazy(() => import('./Catalogos/RegistroYSalidaUnificado'))
+    },
+    {
+        path: "/menus",
+        import: lazy(() => import('./Catalogos/Menus'))
+    },
+
+     {
+        path: "/listaverificacion",
+        import: lazy(() => import('./Catalogos/ListaVerificacion'))
+    },
 ]
 
 export default function Home({ auth, token }) {
     const navigate = useNavigate();
     const location = useLocation();
     const {
+        loggedUser,
         userMenus,
         showMenu,
         searchMenuTerm,
@@ -53,9 +72,10 @@ export default function Home({ auth, token }) {
     const containerClass = showMenu ? "body-container" : "body-container open"
 
     const getUserMenus = async () => {
+        // console.log(auth)
         const response = await fetch(route("user.menus"), {
-            method: "POST",
-            body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
+            method: "GET",
+            // body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
             headers: { "Content-Type": "application/json" }
         });
 
@@ -86,13 +106,13 @@ export default function Home({ auth, token }) {
     };
 
     useEffect(() => {
-        console.log(userMenus)
+        console.log(loggedUser)
         // console.log(token)
         if (!userMenus) {
             getUserMenus();
-            setLoggedUser(auth.user);
+            setLoggedUser(localStorage.getItem('userId'));
         }
-    }, [userMenus, token]);
+    }, [userMenus, localStorage.getItem('authToken')]);
 
     useEffect(() => {
         if (searchMenuTerm !== '' && searchMenuTerm) {
@@ -130,44 +150,44 @@ export default function Home({ auth, token }) {
         localStorage.setItem('lastPath', location.pathname);
     }, [userMenus, location.pathname])
 
-    useEffect(() => {
-        // Verificar si el usuario está autenticado
-        if (!auth.user) {
-            router.visit('/login');
-            return;
-        } else {
+    // useEffect(() => {
+    //     // Verificar si el usuario está autenticado
+    //     if (!loggedUser) {
+    //         router.visit('/login');
+    //         return;
+    //     } else {
 
-        }
-    }, [auth]);
+    //     }
+    // }, [loggedUser]);
 
     // if (!auth.user) return null
 
     return (
         <div id="page-container">
-            <Head title="Welcome" />
-            {!auth.user && <Loading />}
-            {auth.user &&
+            <Head title="Delfin tecnologias" />
+            {!loggedUser && <Loading />}
+            {loggedUser &&
                 <div className={containerClass}>
-                    <LeftMenu auth={auth} />
-                    <div className="content sm:overflow-auto md:overflow-hidden">{/* blue-scroll */}
-                        <Header user={auth.user} />
+                    <LeftMenu auth={loggedUser} />
+                    <div className="content sm:overflow-auto md:overflow-hidden  ">{/* blue-scroll */}
+                        <Header user={loggedUser} />
                         <div className="scrollable-content styled-scroll">
                             {/* <div className='relative h-[100%] pb-4 px-3 overflow-auto'> */}
-                                <Routes>
-                                    {
-                                        routes.map((route, index) => (
-                                            <Route key={index} lazy={route.import} path={route.path} element={(
-                                                <Suspense fallback={
-                                                    <div className="h-full">
-                                                        <Loading />
-                                                    </div>
-                                                }>
-                                                    <route.import auth={auth} />
-                                                </Suspense>
-                                            )} />
-                                        ))
-                                    }
-                                </Routes>
+                            <Routes>
+                                {
+                                    routes.map((route, index) => (
+                                        <Route key={index} lazy={route.import} path={route.path} element={(
+                                            <Suspense fallback={
+                                                <div className="h-full">
+                                                    <Loading />
+                                                </div>
+                                            }>
+                                                <route.import auth={loggedUser} />
+                                            </Suspense>
+                                        )} />
+                                    ))
+                                }
+                            </Routes>
                             {/* </div> */}
                         </div>
                     </div>

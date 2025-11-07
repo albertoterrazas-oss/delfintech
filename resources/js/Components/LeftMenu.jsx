@@ -11,7 +11,7 @@ import useStore from "@/Stores/useStore";
 // import * as Icons from "@mui/icons-material";
 
 const LeftMenu = ({ auth }) => {
-    const { 
+    const {
         userMenus,
         searchMenuTerm,
         selectedMenu,
@@ -253,35 +253,43 @@ const LeftMenu = ({ auth }) => {
                     <div className="user-info">
 
                         <div className="flex items-center gap-4">
-                            <div className="relative w-12 h-12">
-                                {!imageLoaded && (
+                            {/* <div className="relative w-12 h-12">
+                                {/* {!imageLoaded && (
                                     <div className="absolute inset-0 w-12 h-12 rounded-full bg-gray-300 animate-pulse"></div>
-                                )}
-                                <img
+                                )} */}
+                            {/* <img
                                     alt=""
                                     src={user?.imagen ? `data:image/png;base64,${user.imagen}` : "https://via.placeholder.com/150"}
                                     className={`absolute inset-0 w-12 h-12 rounded-full object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"
                                         }`}
                                     onLoad={() => setImageLoaded(true)}
-                                />
-                                <span
+                                /> */}
+                            {/* <span
                                     className={`absolute bottom-0 left-8 w-3.5 h-3.5 border-2 border-white dark:border-white-800 rounded-full 
                                                 ${user?.usuario_estatus === "1" ? "bg-green-400" : "bg-red-400"}`}
-                                ></span>
-                            </div>
+                                ></span> */}
+                            {/* </div>  */}
 
                             <div>
-                                <h3 className="text-[9px] w-24 overflow-hidden text-ellipsis whitespace-nowrap" title={auth.user ? auth.user.usuario_nombre : ""}>
-                                    {auth.user ? auth.user.usuario_nombre : <div className="w-24 h-4 bg-gray-300 animate-pulse" />}
+                                <h3
+                                    className="text-[11px] w-24 overflow-hidden text-ellipsis whitespace-nowrap"
+                                    title="Panel de administracion"
+                                >
+                                    {/* {auth.user
+                                        ? auth.user.usuario_nombre
+                                        : <div className="w-24 h-4 bg-gray-300 animate-pulse" />
+                                    } */}
+                                    Delfin Tecnologias
                                 </h3>
 
                                 <div className="flow-root">
                                     <ul className="-m-1 flex flex-wrap">
                                         <li className="p-1 leading-none">
-                                            <a className="text-[#fcfcfc] text-[14px] truncate">
-                                                {auth.user ? auth.user.usuario_username :
+                                            <a className="text-[#fcfcfc] text-[14px] truncate text-bold">
+                                                {/* {auth.user ? auth.user.usuario_username :
                                                     <div className="w-36 h-4 bg-gray-300 animate-pulse" />
-                                                }
+                                                } */}
+                                                Panel de administracion
                                             </a>
                                         </li>
                                     </ul>
@@ -342,7 +350,7 @@ const LeftMenu = ({ auth }) => {
                             ))}
                     </ul>
                 </div>
-                <div className="footerMenu border-t-2 border-[#d1d1d117]">
+                {/* <div className="footerMenu border-t-2 border-[#d1d1d117]">
                     <div className="flex flex-col justify-between gap-2 items-center logout-button transition-all duration-300 ease-in-out shadow-lg hover:scale-110">
                         <img
                             id="logoutButton"
@@ -351,6 +359,31 @@ const LeftMenu = ({ auth }) => {
                             className="w-[30px] h-[30px] cursor-pointer clickeableItem"
                         />
                     </div>
+                </div> */}
+                <div className="footerMenu border-t-2 border-[#d1d1d117] pt-2">
+                    {/* Contenedor del Botón de Cerrar Sesión */}
+                    <button
+                        id="logoutButton"
+                        onClick={(e) => logout()}
+                        className="
+      w-full flex items-center justify-between p-2 rounded-lg 
+      text-white bg-transparent 
+      hover:bg-blue-100 hover:text-blue-600 
+      transition-all duration-200 ease-in-out
+    "
+                    >
+                        {/* Texto del Botón (primero para que esté a la izquierda) */}
+                        <span className="font-medium text-sm">
+                            Cerrar Sesión
+                        </span>
+
+                        {/* Ícono de Salida (después del texto, y se moverá a la derecha) */}
+                        <img
+                            src={LogoutIcon}
+                            alt="Cerrar Sesión"
+                            className="w-5 h-5" // Eliminamos 'mr-3' ya que ahora está a la derecha
+                        />
+                    </button>
                 </div>
 
             </div>

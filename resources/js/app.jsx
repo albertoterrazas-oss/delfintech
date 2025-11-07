@@ -35,6 +35,29 @@ const appName = import.meta.env.VITE_APP_NAME || 'Delfin';
 //     return children;
 // }
 
+const { fetch: originalFetch } = window;
+window.fetch = async (...args) => {
+    const token = localStorage.getItem('authToken');
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    };
+    let [resource, config] = args;
+
+    const response = await originalFetch(resource, { ...config, headers });
+    if (response.status === 599) {
+        if (!error) {
+            noty('Sesión terminada', 'error');
+            error = true;
+            setTimeout(() => {
+                const logout = document.getElementById('logoutButton')
+                logout.click()
+            }, 2000)
+        }
+    }
+    return response;
+};
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),

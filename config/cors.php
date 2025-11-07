@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*', 'https://192.168.139.46:5173'], /* <-- IP y puerto locales */
+    'allowed_origins' => ['*'], /* <-- IP y puerto locales */
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +29,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,  // Si no usas cookies o credenciales, déjalo como false
 
 ];

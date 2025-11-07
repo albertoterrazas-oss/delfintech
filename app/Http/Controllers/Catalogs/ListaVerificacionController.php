@@ -1,0 +1,135 @@
+<?php
+
+namespace App\Http\Controllers\Catalogs;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Catalogos\ListaVerificacion; // Asegúrate de importar el modelo
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException; // Se recomienda usar la excepción específica
+
+class ListaVerificacionController extends Controller
+{
+    // Definición de reglas de validación comunes
+    // ¡IMPORTANTE! Las claves deben coincidir con las columnas del modelo ($fillable)
+    private $validationRules = [
+        'ListaVerificacion_nombre'       => 'required|string|max:255',
+        'ListaVerificacion_tipo'         => 'required|string|max:100',
+        'ListaVerificacion_observaciones' => 'required|string', // Cambiado a 'string'
+        'ListaVerificacion_usuarioID'    => 'required|integer', // Asumiendo que es un ID de usuario entero
+    ];
+
+    /**
+     * Display a listing of the resource.
+     * Muestra una lista de todos los recursos de CatalogosListaVerificacion.
+     */
+    public function index(): JsonResponse
+    {
+        try {
+            $listas = ListaVerificacion::all();
+            return response()->json($listas);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al obtener las listas de verificación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     * Almacena un recurso de CatalogosListaVerificacion recién creado en la base de datos.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        try {
+            // 1. Validar los datos de entrada
+            // El método validate() de Laravel lanza una ValidationException en caso de fallo,
+            // que es manejada automáticamente por Laravel para devolver una respuesta 422 JSON
+            $validatedData = $request->validate($this->validationRules);
+
+            // 2. Crear el nuevo registro (Mass Assignment seguro debido a $fillable)
+            $lista = ListaVerificacion::create($validatedData);
+
+            // 3. Devolver el recurso creado
+            return response()->json($lista, 201);
+        } catch (ValidationException $e) {
+            // Laravel maneja esto automáticamente, pero lo dejamos por si se quiere un manejo específico
+            return response()->json(['message' => 'Los datos proporcionados no son válidos.', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al crear la lista de verificación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     * Muestra el recurso de CatalogosListaVerificacion especificado por su ID.
+     */
+    public function show(string $id): JsonResponse
+    {
+        try {
+            // Buscar el recurso por la clave primaria definida en el modelo
+            $lista = ListaVerificacion::findOrFail($id);
+            return response()->json($lista);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Lista de verificación no encontrada.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al obtener la lista de verificación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     * Actualiza el recurso de CatalogosListaVerificacion especificado en la base de datos.
+     */
+    public function update(Request $request, string $id): JsonResponse
+    {
+        try {
+            // 1. Validar los datos de entrada
+            $validatedData = $request->validate($this->validationRules);
+
+            // 2. Encontrar el recurso
+            $lista = ListaVerificacion::findOrFail($id);
+
+            // 3. Actualizar el registro
+            $lista->update($validatedData);
+
+            // 4. Devolver el recurso actualizado
+            return response()->json($lista);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Los datos proporcionados no son válidos.', 'errors' => $e->errors()], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Lista de verificación no encontrada para actualizar.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al actualizar la lista de verificación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * Elimina el recurso de CatalogosListaVerificacion especificado de la base de datos.
+     */
+    public function destroy(string $id): JsonResponse
+    {
+        try {
+            // 1. Encontrar y eliminar el recurso
+            $lista = ListaVerificacion::findOrFail($id);
+            $lista->delete();
+
+            // 2. Devolver una respuesta de éxito sin contenido
+            return response()->json(null, 204);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Lista de verificación no encontrada para eliminar.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar la lista de verificación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Métodos `create` y `edit` no implementados para API (se dejan sin cambios o se pueden eliminar)
+    public function create()
+    {
+        return response()->json(['message' => 'Ruta no implementada para APIs (solo para formularios web)'], 404);
+    }
+
+    public function edit(string $id)
+    {
+        return response()->json(['message' => 'Ruta no implementada para APIs (solo para formularios web)'], 404);
+    }
+}

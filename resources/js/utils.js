@@ -44,6 +44,7 @@ const requestBody = (method, body) => {
         method,
         headers: {
             'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
             // Agrega headers adicionales aquí si son necesarios
         },
     };

@@ -51,6 +51,7 @@ export default function Home({ auth, token }) {
     const navigate = useNavigate();
     const location = useLocation();
     const {
+        loggedUser,
         userMenus,
         showMenu,
         searchMenuTerm,
@@ -65,9 +66,10 @@ export default function Home({ auth, token }) {
     const containerClass = showMenu ? "body-container" : "body-container open"
 
     const getUserMenus = async () => {
+        // console.log(auth)
         const response = await fetch(route("user.menus"), {
-            method: "POST",
-            body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
+            method: "GET",
+            // body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
             headers: { "Content-Type": "application/json" }
         });
 
@@ -98,13 +100,13 @@ export default function Home({ auth, token }) {
     };
 
     useEffect(() => {
-        console.log(userMenus)
+        console.log(loggedUser)
         // console.log(token)
         if (!userMenus) {
             getUserMenus();
-            setLoggedUser(auth.user);
+            setLoggedUser(localStorage.getItem('userId'));
         }
-    }, [userMenus, token]);
+    }, [userMenus, localStorage.getItem('authToken')]);
 
     useEffect(() => {
         if (searchMenuTerm !== '' && searchMenuTerm) {
@@ -144,25 +146,25 @@ export default function Home({ auth, token }) {
 
     useEffect(() => {
         // Verificar si el usuario está autenticado
-        if (!auth.user) {
+        if (!loggedUser) {
             router.visit('/login');
             return;
         } else {
 
         }
-    }, [auth]);
+    }, [loggedUser]);
 
     // if (!auth.user) return null
 
     return (
         <div id="page-container">
             <Head title="Welcome" />
-            {!auth.user && <Loading />}
-            {auth.user &&
+            {!loggedUser && <Loading />}
+            {loggedUser &&
                 <div className={containerClass}>
-                    <LeftMenu auth={auth} />
+                    <LeftMenu auth={loggedUser} />
                     <div className="content sm:overflow-auto md:overflow-hidden  ">{/* blue-scroll */}
-                        <Header user={auth.user} />
+                        <Header user={loggedUser} />
                         <div className="scrollable-content styled-scroll">
                             {/* <div className='relative h-[100%] pb-4 px-3 overflow-auto'> */}
                             <Routes>
@@ -174,7 +176,7 @@ export default function Home({ auth, token }) {
                                                     <Loading />
                                                 </div>
                                             }>
-                                                <route.import auth={auth} />
+                                                <route.import auth={loggedUser} />
                                             </Suspense>
                                         )} />
                                     ))

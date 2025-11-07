@@ -165,11 +165,14 @@ export default function Login() {
                 Personas_contrasena: data.Personas_contrasena,
             });
 
-            const { access_token, redirect_to } = response.data;
+            const { access_token, redirect_to, id, Personas_usuario } = response.data;
+            // console.log(user)
 
             // 3. Guardar el token en localStorage
             if (access_token) {
                 localStorage.setItem('authToken', access_token);
+                localStorage.setItem('userId', id);
+                localStorage.setItem('persona', Personas_usuario);
                 // localStorage.setItem('tokenType', 'Bearer');
             }
             // 4. Redirigir al usuario (hard redirect)

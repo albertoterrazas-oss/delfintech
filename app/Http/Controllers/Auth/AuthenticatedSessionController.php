@@ -91,10 +91,10 @@ class AuthenticatedSessionController extends Controller
 
         // 6. Retornar el token y los datos del usuario en una respuesta JSON
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'Personas_usuario' => $user->Personas_usuario,
-            ],
+            'id' => $user->Personas_usuarioID,
+            'Personas_usuario' => $user->Personas_usuario,
+            // 'user' => [
+            // ],
             'access_token' => $token,
             'token_type' => 'Bearer', // Añadido para seguir el estándar de API
             'redirect_to' => RouteServiceProvider::HOME,

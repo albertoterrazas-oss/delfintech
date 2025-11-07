@@ -75,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::post('user/menus', [UserController::class, 'menus'])->name('user.menus');
+Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
 Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
 Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');

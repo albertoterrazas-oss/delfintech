@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
-import { Dialog,DialogPanel,DialogTitle, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
 // Importamos Sonner
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 
 import request from "@/utils";
+
+import PermissionTreeTable from "./PermissionTreeTable";
+
+PermissionTreeTable
 // Supongo que `route` y `validateInputs` existen en tu entorno.
 
 // DUMMY FUNCTIONS (Reemplazar con tus implementaciones reales)
 const route = (name, params = {}) => {
     const routeMap = {
         "users.index": "/api/users",
+        "menus-tree": "/api/menus-tree",
         "users.store": "/api/users",
         "users.update": `/api/users/${params}`,
     };
@@ -322,6 +327,9 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
 export default function Usuarios() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [users, setUsers] = useState([]);
+
+    const [menus, setMenus] = useState([]);
+
     const [action, setAction] = useState('create'); // 'create' o 'edit'
     const [personData, setPersonData] = useState(initialPersonData); // Datos para editar/crear
     const [errors, setErrors] = useState({}); // Errores de validación
@@ -402,8 +410,21 @@ export default function Usuarios() {
         }
     }
 
+
+    const getMenus = async () => {
+        try {
+            // Simulación: Si request no está definido para GET, usamos fetch
+            const data = await fetch(route("menus-tree")).then(res => res.json());
+
+            setMenus(data);
+        } catch (error) {
+            console.error('Error al obtener los usuarios:', error);
+        }
+    }
+
     useEffect(() => {
-        getUsers()
+        getUsers();
+        getMenus();
     }, [])
 
     return (
@@ -453,6 +474,8 @@ export default function Usuarios() {
                 errors={errors} // Pasamos los errores
                 setErrors={setErrors} // Pasamos el setter de errores
             />
+
+             <PermissionTreeTable initialData={menus} />;
 
         </div>
     );

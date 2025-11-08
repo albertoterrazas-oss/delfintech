@@ -340,23 +340,23 @@ export default function ListaVerificacion() {
                 virtual={true}
                 columns={[
                     // Accesor ajustado a los nombres de campos del modelo
-                    { header: 'ID', accessor: 'ListaVerificacion_listaID' },
+                    // { header: 'ID', accessor: 'ListaVerificacion_listaID' },
                     { header: 'Nombre', accessor: 'ListaVerificacion_nombre' },
                     { header: 'Tipo', accessor: 'ListaVerificacion_tipo' },
                     { header: 'Observaciones', accessor: 'ListaVerificacion_observaciones' },
-                    {
-                        header: 'Fecha Creación',
-                        accessor: 'ListaVerificacion_fechaCreacion',
-                        cell: (eprops) => {
-                            // Usamos el nombre de campo corregido para la fecha
-                            const dateValue = eprops.item.ListaVerificacion_fechaCreacion;
-                            if (!dateValue) return 'N/A';
-                            // Asumiendo que el campo viene en un formato que Date puede leer
-                            const date = new Date(dateValue);
-                            return date.toLocaleDateString('es-ES');
-                        }
-                    },
-                    { header: 'Usuario ID', accessor: 'ListaVerificacion_usuarioID' },
+                    // {
+                    //     header: 'Fecha Creación',
+                    //     accessor: 'ListaVerificacion_fechaCreacion',
+                    //     cell: (eprops) => {
+                    //         // Usamos el nombre de campo corregido para la fecha
+                    //         const dateValue = eprops.item.ListaVerificacion_fechaCreacion;
+                    //         if (!dateValue) return 'N/A';
+                    //         // Asumiendo que el campo viene en un formato que Date puede leer
+                    //         const date = new Date(dateValue);
+                    //         return date.toLocaleDateString('es-ES');
+                    //     }
+                    // },
+                    { header: 'Usuario', accessor: 'usuario.Personas_nombres' },
                     {
                         header: "Acciones", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
                             <button

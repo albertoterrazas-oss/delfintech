@@ -330,12 +330,7 @@ export default function Destinos() {
                                 >
                                     Editar
                                 </button>
-                                <button
-                                    onClick={() => deleteDestination(eprops.item)}
-                                    className="px-3 py-1 text-sm font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200"
-                                >
-                                    Eliminar
-                                </button>
+                              
                             </div>)
                         },
                     ]}

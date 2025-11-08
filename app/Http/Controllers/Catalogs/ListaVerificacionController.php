@@ -26,7 +26,7 @@ class ListaVerificacionController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $listas = ListaVerificacion::all();
+            $listas = ListaVerificacion::with('usuario')->get();
             return response()->json($listas);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al obtener las listas de verificación.', 'error' => $e->getMessage()], 500);

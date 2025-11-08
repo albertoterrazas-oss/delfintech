@@ -47,12 +47,20 @@ const routes = [
         import: lazy(() => import('./Catalogos/Menus'))
     },
 
-     {
+    {
         path: "/listaverificacion",
         import: lazy(() => import('./Catalogos/ListaVerificacion'))
     },
 
-    
+    {
+        path: "/puestos",
+        import: lazy(() => import('./Catalogos/Puestos'))
+    },
+    {
+        path: "/departamentos",
+        import: lazy(() => import('./Catalogos/Departamentos'))
+    },
+
 
 
 ]

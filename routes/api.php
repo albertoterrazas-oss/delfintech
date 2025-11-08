@@ -4,11 +4,15 @@
 
 use App\Http\Controllers\Auth\Admin\RolesController;
 use App\Http\Controllers\Auth\Admin\UserController;
+use App\Http\Controllers\Catalogs\DepartamentoController;
 use App\Http\Controllers\Catalogs\DestinosController;
 use App\Http\Controllers\Catalogs\ListaVerificacionController;
 use App\Http\Controllers\Catalogs\MenuController;
 use App\Http\Controllers\Catalogs\MotivosController;
+use App\Http\Controllers\Catalogs\PuestosController;
 use App\Http\Controllers\Catalogs\UnidadesController;
+use App\Models\Catalogos\Departamento;
+use App\Models\Catalogos\Puestos;
 use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +91,23 @@ Route::middleware('auth:sanctum')->group(function () {
         'update'  // Registra el método update (PUT/PATCH)
         // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
+
+    Route::resource('departamentos', DepartamentoController::class)->only([
+        'index',  // Registra el método index (GET)
+        'store',  // Registra el método store (POST)
+        'update'  // Registra el método update (PUT/PATCH)
+        // No incluyas 'show', 'destroy', 'create', 'edit'
+    ]);
+
+
+    Route::resource('puestos', PuestosController::class)->only([
+        'index',  // Registra el método index (GET)
+        'store',  // Registra el método store (POST)
+        'update'  // Registra el método update (PUT/PATCH)
+        // No incluyas 'show', 'destroy', 'create', 'edit'
+    ]);
+
+    Route::get('menus-tree', [MenuController::class, 'getTree'])->name('menus-tree');
 
 
 

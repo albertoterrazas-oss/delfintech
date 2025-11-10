@@ -2,8 +2,10 @@
 
 namespace App\Models\Catalogos;
 
+use App\Models\Admin\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChoferUnidadAsignar extends Model
 {
@@ -28,4 +30,29 @@ class ChoferUnidadAsignar extends Model
         'CUA_fechaAsignacion',
         'CUA_estatus',
     ];
+
+    public function chofer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'CUA_choferID', 'Personas_usuarioID');
+    }
+
+    public function ayudante(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'CUA_ayudanteID', 'Personas_usuarioID');
+    }
+
+    public function unidad(): BelongsTo
+    {
+        return $this->belongsTo(Unidades::class, 'CUA_unidadID', 'Unidades_unidadID');
+    }
+
+    public function motivo(): BelongsTo
+    {
+        return $this->belongsTo(Motivos::class, 'CUA_motivoID', 'Motivos_motivoID');
+    }
+
+    public function destino(): BelongsTo
+    {
+        return $this->belongsTo(Destinos::class, 'CUA_destino', 'Destinos_Id');
+    }
 }

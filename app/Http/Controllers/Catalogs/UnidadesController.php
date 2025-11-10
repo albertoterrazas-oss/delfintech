@@ -229,14 +229,12 @@ class UnidadesController extends Controller
         return response()->json(['message' => 'Unidad eliminada exitosamente'], 200);
     }
 
-    // Los métodos 'create' y 'edit' se dejan vacíos ya que son típicamente para interfaces web (no API REST).
-    public function create()
-    {
-        //
-    }
 
-    public function edit(string $id)
+
+    public function DashboardUnidad(Request $request)
     {
         //
+
+        $ultimas5Unidades = Unidades::latest()->limit(5)->get();
     }
 }

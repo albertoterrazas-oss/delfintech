@@ -18,7 +18,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        // Usamos el operador de concatenación '+' en SQL Server.
+        // Es crucial usar comillas simples (') para los espacios.
+        $users = User::selectRaw("
+        *,
+        (Personas_nombres + ' ' + Personas_apPaterno + ' ' + Personas_apMaterno) AS nombre_completo
+    ")->get();
+
         return response()->json($users);
     }
 

@@ -72,6 +72,9 @@ class User extends Authenticatable
         return $this->getKey();
     }
 
+
+    
+
     public function menus()
     {
         return $this->belongsToMany(Menu::class, 'usuarioxmenu', 'usuarioxmenu_idusuario', 'usuarioxmenu_idmenu')

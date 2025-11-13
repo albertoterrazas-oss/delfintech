@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
 import { toast } from 'sonner';
 // Asumiendo que Datatable y LoadingDiv existen en tu entorno de componentes
-import Datatable from "@/Components/Datatable"; 
-import LoadingDiv from "@/Components/LoadingDiv"; 
+import Datatable from "@/Components/Datatable";
+import LoadingDiv from "@/Components/LoadingDiv";
 
 // --- DUMMY FUNCTIONS (Ajustar a tu backend) ---
 // Función para simular las rutas de la API
 const route = (name, params = {}) => {
-    const id = params.Destinos_Id; 
+    const id = params.Destinos_Id;
     const routeMap = {
         "destinos.index": "/api/destinos",
         "destinos.store": "/api/destinos",
@@ -117,14 +117,14 @@ function DestinationFormDialog({ isOpen, closeModal, onSubmit, destinationToEdit
                         </DialogTitle>
 
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-                            
+
                             {/* Input Nombre */}
                             <label className="block">
                                 <span className="text-sm font-medium text-gray-700">Nombre del Destino: <span className="text-red-500">*</span></span>
                                 <input
                                     type="text"
                                     name="Destinos_Nombre"
-                                    value={destinationData.Destinos_Nombre || ''} 
+                                    value={destinationData.Destinos_Nombre || ''}
                                     onChange={handleChange}
                                     className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Destinos_Nombre ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                                 />
@@ -208,7 +208,7 @@ export default function Destinos() {
 
     const openEditModal = (destination) => {
         setAction('edit');
-        setDestinationData(destination); 
+        setDestinationData(destination);
         setErrors({});
         setIsDialogOpen(true);
     };
@@ -246,7 +246,7 @@ export default function Destinos() {
                 Destinos_Longitud: data.Destinos_Longitud,
                 // Puedes añadir otros campos fillable aquí si los editas (e.g., Estatus)
             };
-            
+
             await request(ruta, method, payload);
             await getDestinations();
             toast.success(successMessage);
@@ -256,37 +256,17 @@ export default function Destinos() {
             throw error;
         }
     };
-    
-    // Función para eliminar un destino (¡Nueva funcionalidad!)
-    const deleteDestination = async (destino) => {
-        // En un entorno real, usarías un modal de confirmación en lugar de window.confirm()
-        const confirmed = window.confirm(`¿Estás seguro de que deseas eliminar el destino: ${destino.Destinos_Nombre}?`);
-        
-        if (confirmed) {
-            try {
-                const ruta = route("destinos.destroy", { Destinos_Id: destino.Destinos_Id });
-                await request(ruta, "DELETE");
-                await getDestinations();
-                toast.success(`Destino ${destino.Destinos_Nombre} eliminado con éxito.`);
-            } catch (error) {
-                console.error("Error al eliminar el destino:", error);
-                toast.error("Hubo un error al eliminar el destino.");
-            }
-        }
-    };
+
+
 
     const getDestinations = async () => {
         setIsLoading(true);
         try {
             const response = await fetch(route("destinos.index"));
             const result = await response.json();
-            
-            if (result && Array.isArray(result.data)) {
-                setDestinations(result.data);
-            } else {
-                console.warn("La respuesta de la API no contiene la propiedad 'data' como un array:", result);
-                setDestinations([]);
-            }
+
+            setDestinations(result);
+
         } catch (error) {
             console.error('Error al obtener los destinos:', error);
             toast.error("No se pudieron cargar los destinos.");
@@ -330,7 +310,7 @@ export default function Destinos() {
                                 >
                                     Editar
                                 </button>
-                              
+
                             </div>)
                         },
                     ]}

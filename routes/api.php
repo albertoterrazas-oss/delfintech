@@ -10,6 +10,7 @@ use App\Http\Controllers\Catalogs\ListaVerificacionController;
 use App\Http\Controllers\Catalogs\MenuController;
 use App\Http\Controllers\Catalogs\MotivosController;
 use App\Http\Controllers\Catalogs\PuestosController;
+use App\Http\Controllers\Catalogs\RegistroEntradaController;
 use App\Http\Controllers\Catalogs\UnidadesController;
 use App\Models\Catalogos\Departamento;
 use App\Models\Catalogos\Puestos;
@@ -118,6 +119,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
+    Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
+
+    
+
+    Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
+    Route::post('/changesswho', [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
+
+    
+
+    // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
+    // Ejemplo en routes/api.php
+    Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 });
 
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');

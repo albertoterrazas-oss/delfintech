@@ -325,7 +325,7 @@ export default function Motivos() {
                 data={motivos}
                 virtual={true}
                 columns={[
-                    { header: 'ID', accessor: 'Motivos_motivoID' }, // Opcional, si tienes el ID en la respuesta
+                    // { header: 'ID', accessor: 'Motivos_motivoID' }, // Opcional, si tienes el ID en la respuesta
                     { header: 'Nombre', accessor: 'Motivos_nombre' },
                     { header: 'Tipo', accessor: 'Motivos_tipo' },
                     { header: 'Descripción', accessor: 'Motivos_descripcion' },

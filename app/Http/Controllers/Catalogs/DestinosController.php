@@ -16,10 +16,9 @@ class DestinosController extends Controller
             $destinos = Destinos::all();
 
             // Devolver respuesta JSON
-            return response()->json([
-                'message' => 'Lista de destinos obtenida con éxito',
-                'data' => $destinos
-            ], 200);
+            return response()->json(
+              $destinos
+            , 200);
         } catch (\Exception $e) {
             // Log::error("Error al obtener la lista de destinos: " . $e->getMessage());
             return response()->json([

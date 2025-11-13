@@ -60,6 +60,10 @@ const routes = [
         path: "/departamentos",
         import: lazy(() => import('./Catalogos/Departamentos'))
     },
+    {
+        path: "/QuienConQuienTransporte",
+        import: lazy(() => import('./Catalogos/QuienConQuienTransporte'))
+    },
 
 
 

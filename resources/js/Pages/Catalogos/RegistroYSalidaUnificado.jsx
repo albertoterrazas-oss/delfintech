@@ -1,11 +1,83 @@
-import React, { useState } from 'react';
-
-// --- Componente Único: RegistroYSalidaUnificado ---
+import React, { useState, useEffect } from 'react';
+import Datatable from "@/Components/Datatable";
 
 const RegistroYSalidaUnificado = () => {
-    
-    // --- LÓGICA DE ESTADO (Manejada internamente) ---
-    
+
+    const [requests, setRequests] = useState({
+        Motivos: [],
+        Unidades: [],
+        Choferes: [],
+        Ayudantes: [],
+        Destinos: [],
+        ListasVerificacion: [],
+        UltimosMovimientos: [],
+    });
+
+
+    const [informacion, setInformacion] = useState({
+        NombreUnidad: '',
+        UltimoKilometraje: '',
+        NombreAyudante: '',
+        NombreOperador: '',
+        Estado: '',
+
+    });
+
+
+
+    // Función auxiliar para obtener datos de una ruta
+    const fetchData = async (routeName) => {
+        const response = await fetch(route(routeName));
+        if (!response.ok) {
+            throw new Error(`Fallo al cargar ${routeName}: ${response.statusText}`);
+        }
+        return response.json();
+    };
+
+    const loadAllData = async () => {
+        try {
+            // 1. Ejecutar todas las llamadas API en paralelo con Promise.all
+            const [
+                MotivosData,
+                UnidadesData,
+                ChoferesData,
+                AyudantesData,
+                DestinosData,
+                ListasData,
+            ] = await Promise.all([
+                fetchData("motivos.index"),
+                fetchData("unidades.index"),
+                fetchData("users.index"), // Rutas asumidas
+                fetchData("users.index"), // Rutas asumidas
+                fetchData("destinos.index"),
+                fetchData("listaverificacion.index"),
+            ]);
+
+            // **2. Una única llamada a setRequests con todos los datos**
+            setRequests(prevRequests => ({
+                ...prevRequests,
+                Motivos: MotivosData,
+                Unidades: UnidadesData,
+                Choferes: ChoferesData,
+                Ayudantes: AyudantesData,
+                Destinos: DestinosData,
+                ListasVerificacion: ListasData,
+
+            }));
+
+        } catch (error) {
+            console.error('Error al cargar datos:', error);
+            // Opcional: toast.error('No se pudieron cargar algunos datos iniciales.');
+        }
+    }
+
+    useEffect(() => {
+        loadAllData();
+    }, []);
+
+
+
+
     const initialFormState = {
         movementType: 'ENTRADA',
         unit: '',
@@ -13,48 +85,102 @@ const RegistroYSalidaUnificado = () => {
         destination: '',
         kilometers: 0,
         motive: '',
-        observations: '',
-        checklist: {
-            tires: null, 
-            lights: null,
-            brakes: null, // Crítico
-            mirrors: null,
-        },
+        observation: '',
+        combustible: '',
+        checklist: [],
         authorizationCode: '',
     };
-    
-    const [form, setForm] = useState(initialFormState);
-    const [isCriticalAlertActive, setIsCriticalAlertActive] = useState(false);
 
-    // Función para manejar cualquier cambio en el input (texto/número)
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const [form, setForm] = useState(initialFormState);
+
+    // const [isCriticalAlertActive, setIsCriticalAlertActive] = useState(false);
+
+
+    useEffect(() => { if (form.unit) { fetchUltimosMovimientos(form.unit); } }, [form.unit]);
+
+
+
+
+
+    const fetchUltimosMovimientos = async (e) => {
+        try {
+            const response = await fetch(route('ultimos-movimientos-unidad'), {
+                method: 'POST',
+                body: JSON.stringify({ unidadID: form.unit }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            setRequests(prevRequests => ({
+                ...prevRequests,
+                UltimosMovimientos: data,
+            }));
+        } catch (err) {
+            console.error('Error al obtener movimientos:', err);
+        }
     };
 
-    // Función para manejar los toggles de Si/No (Checklist)
-    const handleChecklistToggle = (name, value) => {
-        setForm(prev => {
-            const newChecklist = {
-                ...prev.checklist,
-                [name]: value
-            };
 
-            // Lógica de alerta crítica: si los frenos están en 'No'
-            if (name === 'brakes') {
-                setIsCriticalAlertActive(value === 'No');
+    const CrearAsignacion = async () => {
+        try {
+            const response = await fetch(route('asignaciones.store'), {
+                method: 'POST',
+                body: JSON.stringify(form),
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
             }
-            
+
+            const data = await response.json();
+
+            fetchUltimosMovimientos();
+            // }));
+        } catch (err) {
+            console.error('Error al obtener movimientos:', err);
+        }
+    };
+
+    const handleChecklistToggle = (listId, statusValue) => {
+        // listId: El ID de la lista (ej: '1', '2', etc., pasado por el 'name' del ConditionToggle)
+        // statusValue: 'Si' o 'No'
+
+        setForm(prevForm => {
+            const currentChecklist = prevForm.checklist;
+
+            // 1. Busca si el elemento ya existe en el array
+            const existingIndex = currentChecklist.findIndex(item => item.id === listId);
+
+            let newChecklist;
+
+            if (existingIndex > -1) {
+                // 2. Si existe, actualiza su propiedad 'observacion'
+                newChecklist = currentChecklist.map((item, index) =>
+                    index === existingIndex
+                        ? { ...item, observacion: statusValue } // Actualiza inmutablemente
+                        : item
+                );
+            } else {
+                // 3. Si no existe, agrega el nuevo objeto al final
+                const newItem = {
+                    id: listId,
+                    observacion: statusValue
+                };
+                newChecklist = [...currentChecklist, newItem];
+            }
+
             return {
-                ...prev,
-                checklist: newChecklist
+                ...prevForm,
+                checklist: newChecklist,
             };
         });
     };
-
     // Función para cambiar el tipo de movimiento
     const setMovementType = (type) => {
         setForm(prev => ({
@@ -62,78 +188,93 @@ const RegistroYSalidaUnificado = () => {
             movementType: type
         }));
     };
-    
-    // Función de registro (simulada)
-    const registerMovement = () => {
-        if (!form.destination) {
-            alert('🚨 El Destino es un campo requerido.');
-            return;
-        }
-        if (isCriticalAlertActive && !form.authorizationCode) {
-            alert('🛑 Se requiere un código de autorización debido a la alerta crítica.');
-            return;
-        }
-        
-        console.log("Movimiento a registrar:", form);
-        alert("Movimiento registrado (simulado).");
-        // Aquí iría la llamada a la API
-        // setForm(initialFormState); // Descomentar para resetear
-    };
-    
-    // Función de solicitud de autorización (simulada)
-    const solicitAuthorization = () => {
-        alert('Enviando solicitud de código al supervisor...');
-    };
 
-    // Datos simulados para la tabla de Últimos movimientos (READ ONLY)
-    const latestMovements = [
-        { date: '02/10/2025', time: '10:02', unit: 'ECO-310', driver: 'Carlos Díaz', type: 'Salida' },
-        { date: '02/10/2025', time: '09:10', unit: 'ECO-245', driver: 'María López', type: 'Entrada' },
-        { date: '02/10/2025', time: '08:21', unit: 'ECO-102', driver: 'Juan Pérez', type: 'Salida' },
-    ];
 
-    // --- SUB-COMPONENTES DE PRESENTACIÓN (Definidos aquí para estar en el mismo archivo) ---
-    
     const ToggleButton = ({ label, isActive, onClick }) => (
         <button
             onClick={onClick}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                isActive
-                    ? 'bg-[#3b82f6] text-white shadow-lg' // bg-blue-500
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${isActive
+                ? 'bg-[#3b82f6] text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
         >
             {label}
         </button>
     );
 
-    const FormInput = ({ label, name, value, onChange, placeholder, isRequired = false, type = 'text', rows = 1 }) => (
-        <div className={`flex flex-col gap-1 ${name === 'authorizationCode' ? '' : 'h-full'}`}>
+    useEffect(() => {
+        // You can uncomment this if you need to fetch data when the form changes
+        // fetchUltimosMovimientos(form.unit);
+
+        const Unidad = requests.Unidades.find(u => u.Unidades_unidadID === Number(form.unit));
+        const Chofer = requests.Choferes.find(C => C.Personas_usuarioID === Number(form.driver));
+
+        console.log('Unidad encontrada:', Unidad);
+        console.log('Chofer encontrado:', Chofer);
+
+        // Variables para almacenar la información, con valores predeterminados seguros
+        let nombreUnidad = '';
+        let nombreOperador = '';
+
+        // 1. Verificar si la Unidad fue encontrada
+        if (Unidad) {
+            nombreUnidad = Unidad.Unidades_numeroEconomico;
+        }
+
+        // 2. Verificar si el Chofer fue encontrado
+        if (Chofer) {
+            // Usar la propiedad del objeto Chofer encontrado
+            nombreOperador = Chofer.nombre_completo || '';
+        }
+
+        // 3. Establecer el estado con la información recopilada
+        setInformacion({
+            NombreUnidad: nombreUnidad,
+            UltimoKilometraje: '', // Placeholder
+            NombreAyudante: '',    // Placeholder
+            NombreOperador: nombreOperador,
+            Estado: '',            // Placeholder
+        });
+
+        // NOTE: The dependencies [form.driver, form.kilometers] are not currently
+        // being used inside the effect. Consider removing them unless 
+        // you plan to use them (e.g., in a fetch function).
+    }, [form.unit, form.driver]);
+
+
+    const SelectInput = ({
+        label,
+        name,
+        value,
+        onChange,
+        options,
+        isRequired = false,
+        placeholder = "Seleccionar...",
+        valueKey = "value", // Valor por defecto
+        labelKey = "label"  // Valor por defecto
+    }) => (
+        <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-600">
                 {label} {isRequired && <span className="text-red-500">*</span>}
             </label>
-            {rows > 1 ? (
-                <textarea
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    rows={rows}
-                    className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 flex-grow"
-                ></textarea>
-            ) : (
-                <input
-                    type={type}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-            )}
+            <select
+                name={name}
+                value={value}
+                onChange={onChange}
+                required={isRequired}
+                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white appearance-none"
+            >
+                <option value="" disabled hidden>{placeholder}</option>
+
+                {options.map((option, index) => (
+                    <option key={option[valueKey] || index} value={option[valueKey]}>
+                        {option[labelKey]}
+                    </option>
+                ))}
+            </select>
         </div>
     );
-    
+
     const ConditionToggle = ({ label, name, currentValue, onToggle, isCritical = false }) => (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
             <span className="text-sm font-medium text-gray-700">
@@ -143,89 +284,43 @@ const RegistroYSalidaUnificado = () => {
             <div className="flex gap-2">
                 <button
                     onClick={() => onToggle(name, 'No')}
-                    className={`px-4 py-1 text-sm font-semibold rounded-lg transition-colors duration-200 ${
-                        currentValue === 'No'
-                            ? 'bg-red-500 text-white shadow-md'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-4 py-1 text-sm font-semibold rounded-lg transition-colors duration-200 ${currentValue === 'No'
+                        ? 'bg-red-500 text-white shadow-md'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
                 >
                     No
                 </button>
                 <button
                     onClick={() => onToggle(name, 'Si')}
-                    className={`px-4 py-1 text-sm font-semibold rounded-lg transition-colors duration-200 ${
-                        currentValue === 'Si'
-                            ? 'bg-green-500 text-white shadow-md'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-4 py-1 text-sm font-semibold rounded-lg transition-colors duration-200 ${currentValue === 'Si'
+                        ? 'bg-green-500 text-white shadow-md'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
                 >
                     Sí
                 </button>
             </div>
         </div>
     );
-    
+
     const ResumenItem = ({ label, value }) => (
         <div className="flex justify-between items-center py-1 border-b border-gray-200">
             <span className="text-sm font-medium text-gray-600">{label}</span>
             <span className="text-sm font-semibold text-gray-800">{value}</span>
         </div>
     );
-    
-    const VideoUploadBox = ({ label }) => (
-        <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors h-24">
-            {/* Aquí iría un ícono de video (simulado con un span) */}
-            <span className="text-xl text-blue-500">🎬</span> 
-            <span className="text-xs font-medium text-blue-600">{label}</span>
-            <span className="text-xs text-blue-500">Adjuntar o referenciar video...</span>
-        </div>
-    );
-    
-    const LatestMovementsTable = ({ movements }) => (
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                    <tr>
-                        {['Fecha', 'Unidad', 'Chofer', 'Tipo'].map((header) => (
-                            <th key={header} className="px-3 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                {header}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                    {movements.map((mov, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-800">
-                                <span className="block font-medium">{mov.date}</span>
-                                <span className="block text-xs text-gray-500">{mov.time}</span>
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-800">{mov.unit}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-800">{mov.driver}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-sm">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    mov.type === 'Entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
-                                    {mov.type}
-                                </span>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
 
-
-    // --- RENDERIZADO PRINCIPAL ---
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
-            
+
             {/* Encabezado General */}
             <div className="flex justify-between mb-8 border-b pb-4">
-                <div className="text-xl font-bold text-gray-800">Unidad Seleccionada: <span className="text-blue-600">ECO—</span></div>
-                <div className="text-xl font-bold text-gray-800">Chofer: <span className="text-blue-600">—</span></div>
+                <div className="text-xl font-bold text-gray-800">Unidad Seleccionada: <span className="text-blue-600">
+                    {informacion.NombreUnidad || '—'}
+                </span></div>
+                <div className="text-xl font-bold text-gray-800">Chofer: <span className="text-blue-600">{informacion.NombreOperador || '—'}</span></div>
                 <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold">
                     Estado: <span className="font-bold">Pendiente</span>
                 </div>
@@ -233,78 +328,216 @@ const RegistroYSalidaUnificado = () => {
 
             {/* Contenedor Principal de las 2 Columnas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 {/* === COLUMNA IZQUIERDA: DATOS DEL MOVIMIENTO === */}
                 <div className="bg-white p-6 rounded-xl shadow-lg">
                     <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Datos del Movimiento</h2>
-                    
+
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         {/* Toggle ENTRADA/SALIDA */}
-                        <div className="flex gap-2 col-span-1">
-                            <ToggleButton 
-                                label="ENTRADA" 
-                                isActive={form.movementType === 'ENTRADA'} 
-                                onClick={() => setMovementType('ENTRADA')} 
+                        <div className="flex gap-2 col-span-1 ">
+                            <ToggleButton
+                                label="ENTRADA"
+                                isActive={form.movementType === 'ENTRADA'}
+                                onClick={() => setMovementType('ENTRADA')}
                             />
-                            <ToggleButton 
-                                label="SALIDA" 
-                                isActive={form.movementType === 'SALIDA'} 
-                                onClick={() => setMovementType('SALIDA')} 
+                            <ToggleButton
+                                label="SALIDA"
+                                isActive={form.movementType === 'SALIDA'}
+                                onClick={() => setMovementType('SALIDA')}
                             />
                         </div>
 
-                        {/* Motivo (Dropdown Placeholder) */}
-                        <FormInput label="Motivo" name="motive" value={form.motive} onChange={handleChange} placeholder="Seleccionar motivo" />
+
+                        <SelectInput
+                            label="Motivo"
+                            value={form.motive}
+                            onChange={(event) => {
+                                setForm({ ...form, motive: event.target.value });
+                            }}
+                            options={requests.Motivos}
+                            placeholder="Seleccionar motivo..."
+                            valueKey="Motivos_motivoID"
+                            labelKey="Motivos_nombre"
+                        />
+
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-6">
-                        <FormInput label="Unidad (Número Económico)" name="unit" value={form.unit} onChange={handleChange} placeholder="Buscar unidad..." />
-                        <FormInput label="Chofer / Ayudante" name="driver" value={form.driver} onChange={handleChange} placeholder="Buscar chofer..." />
-                        <FormInput label="Destino (requerido)" name="destination" value={form.destination} onChange={handleChange} placeholder="Ej. Planta Norte / Cliente X" isRequired />
-                        <FormInput label="Kilometraje (KM)" name="kilometers" value={form.kilometers} onChange={handleChange} placeholder="0" type="number" />
-                        <FormInput label="Combustible" placeholder="" />
-                        
-                        {/* Observaciones (Textarea) */}
-                        <FormInput label="Observaciones" name="observations" value={form.observations} onChange={handleChange} placeholder="Agregar nota opcional..." rows={3} />
+
+                        <SelectInput
+                            label="Unidad (Número Económico)"
+                            value={form.unit}
+                            onChange={(event) => {
+                                setForm({ ...form, unit: event.target.value });
+                            }}
+                            options={requests.Unidades}
+                            placeholder="Seleccionar unidad..."
+                            valueKey="Unidades_unidadID"
+                            labelKey="Unidades_numeroEconomico"
+                        />
+
+                        <SelectInput
+                            label="Chofer / Ayudante"
+                            value={form.driver}
+                            onChange={(event) => { setForm({ ...form, driver: event.target.value }); }}
+                            options={requests.Choferes}
+                            placeholder="Seleccionar Chofer / ayudante"
+                            valueKey="Personas_usuarioID"
+                            labelKey="nombre_completo"
+                        />
+
+                        <SelectInput
+                            label="Destino"
+                            value={form.destination}
+                            onChange={(event) => { setForm({ ...form, destination: event.target.value }); }}
+                            options={requests.Destinos}
+                            placeholder="Seleccionar destino..."
+                            valueKey="Destinos_Id"
+                            labelKey="Destinos_Nombre"
+                        />
+
+
+                        {/* <div className={`flex flex-col gap-1 h-full`}>
+                            <label className="text-sm font-medium text-gray-600">
+                                Combustible
+                            </label>
+
+                            <input
+                                type="number"
+                                value={form.combustible}
+                                onChange={(e) => { // <-- Cambiado de (value) a (e) para recibir el objeto de evento
+                                    setForm({ ...form, combustible: e.target.value }); // <-- Usando e.target.value para obtener el valor
+                                }}
+                                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                        </div> */}
+
+                        <SelectInput
+                            label="Combustible"
+                            value={form.combustible}
+                            onChange={(event) => { setForm({ ...form, combustible: event.target.value }); }}
+                            options={[
+                                {
+                                    nombre: '1/8',
+                                    escala_valor: 1, // Se utiliza para el 'value' del select
+                                    litros: 5
+                                },
+                                {
+                                    nombre: '1/4',
+                                    escala_valor: 2,
+                                    litros: 10
+                                },
+                                {
+                                    nombre: '3/8',
+                                    escala_valor: 3,
+                                    litros: 15
+                                },
+                                {
+                                    nombre: '1/2',
+                                    escala_valor: 4,
+                                    litros: 20
+                                },
+                                {
+                                    nombre: '5/8',
+                                    escala_valor: 5,
+                                    litros: 25
+                                },
+                                {
+                                    nombre: '3/4',
+                                    escala_valor: 6,
+                                    litros: 30
+                                },
+                                {
+                                    nombre: '7/8',
+                                    escala_valor: 7,
+                                    litros: 35
+                                },
+                                {
+                                    nombre: 'Lleno',
+                                    escala_valor: 8,
+                                    litros: 40
+                                }
+                            ]}
+                            placeholder="Seleccionar combustible"
+                            valueKey="escala_valor"
+                            labelKey="nombre"
+                        />
+
+
+
+                        <div className={`flex flex-col gap-1 h-full`}>
+                            <label className="text-sm font-medium text-gray-600">
+                                Kilometraje
+                            </label>
+
+                            <input
+                                type="number"
+                                name="Motivos_nombre"
+                                value={form.kilometers}
+                                onChange={(e) => { // <-- Cambiado de (value) a (e) para recibir el objeto de evento
+                                    setForm({ ...form, kilometers: e.target.value }); // <-- Usando e.target.value para obtener el valor
+                                }}
+                                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                        </div>
+
+
+                        <div className={`flex flex-col gap-1 h-full`}>
+                            <label className="text-sm font-medium text-gray-600">
+                                Observaciones
+                            </label>
+
+                            <input
+                                type="text"
+                                name="Motivos_nombre"
+                                value={form.observation}
+                                onChange={(e) => { // <-- Cambiado de (value) a (e) para recibir el objeto de evento
+                                    setForm({ ...form, observation: e.target.value }); // <-- Usando e.target.value para obtener el valor
+                                }}
+                                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                        </div>
                     </div>
 
                     {/* Checklist y Condiciones */}
                     <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Checklist y Condiciones</h2>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 p-3 border border-gray-200 rounded-lg">
-                        <ConditionToggle label="Llantas en buen estado" name="tires" currentValue={form.checklist.tires} onToggle={handleChecklistToggle} isCritical />
-                        <ConditionToggle label="Luces funcionando" name="lights" currentValue={form.checklist.lights} onToggle={handleChecklistToggle} />
-                        <ConditionToggle label="Frenos operativos" name="brakes" currentValue={form.checklist.brakes} onToggle={handleChecklistToggle} isCritical />
-                        <ConditionToggle label="Espejos intactos" name="mirrors" currentValue={form.checklist.mirrors} onToggle={handleChecklistToggle} />
+
+                        {requests.ListasVerificacion.map((item) => {
+                            const listId = item.ListaVerificacion_listaID.toString();
+
+                            // 🚨 CORRECCIÓN CLAVE: Asegurar que form.checklist sea un array antes de buscar.
+                            const currentItem = Array.isArray(form.checklist)
+                                ? form.checklist.find(i => i.id === listId)
+                                : undefined;
+
+                            // Esto evita el error si form.checklist es undefined, null, o un objeto {}
+
+                            const currentValue = currentItem ? currentItem.observacion : undefined;
+
+                            return (
+                                <ConditionToggle
+                                    key={listId}
+                                    label={item.ListaVerificacion_nombre}
+                                    name={listId}
+                                    currentValue={currentValue}
+                                    onToggle={handleChecklistToggle}
+                                    isCritical={item.ListaVerificacion_tipo === "Obligatorio"}
+                                />
+                            );
+                        })}
                     </div>
 
-                    {/* Alerta Crítica y Autorización (Visible si isCriticalAlertActive es true) */}
-                    {isCriticalAlertActive && (
-                        <div className="flex items-center justify-between gap-4 p-4 mb-6 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
-                            <p className="text-sm font-semibold text-yellow-800">
-                                Alerta Crítica: Requiere autorización del Supervisor.
-                            </p>
-                            <div className="flex flex-col gap-2">
-                                <FormInput 
-                                    label="" 
-                                    name="authorizationCode" 
-                                    value={form.authorizationCode} 
-                                    onChange={handleChange} 
-                                    placeholder="Ingresar Código"
-                                />
-                                <button 
-                                    onClick={solicitAuthorization}
-                                    className="px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition-colors"
-                                >
-                                    Solicitar Autorización
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Botón Final */}
-                    <button 
-                        onClick={registerMovement}
-                        className="w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-xl hover:bg-blue-700 transition-colors"
+                    <button
+                        onClick={CrearAsignacion}
+                        disabled={form.unit === '' || form.driver === '' || form.destination === '' || form.motive === '' || form.kilometers === '' || form.combustible === ''}
+                        className={`w-full py-3 text-white text-lg font-bold rounded-lg shadow-xl transition-colors 
+        ${form.unit === '' || form.driver === '' || form.destination === '' || form.motive === '' || form.kilometers === '' || form.combustible === ''
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
                     >
                         REGISTRAR MOVIMIENTO
                     </button>
@@ -314,7 +547,7 @@ const RegistroYSalidaUnificado = () => {
                 {/* === COLUMNA DERECHA: RESUMEN Y EVIDENCIAS === */}
                 <div className="bg-white p-6 rounded-xl shadow-lg">
                     <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Resumen y Evidencias</h2>
-                    
+
                     {/* Resumen de Datos (enlazados al estado actual) */}
                     <div className="flex flex-col gap-4 mb-6">
                         <ResumenItem label="Unidad" value={form.unit || '—'} />
@@ -324,16 +557,21 @@ const RegistroYSalidaUnificado = () => {
                         <ResumenItem label="KM / Combustible" value={`${form.kilometers} / 0`} />
                     </div>
 
-                    {/* Evidencia de Video */}
-                    <h3 className="text-md font-bold text-gray-700 mb-3">Evidencia de Video</h3>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <VideoUploadBox label="Video de Entrada" />
-                        <VideoUploadBox label="Video de Salida" />
-                    </div>
-
-                    {/* Últimos Movimientos */}
                     <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Últimos movimientos</h2>
-                    <LatestMovementsTable movements={latestMovements} />
+
+                    <Datatable
+                        data={requests.UltimosMovimientos}
+                        virtual={true}
+                        searcher={false}
+
+                        columns={[
+                            { header: 'Fecha', accessor: 'Movimientos_fecha' },
+                            { header: 'Kilometraje', accessor: 'Movimientos_kilometraje' },
+                            { header: 'Chofer', accessor: 'Unidades_ano' },
+                            { header: 'Tipo', accessor: 'Movimientos_tipoMovimiento' },
+                        ]}
+                    />
+
 
                 </div>
             </div>

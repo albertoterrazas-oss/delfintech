@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
+use App\Models\Catalogos\ChoferUnidadAsignar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Catalogos\Unidades; // Importar el modelo de Unidades
@@ -233,8 +234,40 @@ class UnidadesController extends Controller
 
     public function DashboardUnidad(Request $request)
     {
-        //
-
         $ultimas5Unidades = Unidades::latest()->limit(5)->get();
+    }
+
+
+    public function QuienconQuienUnidades(Request $request)
+    {
+        // Obtiene la fecha actual en formato 'Y-m-d'
+        $today = now()->toDateString();
+
+        // Consulta usando Eloquent para obtener las asignaciones de hoy activas
+        $unidadesDeHoy = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
+            ->where('CUA_estatus', 1)
+            ->get();
+
+        // Verifica si no se encontró ninguna asignación para hoy
+        if ($unidadesDeHoy->isEmpty()) {
+            // Si la colección está vacía, devuelve todas las unidades
+            $todasLasUnidades = Unidades::get();
+
+            // Agrega el nuevo campo 'CUA_unidadID' con el valor del campo 'Unidades_unidadID'
+            $todasLasUnidades = $todasLasUnidades->map(function ($unidad) {
+                $unidad->CUA_unidadID = $unidad->Unidades_unidadID;
+                $unidad->CUA_choferID = null;
+                $unidad->CUA_destino = null;
+                $unidad->CUA_motivoID = null;
+
+
+                return $unidad;
+            });
+
+            return response()->json($todasLasUnidades); // ⬅️ Add final return
+        }
+
+        // Si hay asignaciones para hoy, devuelve esas asignaciones
+        return response()->json($unidadesDeHoy);
     }
 }

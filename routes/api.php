@@ -46,14 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 
-    Route::resource('users', UserController::class)->only([
-        'index', // GET /api/admin/users
-        'store', // POST /api/admin/users
-        'show',  // GET /api/admin/users/{user}
-        'update', // PUT/PATCH /api/admin/users/{user}
-        'destroy' // DELETE /api/admin/users/{user}
-    ]);
-
+  
     // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
     Route::resource('unidades', UnidadesController::class)->only([
         'index',
@@ -126,13 +119,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
     Route::post('/changesswho', [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
 
-    
+     Route::resource('users', UserController::class)->only([
+        'index', // GET /api/admin/users
+        'store', // POST /api/admin/users
+        'show',  // GET /api/admin/users/{user}
+        'update', // PUT/PATCH /api/admin/users/{user}
+        'destroy' // DELETE /api/admin/users/{user}
+    ]);
+
 
     // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
     // Ejemplo en routes/api.php
     Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 });
-
+ 
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
 Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
 Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');

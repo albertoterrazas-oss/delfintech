@@ -9,15 +9,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Illuminate\Http\JsonResponse; 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use App\Models\Admin\User; 
+use App\Models\Admin\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\RedirectResponse; 
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; // MANTENER
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException; 
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Session;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -42,6 +45,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $token = null;
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             'Personas_usuario' => 'required|string|max:255',
@@ -63,45 +67,36 @@ class AuthenticatedSessionController extends Controller
         }
 
         // --- LÓGICA DE AUTENTICACIÓN BASADA EN TOKEN (Sanctum) con Transacción ---
-        $token = null;
-
         try {
-            // Inicia la transacción para garantizar la atomicidad
-            DB::beginTransaction();
-
-            // 4. Eliminar tokens existentes para evitar acumulación
-            // IMPORTANTE: Asegúrate de que el modelo App\Models\Admin\User use el trait HasApiTokens.
-            $user->tokens()->delete();
-
-            // 5. Generar el nuevo token
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            // Confirma la transacción
-            DB::commit();
-
+            $token = JWTAuth::fromUser($user);
+            // Session::put('token', $token);
         } catch (\Exception $e) {
-            // Si algo falla, revierte los cambios de la transacción
-            DB::rollBack();
-
-            // *** CAMBIO CLAVE PARA DEPURACIÓN ***
-            // Registra el error interno (incluyendo el stack trace) para diagnóstico
-            Log::error('Error FATAL al generar token de acceso para el usuario ID: ' . $user->Personas_usuarioID . ':', [
+            Log::error('Error al generar token JWT para usuario ID: ' . $user->Personas_usuarioID, [
                 'exception' => $e
             ]);
-            // **********************************
-
-            // Lanza una excepción 409 Conflict explícitamente
-            throw new ConflictHttpException('Hubo un conflicto al intentar generar su sesión de acceso. Por favor, revise los logs del servidor para detalles del error. Intente nuevamente.');
+            throw new ConflictHttpException('Hubo un problema al generar el token JWT. Intenta nuevamente.');
         }
 
         // 6. Retornar el token y los datos del usuario en una respuesta JSON
         return response()->json([
+            'user' => $user,
             'id' => $user->Personas_usuarioID,
             'Personas_usuario' => $user->Personas_usuario,
             'access_token' => $token,
-            'token_type' => 'Bearer', 
+            'token_type' => 'Bearer',
             'redirect_to' => RouteServiceProvider::HOME,
         ], 200);
+    }
+
+    public function logout()
+    {
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'No se pude cerrar sesión, intenta nuevamente.'], 500);
+        }
+
+        return response()->json(['message' => 'Sesión cerrada.'], 200);
     }
 
     /**

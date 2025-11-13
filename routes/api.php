@@ -24,13 +24,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('jwt')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt')->group(function () {
 
     // RUTA PROTEGIDA CON TOKEN: Destinos
     // Para que funcione en Insomnia/Postman, debes enviar el token en el encabezado 'Authorization: Bearer [TOKEN]'
@@ -39,7 +39,6 @@ Route::middleware('auth:sanctum')->group(function () {
         'store',    // (POST /api/destinos)
         'update'    // (PUT/PATCH /api/destinos/{destino})
     ]);
-
 
     Route::resource('users', UserController::class)->only([
         'index', // GET /api/admin/users
@@ -58,7 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
         'destroy'
     ]);
 
-
     Route::resource('roles', RolesController::class)->only([
         'index', // GET /api/admin/roles
         'store', // POST /api/admin/roles
@@ -72,14 +70,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
-
     Route::resource('menus', MenuController::class)->only([
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
         // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
-
 
     Route::resource('listaverificacion', ListaVerificacionController::class)->only([
         'index',  // Registra el método index (GET)
@@ -88,20 +84,17 @@ Route::middleware('auth:sanctum')->group(function () {
         // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
-
-
     // Opcional: Ruta para obtener el usuario autenticado
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
+    Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
+    Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
+    Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');
+    Route::post('rolesxmenu/usersPerRole', [RolesController::class, 'usersPerRole'])->name('rolesxmenu.usersPerRole');
+    Route::post('usuarioxmenu', [UserController::class, 'getUsuarioMenu'])->name('usuarioxmenu.index');
+    Route::put('usuarioxmenu/{id}', [UserController::class, 'usuarioxmenu'])->name('usuarioxmenu.update');
 });
 
-Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
-Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
-Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');
-Route::post('rolesxmenu/usersPerRole', [RolesController::class, 'usersPerRole'])->name('rolesxmenu.usersPerRole');
-Route::post('usuarioxmenu', [UserController::class, 'getUsuarioMenu'])->name('usuarioxmenu.index');
-Route::put('usuarioxmenu/{id}', [UserController::class, 'usuarioxmenu'])->name('usuarioxmenu.update');

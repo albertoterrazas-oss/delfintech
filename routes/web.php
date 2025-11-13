@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -16,64 +17,42 @@ use Inertia\Inertia;
 |
 */
 
-// Route::get('/', function () {
-//     return Inertia::render('Home', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register')
-//     ]);
-// });
-
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
-
-Route::get('/', function () {
-    // Redirigir a dashboard si está autenticado
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    // Si no está autenticado, mostrar login
-    return Inertia::render('Auth/Login');
-})->name('login');
-
-// Ruta específica de login que también redirige si está autenticado
-Route::get('/login', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    return Inertia::render('Auth/Login');
+// Rutas públicas
+Route::middleware('guest')->group(function () {
+    Route::get('/', fn() => Inertia::render('Auth/Login'))->name('login');
+    Route::get('/login', fn() => Inertia::render('Auth/Login'));
+    Route::get('/logout', [AuthenticatedSessionController::class, 'logout'])->name('logout');
 });
 
-// Route::middleware(['auth'])->group(function () {
+// Rutas protegidas
+Route::middleware('jwt')->group(function () {
+    // Ruta del Dashboard
     Route::get('/dashboard', function () {
         return Inertia::render('Home', [
+            'auth' => [
+                'user' => auth()->user()
+            ],
             'initialPage' => '/dashboard'
         ]);
     })->name('dashboard');
 
+    // Rutas del perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
 
-// Rutas de autenticación y API específicas primero
-// Route::middleware(['auth'])->group(function () {
-//     // Rutas específicas de API o backend...
-// });
+    // Captura todas las demás rutas autenticadas
+    // Route::get('{path?}', function () {
+    //     return Inertia::render('Home', [
+    //         'auth' => [
+    //             'user' => auth()->user()
+    //         ]
+    //     ]);
+    // })->where('path', '^(?!api|login|dashboard).*$');
+    Route::get('/{path?}', fn() => Inertia::render('Home', [
+        'auth' => ['user' => auth()->user()],
+    ]))->where('path', '^(?!api|login).*$');
+});
 
-// Captura todas las demás rutas y las envía a React Router
-Route::get('{path?}', function () {
-    return Inertia::render('Home', [
-        'auth' => [
-            'user' => auth()->user()
-        ]
-    ]);
-})->where('path', '.*')->middleware(['auth']);
-
+// Redirección después del login (en RedirectIfAuthenticated middleware)
 require __DIR__ . '/auth.php';

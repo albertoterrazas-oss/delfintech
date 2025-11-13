@@ -7,6 +7,8 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router';
 import '../../sass/_scrollableContentStyle.scss'
 import { findMenuByUrl, normalizeUrl } from '@/utils';
+import DialogComp from '@/Components/ui/Dialog';
+import axios from 'axios';
 
 const routes = [
     {
@@ -47,7 +49,7 @@ const routes = [
         import: lazy(() => import('./Catalogos/Menus'))
     },
 
-     {
+    {
         path: "/listaverificacion",
         import: lazy(() => import('./Catalogos/ListaVerificacion'))
     },
@@ -66,20 +68,27 @@ export default function Home({ auth, token }) {
         setSelectedMenu,
         setFilteredMenus
     } = useStore()
+    const [sessionExpired, setSessionExpired] = useState(false);
 
     const [menuSelected, setMenuSelected] = useState('')
     // const [showMenu, setShowMenu] = useState(true)
     const containerClass = showMenu ? "body-container" : "body-container open"
 
+    const handleLogout = () => {
+        setSessionExpired(false);
+        router.visit(route('login'));
+    };
+
     const getUserMenus = async () => {
         // console.log(auth)
-        const response = await fetch(route("user.menus"), {
-            method: "GET",
-            // body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
-            headers: { "Content-Type": "application/json" }
-        });
-
-        const data = await response.json()
+        // const response = await fetch(route("user.menus"), {
+        //     method: "GET",
+        //     // body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
+        //     headers: { "Content-Type": "application/json" }
+        // });
+        const response = await axios.get(route("user.menus"))
+        console.log(response)
+        const data = await response.data
         setUserMenus(data)
     };
 
@@ -151,6 +160,16 @@ export default function Home({ auth, token }) {
     }, [userMenus, location.pathname])
 
     // useEffect(() => {
+    //     const unregister = router.on('error', (event) => {
+    //         if (event.detail.status === 401) {
+    //             setSessionExpired(true);
+    //         }
+    //     });
+
+    //     return () => unregister();
+    // }, []);
+
+    // useEffect(() => {
     //     // Verificar si el usuario está autenticado
     //     if (!loggedUser) {
     //         router.visit('/login');
@@ -191,6 +210,20 @@ export default function Home({ auth, token }) {
                             {/* </div> */}
                         </div>
                     </div>
+                    {sessionExpired && (
+                        <DialogComp open={sessionExpired} onClose={handleLogout} >
+                            <h2 className="text-lg font-semibold mb-4">Sesión expirada</h2>
+                            <p className="text-gray-600 mb-6">
+                                Tu sesión ha caducado o el equipo estuvo inactivo por mucho tiempo.
+                            </p>
+                            <button
+                                onClick={handleLogout}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                            >
+                                Aceptar
+                            </button>
+                        </DialogComp>
+                    )}
                 </div>
             }
             {/* <div className="serverhostInfo non-selectable">{props.localServerInfo && props.localServerInfo}</div> */}

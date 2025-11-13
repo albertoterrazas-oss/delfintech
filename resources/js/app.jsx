@@ -2,11 +2,13 @@ import './bootstrap';
 import '../css/app.css';
 // import 'devextreme/dist/css/dx.light.css'; // or dx.material.teal.light.css, etc.
 import { createRoot } from 'react-dom/client';
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { BrowserRouter } from 'react-router';
+import axios from 'axios';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Delfin';
+const appUrl = import.meta.env.VITE_API_URL;
 
 // function SyncProvider({ children }) {
 //     useEffect(() => {
@@ -35,28 +37,57 @@ const appName = import.meta.env.VITE_APP_NAME || 'Delfin';
 //     return children;
 // }
 
-const { fetch: originalFetch } = window;
-window.fetch = async (...args) => {
-    const token = localStorage.getItem('authToken');
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-    };
-    let [resource, config] = args;
+// const { fetch: originalFetch } = window;
+// window.fetch = async (...args) => {
+//     const token = localStorage.getItem('authToken');
+//     console.log('token', token);
 
-    const response = await originalFetch(resource, { ...config, headers });
-    if (response.status === 599) {
-        if (!error) {
-            noty('Sesión terminada', 'error');
-            error = true;
-            setTimeout(() => {
-                const logout = document.getElementById('logoutButton')
-                logout.click()
-            }, 2000)
-        }
+//     let [resource, config] = args;
+
+//     const response = await originalFetch(resource, {
+//         ...config,
+//         headers: {
+//             ...(config?.headers || {}),
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//         },
+//     });
+
+//     if (response.status === 599) {
+//         if (!error) {
+//             // noty('Sesión terminada', 'error');
+//             error = true;
+//             setTimeout(() => {
+//                 const logout = document.getElementById('logoutButton');
+//                 logout.click();
+//             }, 2000);
+//         }
+//     }
+
+//     return response;
+// };
+
+axios.defaults.baseURL = appUrl;
+axios.defaults.withCredentials = true;
+
+axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    return response;
-};
+    return config;
+});
+
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('authToken');
+            router.visit('/login');
+        }
+        return Promise.reject(error);
+    }
+);
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

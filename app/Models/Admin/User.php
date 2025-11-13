@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 
 // ¡CORRECCIÓN CRÍTICA! Debe extender Authenticatable para que Auth::login() funcione.
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     // Usamos los traits necesarios, incluyendo HasApiTokens
     use HasApiTokens, HasFactory, Notifiable;
@@ -70,6 +71,16 @@ class User extends Authenticatable
     public function getAuthIdentifier()
     {
         return $this->getKey();
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey(); // normalmente es el ID
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 
     public function menus()

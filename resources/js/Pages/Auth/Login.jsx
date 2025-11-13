@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios'; 
 import logo from '../../../../public/img/logo.png'; 
+import { router } from '@inertiajs/react';
 
 // ===========================================
 // UTILITY/MOCK FUNCTIONS
@@ -167,7 +168,6 @@ export default function Login() {
             });
 
             const { access_token, redirect_to, id, Personas_usuario } = response.data;
-            // console.log(user)
 
             // 3. Guardar el token en localStorage
             if (access_token) {
@@ -178,7 +178,8 @@ export default function Login() {
             }
             // 4. Redirigir al usuario (hard redirect)
             const targetUrl = redirect_to || '/dashboard';
-            window.location.href = targetUrl; // 👈 Línea clave
+            // window.location.href = targetUrl; // 👈 Línea clave
+            router.visit(targetUrl);
 
         } catch (error) {
             console.error('Login error:', error);

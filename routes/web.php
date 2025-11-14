@@ -29,12 +29,12 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
 
 
 // Captura todas las demás rutas y las envía a React Router
-Route::get('{path?}', function () {
-    return Inertia::render('Home', [
-        'auth' => [
-            'user' => auth()->user()
-        ]
-    ]);
-})->where('path', '.*')->middleware(['auth']);
+// Route::get('{path?}', function () {
+//     return Inertia::render('Home', [
+//         'auth' => [
+//             'user' => auth()->user()
+//         ]
+//     ]);
+// })->where('path', '.*')->middleware(['auth']);
 
 require __DIR__ . '/auth.php';

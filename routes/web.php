@@ -16,25 +16,17 @@ use Inertia\Inertia;
 | contains the "web" middleware group. Now create something great!
 |
 */
+// Ruta para mostrar el formulario (usa el método create)
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login');
 
-
-// Route::get('login', [AuthenticatedSessionController::class, 'create'])
-//     ->name('login')->middleware('authWeb');
 
 Route::post('login', [AuthenticatedSessionController::class, 'store'])
-    ->name('login')->middleware('authWeb');
+    ->name('login.attempt')->middleware('authWeb'); // Nota: cambié el nombre de la ruta POST para evitar conflicto con la GET
+
 
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout')->middleware('auth');
 
-
-// Captura todas las demás rutas y las envía a React Router
-Route::get('{path?}', function () {
-    return Inertia::render('Home', [
-        'auth' => [
-            'user' => auth()->user()
-        ]
-    ]);
-})->where('path', '.*')->middleware(['authWeb']);
 
 require __DIR__ . '/auth.php';

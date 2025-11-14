@@ -121,50 +121,50 @@ export default function Home({ auth, token }) {
         return calc
     };
 
-    useEffect(() => {
-        console.log(loggedUser)
-        // console.log(token)
-        if (!userMenus) {
-            // getUserMenus();
-            setLoggedUser(localStorage.getItem('userId'));
-        }
-    }, [userMenus, localStorage.getItem('authToken')]);
+    // useEffect(() => {
+    //     console.log(loggedUser)
+    //     // console.log(token)
+    //     if (!userMenus) {
+    //         getUserMenus();
+    //         setLoggedUser(localStorage.getItem('userId'));
+    //     }
+    // }, [userMenus, localStorage.getItem('token')]);
 
-    useEffect(() => {
-        if (searchMenuTerm !== '' && searchMenuTerm) {
-            const filtered = filterMenus(userMenus)
-            setFilteredMenus(filtered);
-            // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
-            // setFilteredMenus(filtered);
-        } else {
-            setFilteredMenus(userMenus);
-            // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })
-            // setFilteredMenus(userMenus);
-        }
-    }, [searchMenuTerm, userMenus]);
+    // useEffect(() => {
+    //     if (searchMenuTerm !== '' && searchMenuTerm) {
+    //         const filtered = filterMenus(userMenus)
+    //         setFilteredMenus(filtered);
+    //         // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
+    //         // setFilteredMenus(filtered);
+    //     } else {
+    //         setFilteredMenus(userMenus);
+    //         // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })
+    //         // setFilteredMenus(userMenus);
+    //     }
+    // }, [searchMenuTerm, userMenus]);
 
-    useEffect(() => {
-        if (userMenus) {
-            const savedMenu = localStorage.getItem("selectedMenu")
-            const pathname = normalizeUrl(location.pathname)
+    // useEffect(() => {
+    //     if (userMenus) {
+    //         const savedMenu = localStorage.getItem("selectedMenu")
+    //         const pathname = normalizeUrl(location.pathname)
 
-            let selected = savedMenu ? JSON.parse(savedMenu) : null
+    //         let selected = savedMenu ? JSON.parse(savedMenu) : null
 
-            if (!selected || selected.menu_url !== pathname) {
-                const matched = findMenuByUrl(userMenus, pathname)
-                if (matched) {
-                    setSelectedMenu(matched)
-                    localStorage.setItem("selectedMenu", JSON.stringify(matched))
-                } else {
-                    setSelectedMenu(null)
-                    localStorage.removeItem("selectedMenu")
-                }
-            } else {
-                setSelectedMenu(selected)
-            }
-        }
-        localStorage.setItem('lastPath', location.pathname);
-    }, [userMenus, location.pathname])
+    //         if (!selected || selected.menu_url !== pathname) {
+    //             const matched = findMenuByUrl(userMenus, pathname)
+    //             if (matched) {
+    //                 setSelectedMenu(matched)
+    //                 localStorage.setItem("selectedMenu", JSON.stringify(matched))
+    //             } else {
+    //                 setSelectedMenu(null)
+    //                 localStorage.removeItem("selectedMenu")
+    //             }
+    //         } else {
+    //             setSelectedMenu(selected)
+    //         }
+    //     }
+    //     localStorage.setItem('lastPath', location.pathname);
+    // }, [userMenus, location.pathname])
 
     // useEffect(() => {
     //     // Verificar si el usuario está autenticado

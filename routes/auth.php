@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 //     Route::post('register', [RegisteredUserController::class, 'store']);
 
-//     Route::get('login', [AuthenticatedSessionController::class, 'create'])
-//                 ->name('login');
+//     
 
 //     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
@@ -54,6 +53,12 @@ use Illuminate\Support\Facades\Route;
 
 //     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-//     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-//                 ->name('logout');
+
 // });
+
+// Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+//     ->name('logout');
+
+
+// Route::post('login', [AuthenticatedSessionController::class, 'store'])
+//     ->name('login');

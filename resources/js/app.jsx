@@ -8,55 +8,57 @@ import { BrowserRouter } from 'react-router';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Delfin';
 
-// function SyncProvider({ children }) {
-//     useEffect(() => {
-//         const channel = new BroadcastChannel("sync-channel");
+const { fetch: originalFetch } = window;
+window.fetch = async (...args) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    };
+    let [resource, config] = args;
 
-//         channel.onmessage = (event) => {
-//             // if (event.data.type === "cambioEmpresa") {
-//             //     setTimeout(() => {
-//             //         window.location.reload();
-//             //     }, 805);
-//             // }
-//             if (event.data.type === "logout") {
-//                 localStorage.clear();
-//                 window.location.href = "/login";
-//             }
-//             if (event.data.type === "login") {
-//                 setTimeout(() => {
-//                     window.location.reload();
-//                 }, 805);
-//             }
-//         };
+    const response = await originalFetch(resource, { ...config, headers });
+    if (response.status === 599) {
+        if (!error) {
+            noty('Sesión terminada', 'error');
+            error = true;
+            setTimeout(() => {
+                const logout = document.getElementById('logoutButton')
+                logout.click()
+            }, 2000)
+        }
+    }
+    return response;
+};
 
-//         return () => channel.close();
-//     }, []);
 
-//     return children;
-// }
+function SyncProvider({ children }) {
+    useEffect(() => {
+        const channel = new BroadcastChannel("sync-channel");
 
-// const { fetch: originalFetch } = window;
-// window.fetch = async (...args) => {
-//     const token = localStorage.getItem('authToken');
-//     const headers = {
-//         // 'Authorization': `Bearer ${token}`,
-//         'Content-Type': 'application/json',
-//     };
-//     let [resource, config] = args;
+        channel.onmessage = (event) => {
+            // if (event.data.type === "cambioEmpresa") {
+            //     setTimeout(() => {
+            //         window.location.reload();
+            //     }, 805);
+            // }
+            if (event.data.type === "logout") {
+                localStorage.clear();
+                window.location.href = "/login";
+            }
+            if (event.data.type === "login") {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 805);
+            }
+        };
 
-//     const response = await originalFetch(resource, { ...config, headers });
-//     if (response.status === 599) {
-//         if (!error) {
-//             noty('Sesión terminada', 'error');
-//             error = true;
-//             setTimeout(() => {
-//                 const logout = document.getElementById('logoutButton')
-//                 logout.click()
-//             }, 2000)
-//         }
-//     }
-//     return response;
-// };
+        return () => channel.close();
+    }, []);
+
+    return children;
+}
+
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

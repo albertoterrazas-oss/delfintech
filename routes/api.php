@@ -17,6 +17,8 @@ use App\Models\Catalogos\Puestos;
 use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Models\Admin\User;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,10 +31,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
+// Las rutas que están dentro de este grupo requerirán el token en el header Authorization
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -106,9 +109,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Opcional: Ruta para obtener el usuario autenticado
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    // Route::get('/user', function (Request $request) {
+    //     return $request->user();
+    // });
 
 
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
@@ -139,3 +142,14 @@ Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rol
 Route::post('rolesxmenu/usersPerRole', [RolesController::class, 'usersPerRole'])->name('rolesxmenu.usersPerRole');
 Route::post('usuarioxmenu', [UserController::class, 'getUsuarioMenu'])->name('usuarioxmenu.index');
 Route::put('usuarioxmenu/{id}', [UserController::class, 'usuarioxmenu'])->name('usuarioxmenu.update');
+
+
+Route::get('jwt', function () {
+    $users = User::first();
+
+    // $users[0]->setCompany(User::DEFAULT_COMPANY);
+    $token = JWTAuth::fromUser($users);
+    return response()->json([
+        "token" => $token
+    ]);
+});

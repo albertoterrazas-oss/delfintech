@@ -18,8 +18,8 @@ use Inertia\Inertia;
 */
 
 
-Route::get('login', [AuthenticatedSessionController::class, 'create'])
-    ->name('login')->middleware('authWeb');;
+// Route::get('login', [AuthenticatedSessionController::class, 'create'])
+//     ->name('login')->middleware('authWeb');
 
 Route::post('login', [AuthenticatedSessionController::class, 'store'])
     ->name('login')->middleware('authWeb');
@@ -29,12 +29,12 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
 
 
 // Captura todas las demás rutas y las envía a React Router
-// Route::get('{path?}', function () {
-//     return Inertia::render('Home', [
-//         'auth' => [
-//             'user' => auth()->user()
-//         ]
-//     ]);
-// })->where('path', '.*')->middleware(['auth']);
+Route::get('{path?}', function () {
+    return Inertia::render('Home', [
+        'auth' => [
+            'user' => auth()->user()
+        ]
+    ]);
+})->where('path', '.*')->middleware(['authWeb']);
 
 require __DIR__ . '/auth.php';

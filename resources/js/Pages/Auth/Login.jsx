@@ -170,12 +170,12 @@ export default function Login() {
             // console.log(user)
 
             // 3. Guardar el token en localStorage
-            if (access_token) {
-                localStorage.setItem('authToken', access_token);
+            // if (access_token) {
+            //     localStorage.setItem('authToken', access_token);
                 localStorage.setItem('userId', id);
                 localStorage.setItem('persona', Personas_usuario);
                 // localStorage.setItem('tokenType', 'Bearer');
-            }
+            // }
             // 4. Redirigir al usuario (hard redirect)
             const targetUrl = redirect_to || '/dashboard';
             window.location.href = targetUrl; // 👈 Línea clave

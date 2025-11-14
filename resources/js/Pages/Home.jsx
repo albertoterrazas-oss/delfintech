@@ -125,7 +125,7 @@ export default function Home({ auth, token }) {
         console.log(loggedUser)
         // console.log(token)
         if (!userMenus) {
-            getUserMenus();
+            // getUserMenus();
             setLoggedUser(localStorage.getItem('userId'));
         }
     }, [userMenus, localStorage.getItem('authToken')]);

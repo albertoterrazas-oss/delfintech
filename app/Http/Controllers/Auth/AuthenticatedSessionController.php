@@ -9,15 +9,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Illuminate\Http\JsonResponse; 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use App\Models\Admin\User; 
+use App\Models\Admin\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\RedirectResponse; 
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; // MANTENER
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException; 
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -71,14 +71,13 @@ class AuthenticatedSessionController extends Controller
 
             // 4. Eliminar tokens existentes para evitar acumulación
             // IMPORTANTE: Asegúrate de que el modelo App\Models\Admin\User use el trait HasApiTokens.
-            $user->tokens()->delete();
+            // $user->tokens()->delete();
 
-            // 5. Generar el nuevo token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // // 5. Generar el nuevo token
+            // $token = $user->createToken('auth_token')->plainTextToken;
 
             // Confirma la transacción
             DB::commit();
-
         } catch (\Exception $e) {
             // Si algo falla, revierte los cambios de la transacción
             DB::rollBack();
@@ -98,8 +97,10 @@ class AuthenticatedSessionController extends Controller
         return response()->json([
             'id' => $user->Personas_usuarioID,
             'Personas_usuario' => $user->Personas_usuario,
-            'access_token' => $token,
-            'token_type' => 'Bearer', 
+            // 'access_token' => $token,
+            'access_token' => '',
+
+            'token_type' => 'Bearer',
             'redirect_to' => RouteServiceProvider::HOME,
         ], 200);
     }

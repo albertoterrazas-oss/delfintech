@@ -43,7 +43,7 @@ Route::get('/', function () {
 })->name('login');
 
 // Ruta específica de login que también redirige si está autenticado
-Route::get('/login', function () {
+Route::post('/login', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }

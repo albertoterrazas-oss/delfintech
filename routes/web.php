@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Catalogs\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,17 @@ use Inertia\Inertia;
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
     ->name('login');
 
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+
+Route::middleware(['authWeb'])->group(function () {
+    // La ruta que falta
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard'); // Es buena práctica darle un nombre
+});
 
 Route::post('login', [AuthenticatedSessionController::class, 'store'])
     ->name('login.attempt')->middleware('authWeb'); // Nota: cambié el nombre de la ruta POST para evitar conflicto con la GET

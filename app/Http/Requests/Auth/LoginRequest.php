@@ -40,13 +40,14 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+        dd($this->Personas_usuario);
 
         // if (! Auth::attempt($this->only('usuario_username', 'password'))) {
         if (! Auth::attempt(['Personas_usuario'=>$this->Personas_usuario, 'Personas_contrasena'=>$this->Personas_contrasena])) {
             RateLimiter::hit($this->throttleKey());
             
             throw ValidationException::withMessages([
-                'usuario_password' => "Las credenciales no coinciden con nuestros registros.",
+                'Personas_contrasena' => "Las credenciales no coinciden con nuestros registros.",
             ]);
         }
 
@@ -71,7 +72,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'usuario_username' => trans('auth.throttle', [
+            'Personas_usuario' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),

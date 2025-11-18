@@ -155,7 +155,7 @@ class UserController extends Controller
     public function menus(Request $request)
     {
         $user = $request->user();
-        // dd($user);
+        // dd($user->Personas_usuarioID);
         // $menus = Menu::get();
 
         // return response()->json($menus);

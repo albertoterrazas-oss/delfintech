@@ -45,8 +45,11 @@ class AuthenticatedSessionController extends Controller
      */
 
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
+
+        // $request->session()->regenerate();
+        // $request->authenticate();
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             'Personas_usuario' => 'required|string|max:255',
@@ -71,13 +74,6 @@ class AuthenticatedSessionController extends Controller
         $token = null;
         $token = JWTAuth::fromUser($user);
         Session::put('token', $token);
-
-
-        // 5. Retornar el token y los datos del usuario en una respuesta JSON
-        return response()->json([
-            'token' => $token,
-            'redirect_to' => RouteServiceProvider::HOME,
-        ], 200);
     }
 
 

@@ -88,16 +88,48 @@ export default function Home({ auth, token }) {
     const containerClass = showMenu ? "body-container" : "body-container open"
 
     const getUserMenus = async () => {
-        // console.log(auth)
         const response = await fetch(route("user.menus"), {
             method: "GET",
-            // body: JSON.stringify({ id: auth.user.usuario_idUsuario }),
             headers: { "Content-Type": "application/json" }
         });
 
         const data = await response.json()
         setUserMenus(data)
     };
+    useEffect(() => {
+        // If 'auth' is falsy (meaning the user is NOT authenticated)
+        if (!auth) {
+            // Use 'navigate' or 'router.visit' depending on your setup
+            // Since you are using 'router.visit', we'll stick with that
+            router.visit('/login');
+        }
+        // The dependency array should include 'auth' and 'router'
+        // so the check runs whenever the auth status might change.
+    }, [auth, router]);
+
+
+
+    console.log('Auth Props:', auth);
+    console.log('token Props:', token);
+
+    useEffect(() => {
+        // Only run if the token has a value to avoid saving 'undefined' or 'null'
+        if (token) {
+            console.log('Saving token to localStorage:', token);
+            // Save the token to localStorage under a key (e.g., 'authToken')
+            localStorage.setItem('token', token);
+        } else {
+            console.log('Token is falsy, removing from localStorage.');
+            // Optionally remove the token if it becomes null, undefined, or an empty string
+            localStorage.removeItem('authToken');
+        }
+    }, [token]);
+
+
+    useEffect(() => {
+        localStorage.setItem('auth', JSON.stringify(auth));
+        setLoggedUser(auth.Personas_usuarioID);
+    }, [auth, setLoggedUser]);
 
     const filterMenus = (menuList, calc = []) => {
         const regex = new RegExp(state.searchMenuTerm.replace(/[^a-zA-ZÑñ\s]/g, '').toLowerCase(), 'u');
@@ -121,27 +153,27 @@ export default function Home({ auth, token }) {
         return calc
     };
 
-    // useEffect(() => {
-    //     console.log(loggedUser)
-    //     // console.log(token)
-    //     if (!userMenus) {
-    //         getUserMenus();
-    //         setLoggedUser(localStorage.getItem('userId'));
-    //     }
-    // }, [userMenus, localStorage.getItem('token')]);
+    useEffect(() => {
+        // console.log(loggedUser)
+        // console.log(token)
+        if (!userMenus) {
+            getUserMenus();
+            // setLoggedUser(localStorage.getItem('userId'));
+        }
+    }, [userMenus, loggedUser]);
 
-    // useEffect(() => {
-    //     if (searchMenuTerm !== '' && searchMenuTerm) {
-    //         const filtered = filterMenus(userMenus)
-    //         setFilteredMenus(filtered);
-    //         // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
-    //         // setFilteredMenus(filtered);
-    //     } else {
-    //         setFilteredMenus(userMenus);
-    //         // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })
-    //         // setFilteredMenus(userMenus);
-    //     }
-    // }, [searchMenuTerm, userMenus]);
+    useEffect(() => {
+        if (searchMenuTerm !== '' && searchMenuTerm) {
+            const filtered = filterMenus(userMenus)
+            setFilteredMenus(filtered);
+            // dispatch({ type: 'SET_FILTERED_MENUS', payload: filtered })
+            // setFilteredMenus(filtered);
+        } else {
+            setFilteredMenus(userMenus);
+            // dispatch({ type: 'SET_FILTERED_MENUS', payload: userMenus })
+            // setFilteredMenus(userMenus);
+        }
+    }, [searchMenuTerm, userMenus]);
 
     // useEffect(() => {
     //     if (userMenus) {
@@ -166,15 +198,7 @@ export default function Home({ auth, token }) {
     //     localStorage.setItem('lastPath', location.pathname);
     // }, [userMenus, location.pathname])
 
-    // useEffect(() => {
-    //     // Verificar si el usuario está autenticado
-    //     if (!loggedUser) {
-    //         router.visit('/login');
-    //         return;
-    //     } else {
 
-    //     }
-    // }, [loggedUser]);
 
     // if (!auth.user) return null
 
@@ -182,6 +206,7 @@ export default function Home({ auth, token }) {
         <div id="page-container">
             <Head title="Delfin tecnologias" />
             {!loggedUser && <Loading />}
+            {/* <h2>HOLA EDGAR</h2> */}
             {loggedUser &&
                 <div className={containerClass}>
                     <LeftMenu auth={loggedUser} />

@@ -38,7 +38,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 // Las rutas que están dentro de este grupo requerirán el token en el header Authorization
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt')->group(function () {
 
     // RUTA PROTEGIDA CON TOKEN: Destinos
     // Para que funcione en Insomnia/Postman, debes enviar el token en el encabezado 'Authorization: Bearer [TOKEN]'
@@ -49,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 
-  
+
     // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
     Route::resource('unidades', UnidadesController::class)->only([
         'index',
@@ -60,11 +60,6 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 
-    Route::resource('roles', RolesController::class)->only([
-        'index', // GET /api/admin/roles
-        'store', // POST /api/admin/roles
-        'update' // PUT/PATCH /api/admin/roles/{role}
-    ]);
 
     Route::resource('motivos', MotivosController::class)->only([
         'index',  // Registra el método index (GET)
@@ -117,12 +112,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
     Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
 
-    
+
 
     Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
     Route::post('/changesswho', [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
 
-     Route::resource('users', UserController::class)->only([
+    Route::resource('users', UserController::class)->only([
         'index', // GET /api/admin/users
         'store', // POST /api/admin/users
         'show',  // GET /api/admin/users/{user}
@@ -130,12 +125,23 @@ Route::middleware('auth:sanctum')->group(function () {
         'destroy' // DELETE /api/admin/users/{user}
     ]);
 
-
+    Route::resource('roles', RolesController::class)->only([
+        'index', // GET /api/admin/roles
+        'store', // POST /api/admin/roles
+        'update' // PUT/PATCH /api/admin/roles/{role}
+    ]);
     // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
     // Ejemplo en routes/api.php
     Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 });
- 
+
+
+// Route::middleware(['authWeb'])->group(function () {
+// La ruta que falta
+
+// });
+
+
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
 Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
 Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rolesxmenu.update');
@@ -153,3 +159,6 @@ Route::get('jwt', function () {
         "token" => $token
     ]);
 });
+
+
+

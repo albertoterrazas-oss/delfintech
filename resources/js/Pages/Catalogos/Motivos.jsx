@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
-import { Dialog } from '@headlessui/react';
-// Importamos Sonner
+import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
-
 import request from "@/utils";
-// Supongo que `route` y `validateInputs` existen en tu entorno.
 
-// ======================================================================
-// DUMMY FUNCTIONS ADAPTADAS PARA MOTIVOS
-// ======================================================================
 const route = (name, params = {}) => {
-    // Rutas dummy adaptadas para Motivos
     const routeMap = {
         "motivos.index": "/api/motivos",
         "motivos.store": "/api/motivos",
@@ -25,30 +18,23 @@ const route = (name, params = {}) => {
 const motivoValidations = {
     Motivos_nombre: true,
     Motivos_tipo: true,
-    Motivos_estatus: true,
 };
 
 // Función DUMMY de validación adaptada para Motivos
 const validateInputs = (validations, data) => {
     let formErrors = {};
-
-    // Validación de prueba básica:
     if (validations.Motivos_nombre && !data.Motivos_nombre?.trim()) formErrors.Motivos_nombre = 'El nombre del motivo es obligatorio.';
     if (validations.Motivos_tipo && !data.Motivos_tipo?.trim()) formErrors.Motivos_tipo = 'El tipo de motivo es obligatorio.';
-    if (validations.Motivos_estatus && !data.Motivos_estatus?.trim()) formErrors.Motivos_estatus = 'El estatus es obligatorio.';
-
     return { isValid: Object.keys(formErrors).length === 0, errors: formErrors };
 };
-// FIN DUMMY FUNCTIONS
-// ======================================================================
 
 // Datos de ejemplo para el estado inicial del formulario de Motivo
 const initialMotivoData = {
     Motivos_motivoID: null, // Nuevo ID para identificar en edición
     Motivos_nombre: "",
-    Motivos_tipo: "General",
+    Motivos_tipo: "",
     Motivos_descripcion: "",
-    Motivos_estatus: "Activo", // Ejemplo: 'Activo', 'Inactivo'
+    Motivos_estatus: "1", // Ejemplo: 'Activo', 'Inactivo'
 };
 
 // Componente del Formulario de Motivo (Modal de Headless UI)
@@ -63,11 +49,10 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
             const dataToLoad = motivoToEdit
                 ? {
                     ...motivoToEdit,
-                    // Aseguramos valores por defecto para campos que pueden ser null
                     Motivos_nombre: motivoToEdit.Motivos_nombre || "",
-                    Motivos_tipo: motivoToEdit.Motivos_tipo || "General",
+                    Motivos_tipo: motivoToEdit.Motivos_tipo || "",
                     Motivos_descripcion: motivoToEdit.Motivos_descripcion || "",
-                    Motivos_estatus: motivoToEdit.Motivos_estatus || "Activo",
+                    Motivos_estatus: motivoToEdit.Motivos_estatus || "1",
                 }
                 : initialMotivoData;
             setMotivoData(dataToLoad);
@@ -76,15 +61,14 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
     }, [isOpen, motivoToEdit]);
 
 
-    // Función genérica para manejar los cambios en los inputs
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+
         setMotivoData(prevData => ({
             ...prevData,
-            [name]: value
+            [name]: type === 'checkbox' ? (checked ? "1" : "0") : value
         }));
 
-        // Limpiar error al cambiar el campo
         if (errors[name]) {
             setErrors(prevErrors => {
                 const newErrors = { ...prevErrors };
@@ -120,14 +104,11 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
 
             {/* Contenedor del Modal */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
-                <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl relative">
-
-                    {/* Indicador de carga */}
+                <DialogPanel className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl relative">
                     {loading && <LoadingDiv />}
-
-                    <Dialog.Title className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
+                    <DialogTitle className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
                         {dialogTitle}
-                    </Dialog.Title>
+                    </DialogTitle>
 
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
                         <div className="space-y-3">
@@ -144,21 +125,17 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
                                 {errors.Motivos_nombre && <p className="text-red-500 text-xs mt-1">{errors.Motivos_nombre}</p>}
                             </label>
 
-                            {/* Input Tipo */}
+
                             <label className="block">
                                 <span className="text-sm font-medium text-gray-700">Tipo: <span className="text-red-500">*</span></span>
-                                <select
+                                <input
+                                    type="text"
                                     name="Motivos_tipo"
                                     value={motivoData.Motivos_tipo}
                                     onChange={handleChange}
                                     className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Motivos_tipo ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                >
-                                    <option value="General">General</option>
-                                    <option value="Mantenimiento">Mantenimiento</option>
-                                    <option value="Administrativo">Administrativo</option>
-                                    <option value="Cliente">Cliente</option>
-                                </select>
-                                {errors.Motivos_tipo && <p className="text-red-500 text-xs mt-1">{errors.Motivos_tipo}</p>}
+                                />
+                                {errors.Motivos_nombre && <p className="text-red-500 text-xs mt-1">{errors.Motivos_tipo}</p>}
                             </label>
 
                             {/* Textarea Descripción */}
@@ -173,20 +150,19 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
                                 />
                             </label>
 
-                            {/* Input Estatus */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Estatus: <span className="text-red-500">*</span></span>
-                                <select
-                                    name="Motivos_estatus"
-                                    value={motivoData.Motivos_estatus}
-                                    onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Motivos_estatus ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                >
-                                    <option value="Activo">Activo</option>
-                                    <option value="Inactivo">Inactivo</option>
-                                </select>
-                                {errors.Motivos_estatus && <p className="text-red-500 text-xs mt-1">{errors.Motivos_estatus}</p>}
-                            </label>
+
+                            <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="Motivos_estatus"
+                                        checked={motivoData.Motivos_estatus == 1} // Usamos == para manejar 1 o '1'
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Estatus</span>
+                                </label>
+                            </div>
                         </div>
 
                         {/* Botones */}
@@ -208,15 +184,12 @@ function MotivoFormDialog({ isOpen, closeModal, onSubmit, motivoToEdit, action, 
                             </button>
                         </div>
                     </form>
-                </Dialog.Panel>
+                </DialogPanel>
             </div>
         </Dialog>
     )
 }
 
-// ----------------------------------------------------------------------
-// Componente principal MOTIVOS
-// ----------------------------------------------------------------------
 
 export default function Motivos() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -224,6 +197,7 @@ export default function Motivos() {
     const [action, setAction] = useState('create');
     const [motivoData, setMotivoData] = useState(initialMotivoData); // Cambiado a motivoData
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
 
     // Función para abrir modal en modo creación
     const openCreateModal = () => {
@@ -253,6 +227,7 @@ export default function Motivos() {
      */
     const submit = async (data) => {
         setErrors({});
+        setIsLoading(true);
 
         // 1. VALIDACIÓN
         const validationResult = validateInputs(motivoValidations, data); // Usar motivoValidations
@@ -274,31 +249,36 @@ export default function Motivos() {
         const method = isEdit ? "PUT" : "POST";
         const successMessage = isEdit ? "Motivo actualizado con éxito." : "Motivo creado con éxito.";
 
-        // 3. PETICIÓN (Request)
         try {
             await request(ruta, method, data);
-
-            // 4. POST-ÉXITO
             await getMotivos(); // Obtener lista actualizada
+            
             toast.success(successMessage);
         } catch (error) {
             console.error("Error al guardar el motivo:", error);
-            // Mostrar error más genérico al usuario
             toast.error("Hubo un error al guardar el motivo.");
             throw error; // Propagar el error al MotivoFormDialog para evitar que cierre el modal
         }
     };
 
     const getMotivos = async () => {
+        setIsLoading(true);
+
         try {
-            // Simulación: Si request no está definido para GET, usamos fetch
             const response = await fetch(route("motivos.index"));
-            if (!response.ok) throw new Error("Fallo al cargar motivos");
+
+            if (!response.ok) {
+                throw new Error(`Fallo al cargar motivos: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
             setMotivos(data);
+
         } catch (error) {
             console.error('Error al obtener los motivos:', error);
-            // Opcional: toast.error('No se pudieron cargar los motivos.');
+
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -308,7 +288,6 @@ export default function Motivos() {
 
     return (
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
-
             <div className="flex justify-between items-center p-3 border-b mb-4">
                 <h2 className="text-3xl font-bold text-gray-800">Gestión de Motivos </h2>
                 <button
@@ -318,40 +297,45 @@ export default function Motivos() {
                     + Nuevo Motivo
                 </button>
             </div>
+            {isLoading ? (
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
 
-            {/* Contenido de la tabla de Motivos */}
+            ) : (
+                <Datatable
+                    data={motivos}
+                    virtual={true}
+                    columns={[
+                        {
+                            header: "Estatus",
+                            accessor: "Motivos_estatus",
+                            width: '20%',
+                            cell: ({ item: { Motivos_estatus } }) => {
+                                const color = String(Motivos_estatus) === "1"
+                                    ? "bg-green-300" // Si es "1"
+                                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
 
-            <Datatable
-                data={motivos}
-                virtual={true}
-                columns={[
-                    // { header: 'ID', accessor: 'Motivos_motivoID' }, // Opcional, si tienes el ID en la respuesta
-                    { header: 'Nombre', accessor: 'Motivos_nombre' },
-                    { header: 'Tipo', accessor: 'Motivos_tipo' },
-                    { header: 'Descripción', accessor: 'Motivos_descripcion' },
-                    {
-                        header: 'Estatus',
-                        accessor: 'Motivos_estatus',
-                        cell: (eprops) => (
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Motivos_estatus === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {eprops.item.Motivos_estatus}
-                            </span>
-                        )
-                    },
-                    {
-                        header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                            <button
-                                onClick={() => openEditModal(eprops.item)}
-                                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
-                            >
-                                Editar
-                            </button>
-                        </>)
-                    },
-                ]}
-            />
+                                return (
+                                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                                );
+                            },
+                        },
+                        { header: 'Nombre', accessor: 'Motivos_nombre' },
+                        { header: 'Tipo', accessor: 'Motivos_tipo' },
+                        { header: 'Descripción', accessor: 'Motivos_descripcion' },
+                        {
+                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                                <button
+                                    onClick={() => openEditModal(eprops.item)}
+                                    className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                                >
+                                    Editar
+                                </button>
+                            </>)
+                        },
+                    ]}
+                />
+            )}
 
-            {/* Componente Modal de Headless UI */}
             <MotivoFormDialog
                 isOpen={isDialogOpen}
                 closeModal={closeModal}
@@ -360,7 +344,6 @@ export default function Motivos() {
                 action={action}
                 errors={errors}
                 setErrors={setErrors}
-
             />
 
         </div>

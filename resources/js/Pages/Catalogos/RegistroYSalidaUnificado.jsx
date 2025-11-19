@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Datatable from "@/Components/Datatable";
 
+import SelectInput from "@/components/SelectInput";
+
+
+
 const RegistroYSalidaUnificado = () => {
 
     const [requests, setRequests] = useState({
@@ -11,6 +15,7 @@ const RegistroYSalidaUnificado = () => {
         Destinos: [],
         ListasVerificacion: [],
         UltimosMovimientos: [],
+        QuienconQuienControl: []
     });
 
 
@@ -20,7 +25,6 @@ const RegistroYSalidaUnificado = () => {
         NombreAyudante: '',
         NombreOperador: '',
         Estado: '',
-
     });
 
 
@@ -44,6 +48,7 @@ const RegistroYSalidaUnificado = () => {
                 AyudantesData,
                 DestinosData,
                 ListasData,
+                QuienconQuienControl,
             ] = await Promise.all([
                 fetchData("motivos.index"),
                 fetchData("unidades.index"),
@@ -51,6 +56,7 @@ const RegistroYSalidaUnificado = () => {
                 fetchData("users.index"), // Rutas asumidas
                 fetchData("destinos.index"),
                 fetchData("listaverificacion.index"),
+                fetchData("QuienconQuienControl"),
             ]);
 
             // **2. Una única llamada a setRequests con todos los datos**
@@ -62,6 +68,7 @@ const RegistroYSalidaUnificado = () => {
                 Ayudantes: AyudantesData,
                 Destinos: DestinosData,
                 ListasVerificacion: ListasData,
+                QuienconQuienControl: QuienconQuienControl,
 
             }));
 
@@ -203,14 +210,14 @@ const RegistroYSalidaUnificado = () => {
     );
 
     useEffect(() => {
-        // You can uncomment this if you need to fetch data when the form changes
-        // fetchUltimosMovimientos(form.unit);
+
 
         const Unidad = requests.Unidades.find(u => u.Unidades_unidadID === Number(form.unit));
+        const QuienConQuien = requests.QuienconQuienControl.find(u => Number(u.CUA_unidadID) === Number(form.unit));
+
         const Chofer = requests.Choferes.find(C => C.Personas_usuarioID === Number(form.driver));
 
-        console.log('Unidad encontrada:', Unidad);
-        console.log('Chofer encontrado:', Chofer);
+
 
         // Variables para almacenar la información, con valores predeterminados seguros
         let nombreUnidad = '';
@@ -227,6 +234,16 @@ const RegistroYSalidaUnificado = () => {
             nombreOperador = Chofer.nombre_completo || '';
         }
 
+        console.log("QuienConQuien", QuienConQuien);
+        if (QuienConQuien) {
+            setForm({
+                ...form,
+                motive: QuienConQuien.CUA_motivoID,
+                destination: QuienConQuien.CUA_destino,
+                driver: QuienConQuien.CUA_choferID
+            });
+            console.log("Estado 'form' actualizado con datos de QuienConQuien.");
+        }
         // 3. Establecer el estado con la información recopilada
         setInformacion({
             NombreUnidad: nombreUnidad,
@@ -236,44 +253,9 @@ const RegistroYSalidaUnificado = () => {
             Estado: '',            // Placeholder
         });
 
-        // NOTE: The dependencies [form.driver, form.kilometers] are not currently
-        // being used inside the effect. Consider removing them unless 
-        // you plan to use them (e.g., in a fetch function).
     }, [form.unit, form.driver]);
 
 
-    const SelectInput = ({
-        label,
-        name,
-        value,
-        onChange,
-        options,
-        isRequired = false,
-        placeholder = "Seleccionar...",
-        valueKey = "value", // Valor por defecto
-        labelKey = "label"  // Valor por defecto
-    }) => (
-        <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-600">
-                {label} {isRequired && <span className="text-red-500">*</span>}
-            </label>
-            <select
-                name={name}
-                value={value}
-                onChange={onChange}
-                required={isRequired}
-                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white appearance-none"
-            >
-                <option value="" disabled hidden>{placeholder}</option>
-
-                {options.map((option, index) => (
-                    <option key={option[valueKey] || index} value={option[valueKey]}>
-                        {option[labelKey]}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
 
     const ConditionToggle = ({ label, name, currentValue, onToggle, isCritical = false }) => (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
@@ -359,6 +341,7 @@ const RegistroYSalidaUnificado = () => {
                             placeholder="Seleccionar motivo..."
                             valueKey="Motivos_motivoID"
                             labelKey="Motivos_nombre"
+                            disabled={true}
                         />
 
                     </div>
@@ -371,9 +354,9 @@ const RegistroYSalidaUnificado = () => {
                             onChange={(event) => {
                                 setForm({ ...form, unit: event.target.value });
                             }}
-                            options={requests.Unidades}
+                            options={requests.QuienconQuienControl}
                             placeholder="Seleccionar unidad..."
-                            valueKey="Unidades_unidadID"
+                            valueKey="CUA_unidadID"
                             labelKey="Unidades_numeroEconomico"
                         />
 
@@ -385,6 +368,7 @@ const RegistroYSalidaUnificado = () => {
                             placeholder="Seleccionar Chofer / ayudante"
                             valueKey="Personas_usuarioID"
                             labelKey="nombre_completo"
+                            disabled={true}
                         />
 
                         <SelectInput
@@ -395,23 +379,8 @@ const RegistroYSalidaUnificado = () => {
                             placeholder="Seleccionar destino..."
                             valueKey="Destinos_Id"
                             labelKey="Destinos_Nombre"
+                            disabled={true}
                         />
-
-
-                        {/* <div className={`flex flex-col gap-1 h-full`}>
-                            <label className="text-sm font-medium text-gray-600">
-                                Combustible
-                            </label>
-
-                            <input
-                                type="number"
-                                value={form.combustible}
-                                onChange={(e) => { // <-- Cambiado de (value) a (e) para recibir el objeto de evento
-                                    setForm({ ...form, combustible: e.target.value }); // <-- Usando e.target.value para obtener el valor
-                                }}
-                                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            />
-                        </div> */}
 
                         <SelectInput
                             label="Combustible"
@@ -550,11 +519,11 @@ const RegistroYSalidaUnificado = () => {
 
                     {/* Resumen de Datos (enlazados al estado actual) */}
                     <div className="flex flex-col gap-4 mb-6">
-                        <ResumenItem label="Unidad" value={form.unit || '—'} />
-                        <ResumenItem label="Chofer / Ayudante" value={form.driver || '—'} />
+                        <ResumenItem label="Unidad" value={informacion.NombreUnidad || '—'} />
+                        <ResumenItem label="Chofer / Ayudante" value={informacion.NombreOperador || '—'} />
                         <ResumenItem label="Motivo" value={form.motive || '—'} />
                         <ResumenItem label="Destino" value={form.destination || '—'} />
-                        <ResumenItem label="KM / Combustible" value={`${form.kilometers} / 0`} />
+                        <ResumenItem label="KM / Combustible" value={`${informacion.UltimoKilometraje} / 0`} />
                     </div>
 
                     <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Últimos movimientos</h2>

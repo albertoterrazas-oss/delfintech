@@ -111,11 +111,13 @@ Route::middleware('jwt')->group(function () {
 
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
     Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
+    Route::get('QuienconQuienControl', [UnidadesController::class, 'QuienconQuienControl'])->name('QuienconQuienControl');
 
+
+    
 
 
     Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
-    Route::post('/changesswho', [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
 
     Route::resource('users', UserController::class)->only([
         'index', // GET /api/admin/users
@@ -130,6 +132,9 @@ Route::middleware('jwt')->group(function () {
         'store', // POST /api/admin/roles
         'update' // PUT/PATCH /api/admin/roles/{role}
     ]);
+
+    Route::post('/changesswho',  [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
+
     // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
     // Ejemplo en routes/api.php
     Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
@@ -159,6 +164,3 @@ Route::get('jwt', function () {
         "token" => $token
     ]);
 });
-
-
-

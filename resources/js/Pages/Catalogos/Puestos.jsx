@@ -5,8 +5,6 @@ import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 import request from "@/utils";
 
-// --- Funciones de Utilidad (Simuladas) ---
-
 // Función para mapear rutas de API
 const route = (name, params = {}) => {
     const id = params.Puestos_id; // Ahora usa Puestos_id
@@ -39,8 +37,6 @@ const initialPositionData = {
     Puestos_idDepartamento: "",
 };
 
-// --- Componente del Formulario (Diálogo Modal) ---
-
 function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, action, errors, setErrors, departments }) {
     const [positionData, setPositionData] = useState(initialPositionData);
     const [loading, setLoading] = useState(false);
@@ -51,7 +47,7 @@ function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, acti
             const dataToLoad = positionToEdit
                 ? { ...positionToEdit, Puestos_idDepartamento: String(positionToEdit.Puestos_idDepartamento) }
                 : initialPositionData;
-            
+
             setPositionData(dataToLoad);
             setErrors({});
         }
@@ -62,8 +58,7 @@ function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, acti
 
         setPositionData(prevData => ({
             ...prevData,
-            // Maneja el checkbox para convertir a 1 o 0, los select y texto como valor
-            [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
+            [name]: type === 'checkbox' ? (checked ? "1" : "0") : value
         }));
 
         if (errors[name]) {
@@ -126,8 +121,8 @@ function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, acti
                                 >
                                     <option value="" disabled>Selecciona un departamento</option>
                                     {departments.map((dept) => (
-                                        <option 
-                                            key={dept.Departamentos_id} 
+                                        <option
+                                            key={dept.Departamentos_id}
                                             value={dept.Departamentos_id}
                                         >
                                             {dept.Departamentos_nombre}
@@ -137,19 +132,19 @@ function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, acti
                                 {errors.Puestos_idDepartamento && <p className="text-red-500 text-xs mt-1">{errors.Puestos_idDepartamento}</p>}
                             </label>
 
-                            {/* Campo Estatus del Puesto (Checkbox) */}
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    name="Puestos_estatus"
-                                    // Asegúrate de que el valor para checked sea numérico (1) o el string '1' dependiendo de cómo lo maneje tu backend al cargar.
-                                    // Si el initialData usa 1, mantén '1' o 1. Si viene como string '1' del backend, úsalo así.
+                              <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="Puestos_estatus"
                                     checked={positionData.Puestos_estatus == 1} // Usamos == para manejar 1 o '1'
-                                    onChange={handleChange}
-                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Puesto Activo</span>
-                            </label>
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Estatus</span>
+                                </label>
+                            </div>
+
 
                             <div className="col-span-1 flex justify-end gap-3 pt-4 border-t mt-4">
                                 <button
@@ -255,14 +250,11 @@ export default function Puestos() {
             toast.error("Error al cargar la lista de departamentos.");
         }
     }
-    
+
     const getPositions = async () => {
         try {
             setIsLoading(true);
-
-            // La API de puestos DEBE devolver el nombre del departamento
-            // (ej: haciendo un `JOIN` o usando `with('departamento')` en Laravel)
-            const data = await fetch(route("puestos.index")).then(res => res.json()); 
+            const data = await fetch(route("puestos.index")).then(res => res.json());
             setPositions(data);
             setIsLoading(false);
 
@@ -274,24 +266,28 @@ export default function Puestos() {
     }
 
     useEffect(() => {
-        // Cargar puestos y departamentos al montar
         getDepartments();
         getPositions();
     }, [])
 
     // Definición de las columnas de la tabla
     const columns = [
-        { header: 'Nombre del Puesto', accessor: 'Puestos_nombre' },
-        { header: 'Departamento', accessor: 'departamento.Departamentos_nombre' }, 
         {
-            header: 'Estatus',
-            accessor: 'Puestos_estatus',
-            cell: (props) => (
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${props.item.Puestos_estatus == 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {props.item.Puestos_estatus == 1 ? 'Activo' : 'Inactivo'}
-                </span>
-            )
+            header: "Estatus",
+            accessor: "Puestos_estatus",
+            width: '20%',
+            cell: ({ item: { Puestos_estatus } }) => {
+                const color = String(Puestos_estatus) === "1"
+                    ? "bg-green-300" // Si es "1"
+                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
+
+                return (
+                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                );
+            },
         },
+        { header: 'Nombre del Puesto', accessor: 'Puestos_nombre' },
+        { header: 'Departamento', accessor: 'departamento.Departamentos_nombre' },
         {
             header: "Acciones", accessor: "Acciones", cell: (eprops) => (<div className="flex space-x-2">
                 <button
@@ -317,7 +313,8 @@ export default function Puestos() {
             </div>
 
             {isLoading ? (
-                <LoadingDiv />
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
+
             ) : (
                 <Datatable
                     data={positions}

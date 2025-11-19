@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { Dialog } from '@headlessui/react';
-// Importamos Sonner y el ícono de Lucide para Editar
 import { toast } from 'sonner';
-import { SquarePen } from 'lucide-react'; 
-
-// Importa tus componentes (asumiendo que Datatable, LoadingDiv, request existen)
+import { SquarePen } from 'lucide-react';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 import request from "@/utils";
 
-// ======================================================================
-// DUMMY FUNCTIONS ADAPTADAS PARA MENÚS
-// ======================================================================
 const route = (name, params = {}) => {
-    // Rutas dummy adaptadas para Menús
     const routeMap = {
         "menus.index": "/api/menus",
         "menus.store": "/api/menus",
@@ -40,8 +33,6 @@ const validateInputs = (validations, data) => {
 
     return { isValid: Object.keys(formErrors).length === 0, errors: formErrors };
 };
-// FIN DUMMY FUNCTIONS
-// ======================================================================
 
 // Datos de ejemplo para el estado inicial del formulario de Menú
 const initialMenuData = {
@@ -81,7 +72,7 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
     // Función genérica para manejar los cambios en los inputs
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-        
+
         // Manejo especial para menu_idPadre (debe ser null o un número)
         let newValue = value;
         if (name === 'menu_idPadre') {
@@ -170,7 +161,7 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
                                     type="number"
                                     name="menu_idPadre"
                                     // Convierte a string para el input y maneja null como cadena vacía
-                                    value={menuData.menu_idPadre === null ? "" : menuData.menu_idPadre} 
+                                    value={menuData.menu_idPadre === null ? "" : menuData.menu_idPadre}
                                     onChange={handleChange}
                                     placeholder="Dejar vacío para menú principal"
                                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
@@ -221,7 +212,7 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
                                 disabled={loading}
                                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
                             >
-                                {loading ? (action === 'create' ? 'Registrando...' : 'Actualizando...'): (action === 'create' ? 'Guardar Menú' : 'Actualizar Menú')}
+                                {loading ? (action === 'create' ? 'Registrando...' : 'Actualizando...') : (action === 'create' ? 'Guardar Menú' : 'Actualizar Menú')}
                             </button>
                         </div>
                     </form>
@@ -241,6 +232,7 @@ export default function Menus() {
     const [action, setAction] = useState('create');
     const [menuData, setMenuData] = useState(initialMenuData);
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
 
     // Funciones de control del modal
     const openCreateModal = () => {
@@ -305,15 +297,17 @@ export default function Menus() {
     };
 
     const getMenus = async () => {
+        setIsLoading(true);
+
         try {
-            // Simulación: Si request no está definido para GET, usamos fetch
             const response = await fetch(route("menus.index"));
             if (!response.ok) throw new Error("Fallo al cargar menús");
             const data = await response.json();
             setMenus(data);
         } catch (error) {
             console.error('Error al obtener los menús:', error);
-            // Opcional: toast.error('No se pudieron cargar los menús.');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -333,40 +327,45 @@ export default function Menus() {
                     + Nuevo Menú
                 </button>
             </div>
+            {isLoading ? (
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
 
-            {/* Contenido de la tabla de Menús */}
-            <Datatable
-                data={menus}
-                virtual={true}
-                columns={[
-                    // { header: 'ID', accessor: 'menu_id', width: '5%' },
-                    { header: 'Nombre', accessor: 'menu_nombre' },
-                    { header: 'ID Padre', accessor: 'menu_idPadre' },
-                    { header: 'URL', accessor: 'menu_url' },
-                    { header: 'Tooltip', accessor: 'menu_tooltip' },
-                    {
-                        header: 'Estatus',
-                        accessor: 'estatus',
-                        cell: (eprops) => (
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.menu_estatus === '1' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {eprops.item.menu_estatus === '1' ? 'Activo' : 'Inactivo'}
-                            </span>
-                        )
-                    },
-                    {
-                        header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                            <button
-                                onClick={() => openEditModal(eprops.item)}
-                                className="p-2 text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition flex items-center justify-center"
-                                title="Editar Menú"
-                            >
-                                <SquarePen size={18} /> {/* Ícono de Lucide */}
-                            </button>
-                        </>)
-                    },
-                ]}
-            />
+            ) : (
+                <Datatable
+                    data={menus}
+                    virtual={true}
+                    columns={[
+                        {
+                            header: "Estatus",
+                            accessor: "menu_estatus",
+                            width: '20%',
+                            cell: ({ item: { menu_estatus } }) => {
+                                const color = String(menu_estatus) === "1"
+                                    ? "bg-green-300" // Si es "1"
+                                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
 
+                                return (
+                                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                                );
+                            },
+                        },
+                        { header: 'Nombre', accessor: 'menu_nombre' },
+                        { header: 'ID Padre', accessor: 'menu_idPadre' },
+                        { header: 'URL', accessor: 'menu_url' },
+                        { header: 'Tooltip', accessor: 'menu_tooltip' },
+                         {
+                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                                <button
+                                    onClick={() => openEditModal(eprops.item)}
+                                    className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                                >
+                                    Editar
+                                </button>
+                            </>)
+                        },
+                    ]}
+                />
+            )}
             {/* Componente Modal de Headless UI */}
             <MenuFormDialog
                 isOpen={isDialogOpen}

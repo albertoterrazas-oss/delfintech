@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 // Asumiendo que Datatable y LoadingDiv existen en tu entorno de componentes
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
+import request from "@/utils";
 
 // --- DUMMY FUNCTIONS (Ajustar a tu backend) ---
 // Función para simular las rutas de la API
@@ -29,23 +30,6 @@ const validateInputs = (validations, data) => {
     return { isValid: Object.keys(formErrors).length === 0, errors: formErrors };
 };
 
-// Función DUMMY para simular llamadas fetch
-async function request(url, method = 'GET', data = null) {
-    const options = {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-    };
-    if (data) {
-        options.body = JSON.stringify(data);
-    }
-    // Simulación de respuesta exitosa
-    // En un entorno real, usarías: const response = await fetch(url, options);
-    // return response.json();
-
-    return new Promise(resolve => setTimeout(resolve, 500)); // Simular latencia de red
-}
-// --- FIN DUMMY FUNCTIONS ---
-
 // Validaciones requeridas para el formulario de Destino (¡Sin Descripción!)
 const destinationValidations = {
     Destinos_Nombre: true,
@@ -59,6 +43,7 @@ const initialDestinationData = {
     Destinos_Nombre: "",
     Destinos_Latitud: "",
     Destinos_Longitud: "",
+    Destinos_Estatus: "1", // Activo por defecto
 };
 
 // Componente del Formulario de Destino (Modal de Headless UI)
@@ -75,19 +60,14 @@ function DestinationFormDialog({ isOpen, closeModal, onSubmit, destinationToEdit
     }, [isOpen, destinationToEdit]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+        const finalValue = type === 'checkbox' ? (checked ? "1" : "0") : value;
+
         setDestinationData(prevData => ({
             ...prevData,
-            [name]: value
+            [name]: finalValue
         }));
 
-        if (errors[name]) {
-            setErrors(prevErrors => {
-                const newErrors = { ...prevErrors };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -101,6 +81,37 @@ function DestinationFormDialog({ isOpen, closeModal, onSubmit, destinationToEdit
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleChangeNumeric = (e) => {
+        const { name, value } = e.target;
+
+        if (name !== 'Destinos_Longitud') {
+            // Manejar otros campos si existen, o simplemente retornar
+            return;
+        }
+
+        let filteredValue = value.replace(/[^\d.-]/g, '');
+
+        if (filteredValue.includes('-')) {
+            let valueWithoutDash = filteredValue.replace(/-/g, '');
+
+            if (value.startsWith('-')) {
+                filteredValue = '-' + valueWithoutDash;
+            } else {
+                filteredValue = valueWithoutDash;
+            }
+        }
+
+        const parts = filteredValue.split('.');
+        if (parts.length > 2) {
+            filteredValue = parts[0] + '.' + parts.slice(1).join('');
+        }
+
+        setDestinationData(prevState => ({
+            ...prevState,
+            [name]: filteredValue
+        }));
     };
 
     const dialogTitle = action === 'create' ? 'Crear Nuevo Destino' : 'Editar Destino';
@@ -153,11 +164,26 @@ function DestinationFormDialog({ isOpen, closeModal, onSubmit, destinationToEdit
                                         type="text"
                                         name="Destinos_Longitud"
                                         value={destinationData.Destinos_Longitud || ''}
-                                        onChange={handleChange}
+                                        onChange={handleChangeNumeric}
                                         className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.Destinos_Longitud ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                                         placeholder="-103.4067861000"
                                     />
                                     {errors.Destinos_Longitud && <p className="text-red-500 text-xs mt-1">{errors.Destinos_Longitud}</p>}
+                                </label>
+
+
+
+                            </div>
+                            <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="Destinos_Estatus"
+                                        checked={destinationData.Destinos_Estatus === "1"}
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Estatus</span>
                                 </label>
                             </div>
 
@@ -221,6 +247,7 @@ export default function Destinos() {
 
     // Función para crear/actualizar un destino
     const submit = async (data) => {
+        console.log("Datos a enviar:", data); // Depuración
         setErrors({});
         const validationResult = validateInputs(destinationValidations, data);
 
@@ -244,7 +271,7 @@ export default function Destinos() {
                 Destinos_Nombre: data.Destinos_Nombre,
                 Destinos_Latitud: data.Destinos_Latitud,
                 Destinos_Longitud: data.Destinos_Longitud,
-                // Puedes añadir otros campos fillable aquí si los editas (e.g., Estatus)
+                Destinos_Estatus: data.Destinos_Estatus,
             };
 
             await request(ruta, method, payload);
@@ -292,13 +319,27 @@ export default function Destinos() {
             </div>
 
             {isLoading ? (
-                <LoadingDiv />
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
+
             ) : (
                 <Datatable
                     data={destinations}
                     virtual={true}
                     columns={[
-                        // { header: 'ID', accessor: 'Destinos_Id' },
+                        {
+                            header: "Estatus",
+                            accessor: "Destinos_Estatus",
+                            width: '20%',
+                            cell: ({ item: { Destinos_Estatus } }) => {
+                                const color = String(Destinos_Estatus) === "1"
+                                    ? "bg-green-300" // Si es "1"
+                                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
+
+                                return (
+                                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                                );
+                            },
+                        },
                         { header: 'Nombre', accessor: 'Destinos_Nombre' },
                         { header: 'Latitud', accessor: 'Destinos_Latitud' },
                         { header: 'Longitud', accessor: 'Destinos_Longitud' },

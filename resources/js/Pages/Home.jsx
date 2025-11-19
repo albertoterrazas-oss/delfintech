@@ -64,6 +64,12 @@ const routes = [
         path: "/QuienConQuienTransporte",
         import: lazy(() => import('./Catalogos/QuienConQuienTransporte'))
     },
+ {
+        path: "/roles",
+        import: lazy(() => import('./Catalogos/Roles'))
+    },
+
+    
 
 
 
@@ -122,6 +128,7 @@ export default function Home({ auth, token }) {
             console.log('Token is falsy, removing from localStorage.');
             // Optionally remove the token if it becomes null, undefined, or an empty string
             localStorage.removeItem('authToken');
+            router.visit('/login');
         }
     }, [token]);
 
@@ -175,28 +182,28 @@ export default function Home({ auth, token }) {
         }
     }, [searchMenuTerm, userMenus]);
 
-    // useEffect(() => {
-    //     if (userMenus) {
-    //         const savedMenu = localStorage.getItem("selectedMenu")
-    //         const pathname = normalizeUrl(location.pathname)
+    useEffect(() => {
+        if (userMenus) {
+            const savedMenu = localStorage.getItem("selectedMenu")
+            const pathname = normalizeUrl(location.pathname)
 
-    //         let selected = savedMenu ? JSON.parse(savedMenu) : null
+            let selected = savedMenu ? JSON.parse(savedMenu) : null
 
-    //         if (!selected || selected.menu_url !== pathname) {
-    //             const matched = findMenuByUrl(userMenus, pathname)
-    //             if (matched) {
-    //                 setSelectedMenu(matched)
-    //                 localStorage.setItem("selectedMenu", JSON.stringify(matched))
-    //             } else {
-    //                 setSelectedMenu(null)
-    //                 localStorage.removeItem("selectedMenu")
-    //             }
-    //         } else {
-    //             setSelectedMenu(selected)
-    //         }
-    //     }
-    //     localStorage.setItem('lastPath', location.pathname);
-    // }, [userMenus, location.pathname])
+            if (!selected || selected.menu_url !== pathname) {
+                const matched = findMenuByUrl(userMenus, pathname)
+                if (matched) {
+                    setSelectedMenu(matched)
+                    localStorage.setItem("selectedMenu", JSON.stringify(matched))
+                } else {
+                    setSelectedMenu(null)
+                    localStorage.removeItem("selectedMenu")
+                }
+            } else {
+                setSelectedMenu(selected)
+            }
+        }
+        localStorage.setItem('lastPath', location.pathname);
+    }, [userMenus, location.pathname])
 
 
 

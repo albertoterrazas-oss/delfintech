@@ -83,7 +83,7 @@ export default async function request(url, method = 'GET', body = {}, customMess
             }
         }
         else if (response.ok) {
-            if (method === "POST" && response.status === 201) console.log("Registro guardado. (201 Created)")
+            if (method === "POST" && response.status === 201) console.log("Registro guardado. (201 Created)") 
             else if (method === "POST" && response.status === 200) console.log("Registro obtenido. (200 OK)")
             else if (method === "PUT") console.log("Registro actualizado.")
             else if (method === "DELETE") console.log("Registro eliminado.")

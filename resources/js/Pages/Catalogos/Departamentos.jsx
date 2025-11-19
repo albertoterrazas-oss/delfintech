@@ -5,8 +5,6 @@ import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 import request from "@/utils";
 
-// --- Funciones de Utilidad (Simuladas) ---
-
 // Función para mapear rutas de API
 const route = (name, params = {}) => {
     const id = params.Departamentos_id;
@@ -14,7 +12,6 @@ const route = (name, params = {}) => {
         "departamentos.index": "/api/departamentos",
         "departamentos.store": "/api/departamentos",
         "departamentos.update": `/api/departamentos/${id}`,
-        // "departamentos.destroy": `/api/departamentos/${id}`, // Eliminado si no se usa
     };
     return routeMap[name] || `/${name}`;
 };
@@ -51,23 +48,16 @@ function DepartmentFormDialog({ isOpen, closeModal, onSubmit, departmentToEdit, 
         }
     }, [isOpen, departmentToEdit, setErrors]);
 
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-
+        const finalValue = type === 'checkbox' ? (checked ? "1" : "0") : value;
         setDepartmentData(prevData => ({
             ...prevData,
-            // Maneja el checkbox para convertir a 1 o 0
-            [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
+            [name]: finalValue,
         }));
-
-        if (errors[name]) {
-            setErrors(prevErrors => {
-                const newErrors = { ...prevErrors };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -110,17 +100,18 @@ function DepartmentFormDialog({ isOpen, closeModal, onSubmit, departmentToEdit, 
                                 {errors.Departamentos_nombre && <p className="text-red-500 text-xs mt-1">{errors.Departamentos_nombre}</p>}
                             </label>
 
-                            {/* Campo Estatus del Departamento (Checkbox) */}
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    name="Departamentos_estatus"
-                                    checked={departmentData.Departamentos_estatus === "1"}
-                                    onChange={handleChange}
-                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Departamento Activo</span>
-                            </label>
+                            <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="Departamentos_estatus"
+                                        checked={departmentData.Departamentos_estatus === "1"}
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Estatus</span>
+                                </label>
+                            </div>
 
                             <div className="col-span-1 flex justify-end gap-3 pt-4 border-t mt-4">
                                 <button
@@ -146,8 +137,6 @@ function DepartmentFormDialog({ isOpen, closeModal, onSubmit, departmentToEdit, 
         </Transition>
     )
 }
-
-// --- Componente Principal ---
 
 export default function Departamentos() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -217,11 +206,9 @@ export default function Departamentos() {
     const getDepartments = async () => {
         try {
             setIsLoading(true);
-
             const data = await fetch(route("departamentos.index")).then(res => res.json());
             setDepartments(data);
             setIsLoading(false);
-
         } catch (error) {
             console.error('Error al obtener los usuarios:', error);
         }
@@ -244,22 +231,28 @@ export default function Departamentos() {
             </div>
 
             {isLoading ? (
-                <LoadingDiv />
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
             ) : (
                 <Datatable
                     data={departments}
                     virtual={true}
                     columns={[
-                        { header: 'Nombre', accessor: 'Departamentos_nombre' },
+
                         {
-                            header: 'Estatus',
-                            accessor: 'Departamentos_estatus',
-                            cell: (props) => (
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${props.item.Departamentos_estatus === "1" ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {props.item.Departamentos_estatus === '1' ? 'Activo' : 'Inactivo'}
-                                </span>
-                            )
+                            header: "Estatus",
+                            accessor: "Departamentos_estatus",
+                            width: '20%',
+                            cell: ({ item: { Departamentos_estatus } }) => {
+                                const color = String(Departamentos_estatus) === "1"
+                                    ? "bg-green-300" // Si es "1"
+                                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
+
+                                return (
+                                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                                );
+                            },
                         },
+                        { header: 'Nombre', accessor: 'Departamentos_nombre' },
                         {
                             header: "Acciones", accessor: "Acciones", cell: (eprops) => (<div className="flex space-x-2">
                                 <button
@@ -268,7 +261,6 @@ export default function Departamentos() {
                                 >
                                     Editar
                                 </button>
-                                {/* Botón de Eliminar ha sido removido */}
                             </div>)
                         },
                     ]}

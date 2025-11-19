@@ -14,9 +14,9 @@ class ListaVerificacionController extends Controller
     // ¡IMPORTANTE! Las claves deben coincidir con las columnas del modelo ($fillable)
     private $validationRules = [
         'ListaVerificacion_nombre'       => 'required|string|max:255',
-        'ListaVerificacion_tipo'         => 'required|string|max:100',
+        'ListaVerificacion_tipo'         => 'required',
         'ListaVerificacion_observaciones' => 'required|string', // Cambiado a 'string'
-        'ListaVerificacion_usuarioID'    => 'required|integer', // Asumiendo que es un ID de usuario entero
+        // 'ListaVerificacion_usuarioID'    => 'required|integer', // Asumiendo que es un ID de usuario entero
     ];
 
     /**
@@ -40,10 +40,11 @@ class ListaVerificacionController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            // 1. Validar los datos de entrada
-            // El método validate() de Laravel lanza una ValidationException en caso de fallo,
-            // que es manejada automáticamente por Laravel para devolver una respuesta 422 JSON
+             $user = $request->user();
+         
             $validatedData = $request->validate($this->validationRules);
+
+            $validatedData['ListaVerificacion_usuarioID'] = $user->Personas_usuarioID;
 
             // 2. Crear el nuevo registro (Mass Assignment seguro debido a $fillable)
             $lista = ListaVerificacion::create($validatedData);

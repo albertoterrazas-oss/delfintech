@@ -5,13 +5,13 @@ import request from "@/utils";
 import SelectComp from "@/components/SelectInput";
 
 export default function AsignMenusDialog(props) {
-    const [state, setState] = useState({ 
-        mainMenuList: [], 
-        mainMenuSelected: null, 
-        showConfirmDialog: false, 
-        confirmSave: false, 
-        updateUsers: false, 
-        usersList: [] 
+    const [state, setState] = useState({
+        mainMenuList: [],
+        mainMenuSelected: null,
+        showConfirmDialog: false,
+        confirmSave: false,
+        updateUsers: false,
+        usersList: []
     })
     const [allMenus, setAllMenus] = useState();
     const [assignedMenus, setAssignedMenus] = useState();
@@ -29,7 +29,7 @@ export default function AsignMenusDialog(props) {
 
                 for (const hijo of obj.children) {
                     // Pasar currentSelectedNodes por referencia (ya que es un objeto)
-                    const hijoValores = calcularValores(hijo, assignedMenus, currentSelectedNodes); 
+                    const hijoValores = calcularValores(hijo, assignedMenus, currentSelectedNodes);
 
                     if (!hijoValores) {
                         todosHijosSeleccionados = false;
@@ -64,7 +64,7 @@ export default function AsignMenusDialog(props) {
                         algunoSeleccionado = true;
                     }
                 }
-                
+
                 if (algunoSeleccionado) {
                     // Si al menos un hijo está seleccionado, este nodo padre debe ser PartialChecked
                     currentSelectedNodes[obj.key] = { checked: false, partialChecked: true, label: obj.label };
@@ -82,7 +82,7 @@ export default function AsignMenusDialog(props) {
             const menusResponse = await fetch(route("menus-tree"));
             const dataMenus = await menusResponse.json();
             setAllMenus(dataMenus);
-            
+
             const menusAssignedResponse = await fetch(route("rolesxmenu.show", props.rol.roles_id));
             const dataMenusAssigned = await menusAssignedResponse.json();
             setAssignedMenus(dataMenusAssigned)
@@ -95,30 +95,30 @@ export default function AsignMenusDialog(props) {
                 // Modificamos calcularValores para que use la variable local
                 calcularValores(obj, dataMenusAssigned, initialSelectedNodesLocal);
             });
-            
+
             // 3. Establecer el estado con la variable local
             setSelectedKeys(initialSelectedNodesLocal);
-            
+
             // 4. Abrir el diálogo
             setOpenDialog(true);
-            
+
         } catch (error) {
             console.error("Error fetching menu data:", error);
             // Manejar error
         }
     };
-    
+
     // El resto del componente...
 
     const saveUserMenus = async () => {
         const menus = Object.keys(selectedKeys);
-        
+
         // El resto de la lógica de guardado, incluyendo el diálogo de confirmación, 
         // parece manejar bien el estado `state.confirmSave` y la variable `selectedKeys`.
         // Mantenemos la lógica de la llamada a la API y la notificación.
 
         if (!state.showConfirmDialog && !state.confirmSave) {
-             // ... (Lógica de verificación de cambios y mostrar diálogo de confirmación)
+            // ... (Lógica de verificación de cambios y mostrar diálogo de confirmación)
             const originalMenus = assignedMenus.map(menu => menu.menu_id.toString())
             const hasNewMenus = originalMenus.length !== menus.length || menus.some(menu => !originalMenus.includes(menu)) || originalMenus.some(oMenu => !menus.includes(oMenu));
 
@@ -131,17 +131,17 @@ export default function AsignMenusDialog(props) {
 
             // Si no hay usuarios o no hay cambios que justifiquen el diálogo, se procede a guardar
             try {
-                await request(route('rolesxmenu.update', props.rol.roles_id), 'PUT', { 
-                    menus_ids: menus, 
-                    menuInicio: state.mainMenuSelected, 
-                    updateUsers: state.updateUsers, 
-                    usersList: state.usersList 
+                await request(route('rolesxmenu.update', props.rol.roles_id), 'PUT', {
+                    menus_ids: menus,
+                    menuInicio: state.mainMenuSelected,
+                    updateUsers: state.updateUsers,
+                    usersList: state.usersList
                 }, { enabled: true })
                     .then(() => {
                         // Limpieza del estado después de guardar
                         // No necesitamos `initialSelectedNodes = {}` porque ya no es global.
                         setState({ ...state, showConfirmDialog: false, confirmSave: false, updateUsers: false, usersList: [] });
-                        setOpenDialog(false); 
+                        setOpenDialog(false);
                         props.assignMenuHandler(false);
                         // noty('Datos guardados.', 'success');
                     })
@@ -152,17 +152,17 @@ export default function AsignMenusDialog(props) {
         } else if (state.confirmSave) {
             // Lógica de guardado después de la confirmación
             try {
-                await request(route('rolesxmenu.update', props.rol.roles_id), 'PUT', { 
-                    menus_ids: menus, 
-                    menuInicio: state.mainMenuSelected, 
-                    updateUsers: state.updateUsers, 
-                    usersList: state.usersList 
+                await request(route('rolesxmenu.update', props.rol.roles_id), 'PUT', {
+                    menus_ids: menus,
+                    menuInicio: state.mainMenuSelected,
+                    updateUsers: state.updateUsers,
+                    usersList: state.usersList
                 }, { enabled: true })
                     .then(() => {
                         // Limpieza del estado después de guardar
                         // No necesitamos `initialSelectedNodes = {}` porque ya no es global.
                         setState({ ...state, showConfirmDialog: false, confirmSave: false, updateUsers: false, usersList: [] });
-                        setOpenDialog(false); 
+                        setOpenDialog(false);
                         props.assignMenuHandler(false);
                         // noty('Datos guardados.', 'success');
                     })
@@ -172,19 +172,19 @@ export default function AsignMenusDialog(props) {
             }
         }
     };
-    
+
     // Función de `handleOnChangeCheck` (para cuando el usuario cambia la selección)
     const handleOnChangeCheck = (e) => {
         const keys = Object.keys(e);
         const mainList = {}
         function addMenuName(obj) {
             const menuInfo = keys.find((key) => parseInt(key) === obj.key);
-            
+
             if (menuInfo) {
                 if (obj.children && obj.children.length > 0) {
                     let todosHijosSeleccionados = true;
                     let algunosHijosSeleccionados = false;
-    
+
                     for (const hijo of obj.children) {
                         const hijoValores = addMenuName(hijo);
                         if (!hijoValores) {
@@ -192,7 +192,7 @@ export default function AsignMenusDialog(props) {
                             algunosHijosSeleccionados = true;
                         }
                     }
-    
+
                     if (!(todosHijosSeleccionados === false && algunosHijosSeleccionados === false)) {
                         if (todosHijosSeleccionados) {
                             mainList[obj.key] = { checked: true, partialChecked: false, label: obj.label };
@@ -203,7 +203,7 @@ export default function AsignMenusDialog(props) {
                 } else {
                     mainList[obj.key] = { checked: true, partialChecked: false, label: obj.label, toList: true };
                 }
-    
+
                 if (mainList[obj.key] && mainList[obj.key].checked === false && mainList[obj.key].partialChecked === false) {
                     delete mainList[obj.key];
                     return false;
@@ -219,20 +219,20 @@ export default function AsignMenusDialog(props) {
                         const hijoValores = addMenuName(hijo); // Llama recursivamente
                         if (hijoValores) algunoSeleccionado = true;
                     }
-                    if(algunoSeleccionado) {
+                    if (algunoSeleccionado) {
                         // Si un hijo está seleccionado, y el padre no está en `keys` (la selección de PrimeReact), 
                         // PrimeReact ya maneja el estado parcial. Aquí simplemente aseguramos que el padre sea
                         // considerado en el cálculo general de los menús. Para este caso, solo nos interesa
                         // si es un nodo hoja (toList: true). El cálculo anterior lo hace bien.
                         // Solo devolveremos `algunoSeleccionado` para que el padre superior sepa que tiene hijos seleccionados.
-                        return true; 
+                        return true;
                     }
                 }
                 return false;
             }
             return mainList[obj.key]
         }
-    
+
         allMenus.forEach((obj) => {
             addMenuName(obj)
         })
@@ -249,7 +249,7 @@ export default function AsignMenusDialog(props) {
             // Solo se agregan a la lista de "Menú de Inicio" los menús hoja (toList: true)
             if (item[1].toList) auxArr.push({ key: parseInt(item[0]), label: item[1].label })
         })
-        
+
         // Se preserva el menú seleccionado si existe en la nueva lista de menús disponibles
         const newMainMenuSelected = auxArr.some(menu => menu.key === state.mainMenuSelected) ? state.mainMenuSelected : (auxArr.length > 0 ? auxArr[0].key : null);
 
@@ -282,9 +282,9 @@ export default function AsignMenusDialog(props) {
 
     return (
         <Transition appear show={openDialog} as={Fragment}>
-             {/* Cambié la función onClose para limpiar el estado del diálogo de confirmación también */}
-            <Dialog as="div" className="relative z-10" onClose={() => { 
-                setOpenDialog(false); 
+            {/* Cambié la función onClose para limpiar el estado del diálogo de confirmación también */}
+            <Dialog as="div" className="relative z-10 " onClose={() => {
+                setOpenDialog(false);
                 props.assignMenuHandler(false);
             }}>
                 <TransitionChild
@@ -300,8 +300,8 @@ export default function AsignMenusDialog(props) {
                 </TransitionChild>
 
                 <div className="fixed inset-0 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 text-center">
-                        <TransitionChild
+                    <div className="flex min-h-full  items-center justify-center p-4 text-center">
+                        {/* <TransitionChild
                             as={Fragment}
                             enter="ease-out duration-300"
                             enterFrom="opacity-0 scale-95"
@@ -309,53 +309,71 @@ export default function AsignMenusDialog(props) {
                             leave="ease-in duration-200"
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
-                        >
-                            <DialogPanel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900 bg-white">
-                                    Asignar menus al rol: **{props.rol.roles_descripcion}**
-                                </DialogTitle>
+                        > */}
+                        <DialogPanel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                            <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900 bg-white">
+                                Asignar menus al rol: **{props.rol.roles_descripcion}**
+                            </DialogTitle>
 
-                                <div className="mt-4 flex flex-col justify-content-center gap-4 blue-scroll">
-                                    <SelectComp
-                                        data={"label"}
-                                        value={state.mainMenuSelected || ''}
-                                        onChangeFunc={(e) => setState({ ...state, mainMenuSelected: e })}
-                                        valueKey={"key"}
-                                        options={state.mainMenuList}
-                                        disabled={state.mainMenuList.length === 0}
-                                        virtual={true}
-                                        label={'Selecciona el menu de inicio para este rol'}
-                                    />
-                                    {/* Componente Tree de PrimeReact */}
-                                    <Tree
-                                        value={allMenus}
-                                        selectionMode="checkbox"
-                                        selectionKeys={selectedKeys}
-                                        filter
-                                        filterMode="lenient"
-                                        filterPlaceholder="Buscar"
-                                        pt={{
-                                            root: { className: 'w-full md:w-30rem bg-white' }
-                                        }}
-                                        onSelectionChange={(e) => {
-                                            handleOnChangeCheck(e.value)
-                                        }}
-                                    />
+                            <div className=" mt-4 flex flex-col justify-content-center gap-4 blue-scroll">
+                                <SelectComp
+                                    data={"label"}
+                                    value={state.mainMenuSelected || ''}
+                                    onChangeFunc={(e) => setState({ ...state, mainMenuSelected: e })}
+                                    valueKey={"key"}
+                                    options={state.mainMenuList}
+                                    disabled={state.mainMenuList.length === 0}
+                                    virtual={true}
+                                    label={'Selecciona el menu de inicio para este rol'}
+                                />
+                                {/* Componente Tree de PrimeReact */}
+                                <Tree
+                                    value={allMenus}
+                                    selectionMode="checkbox"
+                                    selectionKeys={selectedKeys}
+                                    filter
+                                    filterMode="lenient"
+                                    filterPlaceholder="Buscar"
+                                    pt={{
+                                        // 1. Contenedor principal de los nodos (p-tree-container)
+                                        container: {
+                                            style: { backgroundColor: 'white !important' }
+                                        },
 
-                                    {/* Diálogo de Confirmación (Headless UI) */}
-                                    <Transition appear show={state.showConfirmDialog} as={Fragment}>
-                                        <Dialog as="div" className="relative z-20" onClose={() => setState({ ...state, showConfirmDialog: false, confirmSave: false, updateUsers: false, usersList: [] })}>
-                                            <TransitionChild
-                                                as={Fragment}
-                                                enter="ease-out duration-300"
-                                                enterFrom="opacity-0"
-                                                enterTo="opacity-100"
-                                                leave="ease-in duration-200"
-                                                leaveFrom="opacity-100"
-                                                leaveTo="opacity-0"
-                                            >
-                                                <div className="fixed inset-0 bg-black bg-opacity-50" />
-                                            </TransitionChild>
+                                        // 2. Cada nodo de la lista (p-treenode)
+                                        node: ({ context }) => ({
+                                            className: context.parent && context.parent.level === 0 ? 'p-0' : '',
+                                            style: {
+                                                paddingLeft: '0',
+                                                margin: '0',
+                                                width: '100%',
+                                                backgroundColor: 'white !important' // FORZANDO el color blanco
+                                            }
+                                        }),
+
+                                        // 3. Contenedor raíz (p-tree)
+                                        root: {
+                                            className: 'w-full p-0',
+                                            style: {
+                                                backgroundColor: 'white !important' // FORZANDO el color blanco
+                                            }
+                                        },
+
+                                        // 4. Contenido del nodo (p-treenode-content) - como respaldo
+                                        content: {
+                                            style: {
+                                                backgroundColor: 'white !important'
+                                            }
+                                        },
+                                    }}
+                                    onSelectionChange={(e) => {
+                                        handleOnChangeCheck(e.value)
+                                    }}
+                                />
+                                {/* Diálogo de Confirmación (Headless UI) */}
+                                {/* <Transition appear show={state.showConfirmDialog} as={Fragment}>
+                                        <Dialog as="div" className="relative z-20 w-full" onClose={() => setState({ ...state, showConfirmDialog: false, confirmSave: false, updateUsers: false, usersList: [] })}>
+                                           
 
                                             <div className="fixed inset-0 overflow-y-auto">
                                                 <div className="flex min-h-full items-center justify-center p-4 text-center">
@@ -408,30 +426,30 @@ export default function AsignMenusDialog(props) {
                                                 </div>
                                             </div>
                                         </Dialog>
-                                    </Transition>
-                                </div>
+                                    </Transition> */}
+                            </div>
 
-                                <div className="mt-6 flex justify-end space-x-2">
-                                    <button
-                                        type="button"
-                                        className="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                                        onClick={() => { 
-                                            setOpenDialog(false); 
-                                            props.assignMenuHandler(false); 
-                                        }}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="inline-flex justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
-                                        onClick={saveUserMenus}
-                                    >
-                                        Guardar cambios
-                                    </button>
-                                </div>
-                            </DialogPanel>
-                        </TransitionChild>
+                            <div className="mt-6 flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    className="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                    onClick={() => {
+                                        setOpenDialog(false);
+                                        props.assignMenuHandler(false);
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="inline-flex justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+                                    onClick={saveUserMenus}
+                                >
+                                    Guardar cambios
+                                </button>
+                            </div>
+                        </DialogPanel>
+                        {/* </TransitionChild> */}
                     </div>
                 </div>
             </Dialog>

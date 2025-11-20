@@ -61,7 +61,7 @@ export default function Roles() {
         setOpen(false);
         setErrors({});
     };
-    
+
     // 💡 Tooltip is not available in Headless UI, so I've removed the MUI Tooltip wrapper 
     // and kept the button's title attribute for accessibility and basic hovering.
 
@@ -81,13 +81,13 @@ export default function Roles() {
                             virtual={true}
                             data={roles}
                             columns={[
-                                { header: "Nombre",width:'70%', accessor: "roles_descripcion", type: 'text' },
+                                { header: "Nombre", width: '70%', accessor: "roles_descripcion", type: 'text' },
                                 {
-                                    header: "Acciones",width:'30%',
+                                    header: "Acciones", width: '30%',
                                     cell: (eprops) => (
                                         <>
                                             {/* Removed MUI Tooltip and added a title attribute */}
-                                            <button
+                                            {/* <button
                                                 className="material-icons"
                                                 title="Editar" 
                                                 onClick={() => {
@@ -100,10 +100,10 @@ export default function Roles() {
                                                 }}
                                             >
                                                 edit
-                                            </button>
-                                            
+                                            </button> */}
+
                                             {/* Removed MUI Tooltip and added a title attribute */}
-                                            <button
+                                            {/* <button
                                                 onClick={() => {
                                                     setAssignMenu(true);
                                                     setData({ ...eprops.item });
@@ -112,9 +112,22 @@ export default function Roles() {
                                                 title="Asignar Menus"
                                             >
                                                 engineering
-                                            </button>
+                                            </button> */}
                                         </>
                                     ),
+                                },
+                                {
+                                    header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                                        <button
+                                            onClick={() => {
+                                                setAssignMenu(true);
+                                                setData({ ...eprops.item });
+                                            }}
+                                            className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                                        >
+                                            Editar
+                                        </button>
+                                    </>)
                                 },
                             ]}
                         />

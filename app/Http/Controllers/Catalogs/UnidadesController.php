@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
+use App\Models\Catalogos\ChoferUnidadAsignar;
+use App\Models\Catalogos\IncidenciasMovimiento;
+use App\Models\Catalogos\Movimientos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Catalogos\Unidades; // Importar el modelo de Unidades
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UnidadesController extends Controller
 {
@@ -27,10 +32,10 @@ class UnidadesController extends Controller
             // CAMBIADO: Ahora es requerido y debe ser 'integer'
             'Unidades_mantenimiento' => 'required|integer',
             // REQUERIDO y debe ser string
-            'Unidades_estatus' => 'required|string|max:50',
+            'Unidades_estatus' => 'required',
             // CAMBIADO: Ahora es requerido y debe tener formato datetime completo para SQL Server
-            'Unidades_fechaCreacion' => 'required|date_format:Y-m-d H:i:s',
-            'Unidades_usuarioID' => 'required|integer',
+            // 'Unidades_fechaCreacion' => 'required|date_format:Y-m-d H:i:s',
+            // 'Unidades_usuarioID' => 'required|integer',
         ];
     }
 
@@ -57,9 +62,9 @@ class UnidadesController extends Controller
             'Unidades_ano.required' => 'El año de la unidad es obligatorio.',
             'Unidades_kilometraje.required' => 'El kilometraje de la unidad es obligatorio.',
             'Unidades_mantenimiento.required' => 'El mantenimiento es obligatorio y debe ser un código numérico entero.',
-            'Unidades_estatus.required' => 'El estatus de la unidad es obligatorio.',
-            'Unidades_fechaCreacion.required' => 'La fecha de creación es obligatoria.',
-            'Unidades_usuarioID.required' => 'El ID del usuario es obligatorio.',
+            // 'Unidades_estatus.required' => 'El estatus de la unidad es obligatorio.',
+            // 'Unidades_fechaCreacion.required' => 'La fecha de creación es obligatoria.',
+            // 'Unidades_usuarioID.required' => 'El ID del usuario es obligatorio.',
         ];
     }
 
@@ -80,47 +85,134 @@ class UnidadesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
+    // public function store(Request $request)
+    // {
+    //     $rules = $this->getValidationRules();
+    //     $messages = $this->getValidationMessages();
+    //     $user = $request->user();
+
+    //     $validator = Validator::make($request->all(), $rules, $messages);
+    //     $validatedData['Unidades_usuarioID'] = $user->Personas_usuarioID;
+
+    //     if ($validator->fails()) {
+    //         return response()->json($validator->errors(), 400);
+    //     }
+
+    //     try {
+    //         // Obtenemos todos los datos (incluyendo, si es necesario, 'Unidades_usuarioID')
+    //         $data = $request->all();
+
+    //         $unidad = Unidades::create($data);
+
+    //         return response()->json([
+    //             'message' => 'Unidad creada exitosamente',
+    //             'unidad' => $unidad
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Error al guardar la unidad. Verifique los tipos de datos.',
+    //             'error_detail' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function store(Request $request)
     {
+        // 1. Obtener reglas y mensajes
         $rules = $this->getValidationRules();
         $messages = $this->getValidationMessages();
+        $user = $request->user();
 
-        // 1. Asegúrate de que tu validación NO requiere Unidades_fechaCreacion
-        // ya que será provista por el servidor.
+        // 2. Ejecutar la validación
         $validator = Validator::make($request->all(), $rules, $messages);
 
+        // 3. Manejar error de validación
         if ($validator->fails()) {
+            // Retorna errores de validación con código 400
             return response()->json($validator->errors(), 400);
         }
 
         try {
-            // Obtenemos todos los datos (incluyendo, si es necesario, 'Unidades_usuarioID')
-            $data = $request->all();
 
-            // Si el cliente accidentalmente manda 'Unidades_fechaCreacion',
-            // Eloquent lo ignorará porque el campo no está en $fillable. 
-            // No se necesita el unset() en este caso, pero puede ser una capa de seguridad extra.
+            $validatedData = $validator->validated();
+            $validatedData['Unidades_usuarioID'] = $user->Personas_usuarioID;
+            $validatedData['Unidades_fechaCreacion'] = Carbon::now()->format('Ymd H:i:s');
+            $unidad = Unidades::create($validatedData);
 
-            // 2. Crear la unidad: Eloquent establecerá automáticamente Unidades_fechaCreacion
-            $unidad = Unidades::create($data);
-
+            // 6. Respuesta exitosa
             return response()->json([
                 'message' => 'Unidad creada exitosamente',
                 'unidad' => $unidad
             ], 201);
         } catch (\Exception $e) {
+            // 7. Manejar error de la base de datos o inesperado
             return response()->json([
-                'message' => 'Error al guardar la unidad. Verifique los tipos de datos.',
+                'message' => 'Error al guardar la unidad. Verifique los tipos de datos o campos de la base de datos.',
                 'error_detail' => $e->getMessage()
             ], 500);
         }
     }
-    /**
-     * Muestra el recurso (Unidad) especificado.
-     *
-     * @param  string  $id El ID de la unidad (Unidades_unidadID)
-     * @return \Illuminate\Http\JsonResponse
-     */
+
+    public function update(Request $request, string $id)
+    {
+        // 1. Encontrar la unidad o fallar (manejo implícito de 404)
+        // Cambiamos find($id) por findOrFail($id) para un código más limpio.
+        $unidad = Unidades::findOrFail($id);
+
+        // 2. Obtener reglas y mensajes de validación
+        $rules = $this->getValidationRules();
+        $messages = $this->getValidationMessages();
+
+        // **AJUSTE CRÍTICO 1: Modificación de reglas para la actualización**
+
+        // a) Eliminar reglas de campos que NO deben ser actualizados
+        // (Ej: ID de usuario y fecha de creación).
+        unset($rules['Unidades_usuarioID'], $rules['Unidades_fechaCreacion']);
+
+        // b) Aplicar 'sometimes' a todas las reglas restantes
+        // Reemplazamos la lógica compleja de array_map con una función más robusta.
+        $updateRules = [];
+        foreach ($rules as $field => $rule) {
+            // Aseguramos que 'required' se reemplace por 'sometimes', 
+            // y que 'sometimes' esté presente sin importar la posición inicial de 'required'.
+            $modifiedRule = str_replace('required', 'sometimes', $rule);
+            if (!str_contains($modifiedRule, 'sometimes')) {
+                $modifiedRule = 'sometimes|' . $modifiedRule;
+            }
+            $updateRules[$field] = $modifiedRule;
+        }
+
+        // 3. Ejecutar la validación (solo sobre los datos que se enviaron)
+        $validator = Validator::make($request->all(), $updateRules, $messages);
+
+        if ($validator->fails()) {
+            // Retorna 400 Bad Request con los errores de validación
+            return response()->json($validator->errors(), 400);
+        }
+
+        // 4. Procesar y guardar
+        try {
+            // Obtenemos solo los datos validados para evitar campos no deseados
+            $validatedData = $validator->validated();
+
+            // Llenar y guardar la unidad. Solo se actualizan los campos presentes y validados.
+            $unidad->fill($validatedData);
+            $unidad->save(); // Eloquent maneja Unidades_fechaModificacion automáticamente.
+
+            // 5. Respuesta exitosa
+            return response()->json([
+                'message' => 'Unidad actualizada exitosamente',
+                'unidad' => $unidad
+            ], 200);
+        } catch (\Exception $e) {
+            // 6. Manejo de errores de base de datos o inesperados
+            return response()->json([
+                'message' => 'Error al actualizar la unidad. Ocurrió un error inesperado.',
+                'error_detail' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function show(string $id)
     {
         $unidad = Unidades::find($id);
@@ -133,108 +225,237 @@ class UnidadesController extends Controller
         return response()->json($unidad);
     }
 
-    /**
-     * Actualiza el recurso (Unidad) especificado en el almacenamiento.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $id El ID de la unidad (Unidades_unidadID)
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request, string $id)
-    {
-        $unidad = Unidades::find($id);
-
-        if (!$unidad) {
-            // Retorna 404 Not Found
-            return response()->json(['message' => 'Unidad no encontrada'], 404);
-        }
-
-        // 1. Obtener reglas de validación base
-        $rules = $this->getValidationRules();
-
-        // **AJUSTE CRÍTICO 1:** Eliminar la regla de validación de la fecha de creación.
-        // Este campo es gestionado por el servidor y no debe ser actualizado por el cliente.
-        if (isset($rules['Unidades_fechaCreacion'])) {
-            unset($rules['Unidades_fechaCreacion']);
-        }
-
-        // 2. Aplicar 'sometimes' a todas las reglas restantes para la actualización parcial
-        $updateRules = array_map(function ($rule) {
-            // Reemplaza 'required' con 'sometimes', o asegura que 'sometimes' esté al inicio
-            $modifiedRule = str_replace('required', 'sometimes', $rule);
-
-            if (!str_contains($modifiedRule, 'sometimes')) {
-                $modifiedRule = 'sometimes|' . $modifiedRule;
-            }
-            return $modifiedRule;
-        }, $rules);
-
-        $messages = $this->getValidationMessages();
-
-        $validator = Validator::make($request->all(), $updateRules, $messages);
-
-        if ($validator->fails()) {
-            // Retorna 400 Bad Request con los errores de validación
-            return response()->json($validator->errors(), 400);
-        }
-
-        try {
-            $data = $request->all();
-
-            // **AJUSTE CRÍTICO 2:** Eliminar cualquier intento de actualizar la fecha de creación.
-            // Esto asegura que el campo no se envíe a Eloquent si el cliente lo incluyó.
-            if (isset($data['Unidades_fechaCreacion'])) {
-                unset($data['Unidades_fechaCreacion']);
-            }
-            // NOTA: Toda la lógica de re-formateo de fechas con \DateTime se ELIMINÓ
-            // ya que Unidades_fechaCreacion no se actualiza, y Unidades_fechaModificacion
-            // (UPDATED_AT) es manejado automáticamente por Eloquent.
-
-            // Llenar y guardar la unidad. Solo se actualizan los campos presentes en el request.
-            $unidad->fill($data);
-            $unidad->save(); // Eloquent establece Unidades_fechaModificacion (UPDATED_AT) automáticamente.
-
-            // Retorna 200 OK con mensaje de éxito
-            return response()->json([
-                'message' => 'Unidad actualizada exitosamente',
-                'unidad' => $unidad
-            ], 200);
-        } catch (\Exception $e) {
-            // Manejo de errores de base de datos
-            return response()->json([
-                'message' => 'Error al actualizar la unidad. Ocurrió un error en la base de datos.',
-                'error_detail' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Elimina el recurso (Unidad) especificado del almacenamiento.
-     *
-     * @param  string  $id El ID de la unidad (Unidades_unidadID)
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function destroy(string $id)
-    {
-        $unidad = Unidades::find($id);
-
-        if (!$unidad) {
-            // Retorna 404 Not Found
-            return response()->json(['message' => 'Unidad no encontrada'], 404);
-        }
-
-        $unidad->delete();
-
-        // Retorna 200 OK con mensaje de éxito
-        return response()->json(['message' => 'Unidad eliminada exitosamente'], 200);
-    }
-
-
-
     public function DashboardUnidad(Request $request)
     {
-        //
+        // Fetch the last 5 units
+        $ultimas5Unidades = Unidades::orderBy('Unidades_fechaCreacion', 'desc')->limit(5)->get();
+        // Obtener el total de unidades (para el total general, no solo las 5)
+        $totalUnidades = Unidades::count();
 
-        $ultimas5Unidades = Unidades::latest()->limit(5)->get();
+        // Obtener movimientos de hoy
+        $movimientosDeHoy = Movimientos::whereDate('Movimientos_fecha', Carbon::today())->get();
+        $totalMovimientosHoy = $movimientosDeHoy->count(); // Total de movimientos de hoy
+
+        // Obtener todas las incidencias
+        $incidencias = IncidenciasMovimiento::get();
+        $totalIncidencias = $incidencias->count(); // Total de incidencias
+
+        // Prepare the data array
+        $data = [
+            'ultimas5Unidades' => $ultimas5Unidades,
+            'totalUnidades' => $totalUnidades, // Total general de unidades en la BD
+            'movimientosDeHoy' => $movimientosDeHoy,
+            'totalMovimientosHoy' => $totalMovimientosHoy, // Total de movimientos de hoy
+            'incidencias' => $incidencias,
+            'totalIncidencias' => $totalIncidencias, // Total de incidencias
+        ];
+
+        // Return the data as a JSON response
+        return response()->json($data);
+    }
+
+
+    public function ReporteMovimientos(Request $request)
+    {
+        // 1. Iniciar la consulta y seleccionar los campos necesarios
+        $query = DB::table('dbo.Movimientos')
+            ->select(
+                'Movimientos.Movimientos_fecha',
+                'Movimientos.Movimientos_tipoMovimiento',
+                'Movimientos.Movimientos_kilometraje',
+                'Movimientos.Movimientos_combustible',
+
+                'Movimientos.Movimientos_usuarioID',
+                DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
+                'Unidades.Unidades_placa',
+                'Unidades.Unidades_modelo',
+                'Unidades.Unidades_numeroEconomico',
+                'Motivos.Motivos_nombre',
+                'Destinos.Destinos_Nombre'
+            )
+            ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
+            ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
+            ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+            ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
+            ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
+            ->orderBy('Movimientos.Movimientos_fecha', 'DESC');
+
+        // 2. Filtrar por Rango de Fechas (Solo si ambas fechas están presentes y NO son nulas)
+        // Esto corrige el problema de enviar [null, null] al whereBetween.
+        if ($request->filled('fechaInicio') && $request->filled('fechaFin')) {
+            $fechaInicio = $request->input('fechaInicio');
+            $fechaFin = $request->input('fechaFin');
+
+            $query->whereBetween('Movimientos.Movimientos_fecha', [$fechaInicio, $fechaFin]);
+        }
+
+        // 3. Filtrar por Tipo de Movimiento (Opcional, solo si el campo está lleno)
+        if ($request->filled('tipoMovimiento')) {
+            $query->where('Movimientos.Movimientos_tipoMovimiento', $request->input('tipoMovimiento'));
+        }
+
+        // 4. Filtrar por Usuario (Opcional, solo si el campo está lleno)
+        if ($request->filled('usuarioID')) {
+            $query->where('Movimientos.Movimientos_usuarioID', $request->input('usuarioID'));
+        }
+
+        // 5. Ejecutar la consulta
+        $movimientosFiltrados = $query->get();
+
+        // 6. Calcular totales
+        // Se puede hacer esto de forma eficiente usando colecciones después de obtener los datos.
+        $totalSalidas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'SALIDA')->count();
+        $totalEntradas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'ENTRADA')->count();
+
+        // 7. Preparar la respuesta
+        $data = [
+            'movimientos' => $movimientosFiltrados,
+            'totalMovimientos' => $movimientosFiltrados->count(),
+            'totalSalidas' => $totalSalidas,
+            'totalEntradas' => $totalEntradas,
+        ];
+
+        return response()->json($data);
+    }
+    // public function ReporteMovimientos(Request $request)
+    // {
+    //     // 1. Iniciar la consulta y seleccionar los campos necesarios
+    //     $query = DB::table('dbo.Movimientos')
+    //         ->select(
+    //             'Movimientos.Movimientos_fecha',
+    //             'Movimientos.Movimientos_tipoMovimiento',
+    //             'Movimientos.Movimientos_usuarioID',
+    //             DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
+    //             'Unidades.Unidades_placa',
+    //             'Unidades.Unidades_modelo',
+    //             'Unidades.Unidades_numeroEconomico',
+    //             'Motivos.Motivos_nombre',
+    //             'Destinos.Destinos_Nombre'
+    //         )
+    //         ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
+    //         ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
+    //         ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+    //         ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
+    //         ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
+
+    //         // **ERROR CORREGIDO:** Ordenar por una columna existente (Movimientos_fecha)
+    //         ->orderBy('Movimientos.Movimientos_fecha', 'DESC');
+
+    //     // 2. Filtrar por Rango de Fechas (Obligatorio en este caso)
+    //     if ($request->has('fechaInicio') && $request->has('fechaFin')) {
+    //         $fechaInicio = $request->input('fechaInicio');
+    //         $fechaFin = $request->input('fechaFin');
+
+    //         // **ERROR CORREGIDO:** Usar el nombre de columna correcto 'Movimientos.Movimientos_fecha'
+    //         // NOTA: Si necesitas incluir el día completo, podrías usar Carbon para modificar $fechaFin a las 23:59:59.
+    //         $query->whereBetween('Movimientos.Movimientos_fecha', [$fechaInicio, $fechaFin]);
+    //     }
+
+    //     // 3. Filtrar por Tipo de Movimiento (Opcional)
+    //     if ($request->has('tipoMovimiento')) {
+    //         $query->where('Movimientos.Movimientos_tipoMovimiento', $request->input('tipoMovimiento'));
+    //     }
+
+    //     // 4. Filtrar por Usuario (Opcional)
+    //     if ($request->has('usuarioID')) {
+    //         $query->where('Movimientos.Movimientos_usuarioID', $request->input('usuarioID'));
+    //     }
+
+    //     // 5. Ejecutar la consulta
+    //     $movimientosFiltrados = $query->get();
+
+    //     $totalSalidas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'SALIDA')->count();
+
+    //     $totalEntradas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'ENTRADA')->count();
+
+    //     // 6. Preparar la respuesta
+    //     $data = [
+    //         'movimientos' => $movimientosFiltrados,
+    //         'totalMovimientos' => $movimientosFiltrados->count(),
+    //         'totalSalidas' => $totalSalidas, // ⬅️ Añadido
+    //         'totalEntradas' => $totalEntradas, // ⬅️ Añadido
+    //     ];
+
+    //     return response()->json($data);
+    // }
+    public function QuienconQuienUnidades(Request $request)
+    {
+        // Obtiene la fecha actual en formato 'Y-m-d'
+        $today = now()->toDateString();
+
+
+
+        $unidadesDeHoy = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
+            ->select('CUA_unidadID', 'CUA_choferID', 'CUA_destino', 'CUA_motivoID', 'CUA_fechaAsignacion')
+            ->with([
+                'unidad' => function ($query) {
+                    $query->select('Unidades_unidadID', 'Unidades_numeroEconomico'); // Ajusta 'Unidades_unidadID' si es la PK real
+                }
+            ])
+            ->where('CUA_estatus', 1)
+            ->get();
+
+
+        $unidadesDeHoy = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
+            ->join('dbo.Unidades', 'dbo.ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+            ->select(
+                'dbo.ChoferUnidadAsignada.CUA_unidadID',
+                'dbo.ChoferUnidadAsignada.CUA_choferID',
+                'dbo.ChoferUnidadAsignada.CUA_destino',
+                'dbo.ChoferUnidadAsignada.CUA_motivoID',
+                'dbo.ChoferUnidadAsignada.CUA_fechaAsignacion',
+                'Unidades.Unidades_numeroEconomico'
+            )
+            ->where('dbo.ChoferUnidadAsignada.CUA_estatus', 1)
+            ->get();
+
+        // Verifica si no se encontró ninguna asignación para hoy
+        if ($unidadesDeHoy->isEmpty()) {
+            // Si la colección está vacía, devuelve todas las unidades
+            $todasLasUnidades = Unidades::get();
+
+            // Agrega el nuevo campo 'CUA_unidadID' con el valor del campo 'Unidades_unidadID'
+            $todasLasUnidades = $todasLasUnidades->map(function ($unidad) {
+                $unidad->CUA_unidadID = $unidad->Unidades_unidadID;
+                $unidad->CUA_choferID = null;
+                $unidad->CUA_destino = null;
+                $unidad->CUA_motivoID = null;
+
+
+                return $unidad;
+            });
+
+            return response()->json($todasLasUnidades); // ⬅️ Add final return
+        }
+
+        // Si hay asignaciones para hoy, devuelve esas asignaciones
+        return response()->json($unidadesDeHoy);
+    }
+
+
+    public function QuienconQuienControl(Request $request)
+    {
+        $today = now()->toDateString();
+
+        $unidadesCompletasDeHoy = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
+            // Agregamos las condiciones whereNotNull para forzar que las columnas tengan valor
+            ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_choferID')
+            ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_destino')
+            ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_motivoID')
+
+            // Resto de tu consulta
+            ->join('dbo.Unidades', 'dbo.ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+            ->select(
+                'dbo.ChoferUnidadAsignada.CUA_unidadID',
+                'dbo.ChoferUnidadAsignada.CUA_choferID',
+                'dbo.ChoferUnidadAsignada.CUA_destino',
+                'dbo.ChoferUnidadAsignada.CUA_motivoID',
+                'dbo.ChoferUnidadAsignada.CUA_fechaAsignacion',
+                'Unidades.Unidades_numeroEconomico'
+            )
+            ->where('dbo.ChoferUnidadAsignada.CUA_estatus', 1)
+            ->get(); // Solo se obtienen las unidades completas
+
+        return $unidadesCompletasDeHoy;
     }
 }

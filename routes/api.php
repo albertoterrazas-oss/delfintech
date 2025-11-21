@@ -4,18 +4,23 @@
 
 use App\Http\Controllers\Auth\Admin\RolesController;
 use App\Http\Controllers\Auth\Admin\UserController;
+use App\Http\Controllers\Catalogs\CorreosController;
 use App\Http\Controllers\Catalogs\DepartamentoController;
 use App\Http\Controllers\Catalogs\DestinosController;
 use App\Http\Controllers\Catalogs\ListaVerificacionController;
 use App\Http\Controllers\Catalogs\MenuController;
 use App\Http\Controllers\Catalogs\MotivosController;
 use App\Http\Controllers\Catalogs\PuestosController;
+use App\Http\Controllers\Catalogs\RegistroEntradaController;
 use App\Http\Controllers\Catalogs\UnidadesController;
 use App\Models\Catalogos\Departamento;
 use App\Models\Catalogos\Puestos;
 use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Models\Admin\User;
+use App\Models\Catalogos\ListaVerificacion;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,13 +33,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+// Las rutas que están dentro de este grupo requerirán el token en el header Authorization
 
 
-
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt')->group(function () {
 
     // RUTA PROTEGIDA CON TOKEN: Destinos
     // Para que funcione en Insomnia/Postman, debes enviar el token en el encabezado 'Authorization: Bearer [TOKEN]'
@@ -45,13 +51,6 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 
-    Route::resource('users', UserController::class)->only([
-        'index', // GET /api/admin/users
-        'store', // POST /api/admin/users
-        'show',  // GET /api/admin/users/{user}
-        'update', // PUT/PATCH /api/admin/users/{user}
-        'destroy' // DELETE /api/admin/users/{user}
-    ]);
 
     // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
     Route::resource('unidades', UnidadesController::class)->only([
@@ -63,11 +62,6 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 
-    Route::resource('roles', RolesController::class)->only([
-        'index', // GET /api/admin/roles
-        'store', // POST /api/admin/roles
-        'update' // PUT/PATCH /api/admin/roles/{role}
-    ]);
 
     Route::resource('motivos', MotivosController::class)->only([
         'index',  // Registra el método index (GET)
@@ -112,13 +106,58 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Opcional: Ruta para obtener el usuario autenticado
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    // Route::get('/user', function (Request $request) {
+    //     return $request->user();
+    // });
 
 
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
+    Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
+    Route::get('QuienconQuienControl', [UnidadesController::class, 'QuienconQuienControl'])->name('QuienconQuienControl');
+    Route::get('DashboardUnidad', [UnidadesController::class, 'DashboardUnidad'])->name('DashboardUnidad');
+
+    Route::post('ReporteMovimientos', [UnidadesController::class, 'ReporteMovimientos'])->name('ReporteMovimientos');
+
+
+
+
+
+    Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
+
+    Route::resource('users', UserController::class)->only([
+        'index', // GET /api/admin/users
+        'store', // POST /api/admin/users
+        'show',  // GET /api/admin/users/{user}
+        'update', // PUT/PATCH /api/admin/users/{user}
+        'destroy' // DELETE /api/admin/users/{user}
+    ]);
+
+    Route::resource('roles', RolesController::class)->only([
+        'index', // GET /api/admin/roles
+        'store', // POST /api/admin/roles
+        'update' // PUT/PATCH /api/admin/roles/{role}
+    ]);
+
+    Route::resource('correos', CorreosController::class)->only([
+        'index', // GET /api/admin/roles
+        'store', // POST /api/admin/roles
+        'update' // PUT/PATCH /api/admin/roles/{role}
+    ]);
+
+
+    Route::post('/changesswho',  [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
+
+    // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
+    // Ejemplo en routes/api.php
+    Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 });
+
+
+// Route::middleware(['authWeb'])->group(function () {
+// La ruta que falta
+
+// });
+
 
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
 Route::get('rolesxmenu/{id}', [RolesController::class, 'getRolesMenu'])->name('rolesxmenu.show');
@@ -126,3 +165,15 @@ Route::put('rolesxmenu/{id}', [RolesController::class, 'rolesxmenu'])->name('rol
 Route::post('rolesxmenu/usersPerRole', [RolesController::class, 'usersPerRole'])->name('rolesxmenu.usersPerRole');
 Route::post('usuarioxmenu', [UserController::class, 'getUsuarioMenu'])->name('usuarioxmenu.index');
 Route::put('usuarioxmenu/{id}', [UserController::class, 'usuarioxmenu'])->name('usuarioxmenu.update');
+
+Route::get('testcorreo', [ListaVerificacionController::class, 'testcorreo'])->name('testcorreo');
+
+Route::get('jwt', function () {
+    $users = User::first();
+
+    // $users[0]->setCompany(User::DEFAULT_COMPANY);
+    $token = JWTAuth::fromUser($users);
+    return response()->json([
+        "token" => $token
+    ]);
+});

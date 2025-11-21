@@ -18,8 +18,23 @@ class UserController extends Controller
      */
     public function index()
     {
+        // 1. Obtiene todos los registros del modelo User.
         $users = User::all();
-        return response()->json($users);
+
+        // 2. Mapea la colección para añadir el campo 'nombre_completo'
+        $usersWithFullName = $users->map(function ($user) {
+            // Concatenamos los campos del objeto User
+            $user->nombre_completo = $user->Personas_nombres . ' ' .
+                $user->Personas_apPaterno . ' ' .
+                $user->Personas_apMaterno;
+
+            // El objeto modificado se devuelve y forma parte de la nueva colección
+            return $user;
+        });
+
+        // 3. Devuelve la colección modificada como respuesta JSON.
+        // Tenga en cuenta que esto devuelve la colección de objetos Eloquent con el campo agregado.
+        return response()->json($usersWithFullName);
     }
 
     /**
@@ -155,22 +170,11 @@ class UserController extends Controller
     public function menus(Request $request)
     {
         $user = $request->user();
-        // dd($user);
-        // $menus = Menu::get();
-
-        // return response()->json($menus);
-
-        // $payload = JWTAuth::parseToken()->getPayload();
-        // $empresa = $payload['companyId'];
-        // $centro_costos = $payload['centroId'];
-
-        // $id = $request->id ?? null;
-
+    
         $user = User::where('Personas_usuarioID', $user->Personas_usuarioID)
             ->with('menus') // <--- Aquí estaba el error: se necesita usar ()
             ->first();
 
-        // dd(vars: $user);
 
         if (!$user) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
@@ -180,10 +184,6 @@ class UserController extends Controller
         $menusData = $user->menus()
             ->orderBy('menu_nombre')
             ->get()
-            // ->filter(function ($menu) use ($empresa, $centro_costos) {
-            //     return ($empresa === null || $menu->pivot->usuarioxmenu_idempresa == $empresa) &&
-            //         ($centro_costos === null || $menu->pivot->usuarioxmenu_idcentrocostos == $centro_costos);
-            // })
             ->map(fn($menu) => $menu->toArray());
 
         $menus = [];

@@ -1,29 +1,18 @@
 import { useEffect, useState } from "react";
-import { Dialog } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 
-// Se asume que esta función maneja las peticiones HTTP (GET, POST, PUT, DELETE)
-import request from "@/utils"; 
-// Supongo que `route` y `validateInputs` existen en tu entorno.
+import request from "@/utils";
 
-// ======================================================================
-// DUMMY FUNCTIONS ADAPTADAS PARA LISTAVERIFICACION (CORREGIDAS)
-// Nombres de campos ajustados a:
-// 'ListaVerificacion_nombre'
-// 'ListaVerificacion_tipo'
-// 'ListaVerificacion_observaciones'
-// 'ListaVerificacion_usuarioID'
-// ======================================================================
 const route = (name, params = {}) => {
     // Rutas dummy adaptadas para ListaVerificacion
     const id = params.id || params; // Permite pasar el ID directamente o como objeto {id: X}
     const routeMap = {
         "listaverificacion.index": "/api/listaverificacion",
         "listaverificacion.store": "/api/listaverificacion",
-        // Usamos el ID de la lista en la ruta de actualización
-        "listaverificacion.update": `/api/listaverificacion/${id}`, 
+        "listaverificacion.update": `/api/listaverificacion/${id}`,
     };
     return routeMap[name] || `/${name}`;
 };
@@ -40,7 +29,6 @@ const listaVerificacionValidations = {
 const validateInputs = (validations, data) => {
     let formErrors = {};
 
-    // Validación de prueba básica:
     if (validations.ListaVerificacion_nombre && !data.ListaVerificacion_nombre?.trim()) formErrors.ListaVerificacion_nombre = 'El nombre de la lista es obligatorio.';
     if (validations.ListaVerificacion_tipo && !data.ListaVerificacion_tipo?.trim()) formErrors.ListaVerificacion_tipo = 'El tipo de lista es obligatorio.';
     if (validations.ListaVerificacion_observaciones && !data.ListaVerificacion_observaciones?.trim()) formErrors.ListaVerificacion_observaciones = 'Las observaciones son obligatorias.';
@@ -54,16 +42,13 @@ const validateInputs = (validations, data) => {
 const initialListData = {
     ListaVerificacion_listaID: null, // ID para identificar en edición
     ListaVerificacion_nombre: "",
-    ListaVerificacion_tipo: "Inspección", // Ejemplo de tipo inicial
+    ListaVerificacion_tipo: "", // Ejemplo de tipo inicial
     ListaVerificacion_observaciones: "",
-    ListaVerificacion_usuarioID: 1, // Valor de ejemplo
-    // Aunque el backend no lo requiere, lo mantenemos si el Datatable lo usa
-    ListaVerificacion_fechaCreacion: new Date().toISOString().slice(0, 10), 
+    // ListaVerificacion_usuarioID: 1, // Valor de ejemplo
+    // ListaVerificacion_fechaCreacion: new Date().toISOString().slice(0, 10), 
 };
 
-// ======================================================================
-// Componente del Formulario de ListaVerificacion (Modal de Headless UI)
-// ======================================================================
+
 function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit, action, errors, setErrors }) {
     // Nota: listToEdit ya debe tener los nombres de campos correctos
     const [listData, setListData] = useState(initialListData);
@@ -75,7 +60,6 @@ function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit,
             const dataToLoad = listToEdit && listToEdit.ListaVerificacion_listaID
                 ? {
                     ...listToEdit,
-                    // Usamos los nuevos nombres de campos
                     ListaVerificacion_nombre: listToEdit.ListaVerificacion_nombre || "",
                     ListaVerificacion_tipo: listToEdit.ListaVerificacion_tipo || "Inspección",
                     ListaVerificacion_observaciones: listToEdit.ListaVerificacion_observaciones || "",
@@ -133,14 +117,14 @@ function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit,
 
             {/* Contenedor del Modal */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
-                <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl relative">
+                <DialogPanel className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl relative">
 
                     {/* Indicador de carga */}
                     {loading && <LoadingDiv />}
 
-                    <Dialog.Title className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
+                    <DialogTitle className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
                         {dialogTitle}
-                    </Dialog.Title>
+                    </DialogTitle>
 
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
                         <div className="space-y-3">
@@ -157,20 +141,16 @@ function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit,
                                 {errors.ListaVerificacion_nombre && <p className="text-red-500 text-xs mt-1">{errors.ListaVerificacion_nombre}</p>}
                             </label>
 
-                            {/* Input Tipo (CORREGIDO NAME) */}
+
                             <label className="block">
                                 <span className="text-sm font-medium text-gray-700">Tipo: <span className="text-red-500">*</span></span>
-                                <select
+                                <input
+                                    type="text"
                                     name="ListaVerificacion_tipo" // ¡CORREGIDO!
                                     value={listData.ListaVerificacion_tipo}
                                     onChange={handleChange}
                                     className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.ListaVerificacion_tipo ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                >
-                                    <option value="Inspección">Inspección</option>
-                                    <option value="Mantenimiento">Mantenimiento</option>
-                                    <option value="Seguridad">Seguridad</option>
-                                    <option value="Auditoría">Auditoría</option>
-                                </select>
+                                />
                                 {errors.ListaVerificacion_tipo && <p className="text-red-500 text-xs mt-1">{errors.ListaVerificacion_tipo}</p>}
                             </label>
 
@@ -187,9 +167,6 @@ function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit,
                                 {errors.ListaVerificacion_observaciones && <p className="text-red-500 text-xs mt-1">{errors.ListaVerificacion_observaciones}</p>}
                             </label>
 
-                            {/* Input UsuarioID (Se deja comentado por limpieza del formulario) */}
-                            {/* <input type="hidden" name="ListaVerificacion_usuarioID" value={listData.ListaVerificacion_usuarioID} /> */}
-                            
                         </div>
 
                         {/* Botones */}
@@ -211,15 +188,12 @@ function ListaVerificacionFormDialog({ isOpen, closeModal, onSubmit, listToEdit,
                             </button>
                         </div>
                     </form>
-                </Dialog.Panel>
+                </DialogPanel>
             </div>
         </Dialog>
     )
 }
 
-// ----------------------------------------------------------------------
-// Componente principal LISTAVERIFICACION
-// ----------------------------------------------------------------------
 
 export default function ListaVerificacion() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -227,6 +201,7 @@ export default function ListaVerificacion() {
     const [action, setAction] = useState('create');
     const [listToEdit, setListToEdit] = useState(null); // Usamos null para edición
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
 
     // Función para abrir modal en modo creación
     const openCreateModal = () => {
@@ -256,6 +231,7 @@ export default function ListaVerificacion() {
      */
     const submit = async (data) => {
         setErrors({});
+        setIsLoading(true);
 
         // 1. VALIDACIÓN (Usando los nombres de campos corregidos)
         const validationResult = validateInputs(listaVerificacionValidations, data);
@@ -285,13 +261,17 @@ export default function ListaVerificacion() {
             // 4. POST-ÉXITO
             await getListas(); // Obtener lista actualizada
             toast.success(successMessage);
+            setIsLoading(false);
+
         } catch (error) {
             console.error("Error al guardar la lista de verificación:", error);
-            
+
             // Intentamos parsear errores del servidor si es posible
             if (error.response && error.response.data && error.response.data.errors) {
                 // Asume que Laravel devuelve errores con los nombres de campo (ListaVerificacion_nombre, etc.)
-                setErrors(error.response.data.errors); 
+                setErrors(error.response.data.errors);
+                setIsLoading(false);
+
                 toast.error("Hubo errores de validación en el servidor.");
             } else {
                 toast.error("Hubo un error al guardar la lista de verificación.");
@@ -301,18 +281,33 @@ export default function ListaVerificacion() {
     };
 
     const getListas = async () => {
+        // 1. Inicia el estado de carga
+        setIsLoading(true);
+
         try {
-            // Usamos fetch ya que `request` no está implementado aquí, pero en tu app usarías `request`.
-            // Si usas axios o una librería similar, la llamada es asíncrona.
             const response = await fetch(route("listaverificacion.index"));
-            if (!response.ok) throw new Error("Fallo al cargar listas de verificación");
+
+            // 2. Verifica la respuesta HTTP antes de procesarla
+            if (!response.ok) {
+                // Lanza un error si el estado HTTP no es 2xx
+                throw new Error(`Error ${response.status}: Fallo al cargar listas de verificación`);
+            }
+
             const data = await response.json();
-            
-            // Asegúrate de que los datos tengan los nombres de campo correctos (ListaVerificacion_...)
+
+            // 3. Actualiza el estado con los datos
             setListas(data);
+
         } catch (error) {
+            // 4. Maneja el error
             console.error('Error al obtener las listas de verificación:', error);
+            // Muestra una notificación al usuario
             toast.error('No se pudieron cargar las listas de verificación.');
+
+        } finally {
+            // 5. El bloque 'finally' se ejecuta SIEMPRE (éxito o error)
+            // Esto garantiza que el estado de carga se desactive
+            setIsLoading(false);
         }
     }
 
@@ -324,7 +319,7 @@ export default function ListaVerificacion() {
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
 
             <div className="flex justify-between items-center p-3 border-b mb-4">
-                <h2 className="text-3xl font-bold text-gray-800">Gestión de Listas de Verificación 📋</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Gestión de Listas de Verificación</h2>
                 <button
                     onClick={openCreateModal}
                     className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
@@ -332,52 +327,37 @@ export default function ListaVerificacion() {
                     + Nueva Lista
                 </button>
             </div>
+            {isLoading ? (
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
 
-            {/* Contenido de la tabla de Listas de Verificación */}
-
-            <Datatable
-                data={listas}
-                virtual={true}
-                columns={[
-                    // Accesor ajustado a los nombres de campos del modelo
-                    // { header: 'ID', accessor: 'ListaVerificacion_listaID' },
-                    { header: 'Nombre', accessor: 'ListaVerificacion_nombre' },
-                    { header: 'Tipo', accessor: 'ListaVerificacion_tipo' },
-                    { header: 'Observaciones', accessor: 'ListaVerificacion_observaciones' },
-                    // {
-                    //     header: 'Fecha Creación',
-                    //     accessor: 'ListaVerificacion_fechaCreacion',
-                    //     cell: (eprops) => {
-                    //         // Usamos el nombre de campo corregido para la fecha
-                    //         const dateValue = eprops.item.ListaVerificacion_fechaCreacion;
-                    //         if (!dateValue) return 'N/A';
-                    //         // Asumiendo que el campo viene en un formato que Date puede leer
-                    //         const date = new Date(dateValue);
-                    //         return date.toLocaleDateString('es-ES');
-                    //     }
-                    // },
-                    { header: 'Usuario', accessor: 'usuario.Personas_nombres' },
-                    {
-                        header: "Acciones", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                            <button
-                                // Los datos pasados al modal ya tienen los nombres correctos
-                                onClick={() => openEditModal(eprops.item)} 
-                                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
-                            >
-                                Editar
-                            </button>
-                        </>)
-                    },
-                ]}
-            />
-
+            ) : (
+                <Datatable
+                    data={listas}
+                    virtual={true}
+                    columns={[
+                        { header: 'Nombre', accessor: 'ListaVerificacion_nombre' },
+                        { header: 'Tipo', accessor: 'ListaVerificacion_tipo' },
+                        { header: 'Observaciones', accessor: 'ListaVerificacion_observaciones' },
+                        { header: 'Usuario', accessor: 'usuario.Personas_nombres' },
+                        {
+                            header: "Acciones", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                                <button
+                                    onClick={() => openEditModal(eprops.item)}
+                                    className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                                >
+                                    Editar
+                                </button>
+                            </>)
+                        },
+                    ]}
+                />
+            )}
             {/* Componente Modal de Headless UI */}
             <ListaVerificacionFormDialog
                 isOpen={isDialogOpen}
                 closeModal={closeModal}
                 onSubmit={submit}
-                // Usamos listToEdit para pasar los datos al formulario
-                listToEdit={listToEdit} 
+                listToEdit={listToEdit}
                 action={action}
                 errors={errors}
                 setErrors={setErrors}

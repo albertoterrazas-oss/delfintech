@@ -9,15 +9,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Illuminate\Http\JsonResponse; 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use App\Models\Admin\User; 
+use App\Models\Admin\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\RedirectResponse; 
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; // MANTENER
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException; 
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Session;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -40,8 +43,13 @@ class AuthenticatedSessionController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): JsonResponse
+
+
+    public function store(Request $request)
     {
+
+        // $request->session()->regenerate();
+        // $request->authenticate();
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             'Personas_usuario' => 'required|string|max:255',
@@ -52,56 +60,45 @@ class AuthenticatedSessionController extends Controller
             throw new ValidationException($validator);
         }
 
-        // 2. Intentar encontrar al usuario (Asegúrate de que 'Personas_usuario' esté indexado en DB)
+        // 2. Intentar encontrar al usuario
         $user = User::where('Personas_usuario', $request->Personas_usuario)->first();
 
-        // 3. Verificar si el usuario existe Y si la contraseña coincide con el hash
+        // 3. Verificar credenciales
         if (!$user || !Hash::check($request->Personas_contrasena, $user->Personas_contrasena)) {
             throw ValidationException::withMessages([
                 'Personas_usuario' => __('Las credenciales proporcionadas no coinciden con nuestros registros.'),
             ]);
         }
 
-        // --- LÓGICA DE AUTENTICACIÓN BASADA EN TOKEN (Sanctum) con Transacción ---
+        // --- LÓGICA DE AUTENTICACIÓN BASADA EN TOKEN (Sanctum) ---
         $token = null;
+        $token = JWTAuth::fromUser($user);
+        Session::put('token', $token);
+    }
 
-        try {
-            // Inicia la transacción para garantizar la atomicidad
-            DB::beginTransaction();
 
-            // 4. Eliminar tokens existentes para evitar acumulación
-            // IMPORTANTE: Asegúrate de que el modelo App\Models\Admin\User use el trait HasApiTokens.
-            $user->tokens()->delete();
 
-            // 5. Generar el nuevo token
-            $token = $user->createToken('auth_token')->plainTextToken;
+    public function login(Request $request)
+    {
 
-            // Confirma la transacción
-            DB::commit();
+        if (!Auth::attempt(['Personas_usuario' => $request->Personas_usuario, 'Personas_contrasena' => $request->Personas_contrasena]))
+            return response()->json([
+                "message" => "Credenciales incorrectas",
+                "status" => false,
+                "data" => null
+            ], HttpResponse::HTTP_OK);
 
-        } catch (\Exception $e) {
-            // Si algo falla, revierte los cambios de la transacción
-            DB::rollBack();
+        $user = User::where('Personas_usuario', $request->Personas_usuario)->first();
 
-            // *** CAMBIO CLAVE PARA DEPURACIÓN ***
-            // Registra el error interno (incluyendo el stack trace) para diagnóstico
-            Log::error('Error FATAL al generar token de acceso para el usuario ID: ' . $user->Personas_usuarioID . ':', [
-                'exception' => $e
-            ]);
-            // **********************************
+        $token = JWTAuth::fromUser($user);
 
-            // Lanza una excepción 409 Conflict explícitamente
-            throw new ConflictHttpException('Hubo un conflicto al intentar generar su sesión de acceso. Por favor, revise los logs del servidor para detalles del error. Intente nuevamente.');
-        }
 
-        // 6. Retornar el token y los datos del usuario en una respuesta JSON
         return response()->json([
-            'id' => $user->Personas_usuarioID,
-            'Personas_usuario' => $user->Personas_usuario,
-            'access_token' => $token,
-            'token_type' => 'Bearer', 
-            'redirect_to' => RouteServiceProvider::HOME,
-        ], 200);
+            "message" => "hola",
+            "data" => $token,
+            "status" => true,
+
+        ], HttpResponse::HTTP_OK);
     }
 
     /**
@@ -111,14 +108,11 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse|JsonResponse
     {
         // Si el usuario está autenticado mediante la API (usando un token)
-        if ($request->user() && $request->user()->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
-            return response()->json(['message' => 'Token revocado exitosamente.'], 200);
-        }
-
-        // Si es una solicitud tradicional de cierre de sesión web (Inertia/Session)
         Auth::guard('web')->logout();
+
+        // $request->session()->forget('user');
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
         return redirect('/');

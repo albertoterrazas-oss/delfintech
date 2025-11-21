@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Catalogs\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -15,65 +17,28 @@ use Inertia\Inertia;
 | contains the "web" middleware group. Now create something great!
 |
 */
+// Ruta para mostrar el formulario (usa el método create)
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login');
 
-// Route::get('/', function () {
-//     return Inertia::render('Home', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register')
-//     ]);
-// });
-
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
 
 Route::get('/', function () {
-    // Redirigir a dashboard si está autenticado
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    // Si no está autenticado, mostrar login
-    return Inertia::render('Auth/Login');
-})->name('login');
-
-// Ruta específica de login que también redirige si está autenticado
-Route::get('/login', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    return Inertia::render('Auth/Login');
+    return redirect()->route('login');
 });
 
-// Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Home', [
-            'initialPage' => '/dashboard'
-        ]);
-    })->name('dashboard');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
+Route::middleware(['authWeb'])->group(function () {
+    // La ruta que falta
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard'); // Es buena práctica darle un nombre
+});
 
-// Rutas de autenticación y API específicas primero
-// Route::middleware(['auth'])->group(function () {
-//     // Rutas específicas de API o backend...
-// });
+Route::post('login', [AuthenticatedSessionController::class, 'store'])
+    ->name('login.attempt')->middleware('authWeb'); // Nota: cambié el nombre de la ruta POST para evitar conflicto con la GET
 
-// Captura todas las demás rutas y las envía a React Router
-Route::get('{path?}', function () {
-    return Inertia::render('Home', [
-        'auth' => [
-            'user' => auth()->user()
-        ]
-    ]);
-})->where('path', '.*')->middleware(['auth']);
+
+Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout')->middleware('auth');
+
 
 require __DIR__ . '/auth.php';

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
 use App\Models\Catalogos\Destinos;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DestinosController extends Controller
@@ -16,10 +17,9 @@ class DestinosController extends Controller
             $destinos = Destinos::all();
 
             // Devolver respuesta JSON
-            return response()->json([
-                'message' => 'Lista de destinos obtenida con éxito',
-                'data' => $destinos
-            ], 200);
+            return response()->json(
+              $destinos
+            , 200);
         } catch (\Exception $e) {
             // Log::error("Error al obtener la lista de destinos: " . $e->getMessage());
             return response()->json([
@@ -37,22 +37,14 @@ class DestinosController extends Controller
      */
     public function store(Request $request)
     {
-
         $user = $request->user();
-        dd($user);
-        // 1. Validar los datos de entrada (solo requeridos + tipo)
-        // Usamos 'bail' para detener la validación después del primer fallo en un campo.
         $validatedData = $request->validate(
             [
                 'Destinos_Nombre'    => 'required|string|max:255',
                 'Destinos_Latitud'   => 'required|numeric',
                 'Destinos_Longitud'  => 'required|numeric',
-                // Asumo que 'Destinos_Estatus' viene como 0 o 1
                 'Destinos_Estatus'   => 'required|boolean',
-                'Destinos_UsuarioID' => 'required|integer|min:1',
-                // 'Destinos_Fecha' se llenará en el código
             ],
-            // Mensajes personalizados
             [
                 'required' => 'El campo :attribute es obligatorio.',
                 'numeric'  => 'El campo :attribute debe ser un número.',
@@ -62,9 +54,9 @@ class DestinosController extends Controller
             ]
         );
 
-        // 2. Preparar datos adicionales antes de la creación
         // Tu modelo tiene $timestamps = false, por lo que gestionamos la fecha.
-        $validatedData['Destinos_Fecha'] = now();
+        $validatedData['Destinos_Fecha'] = Carbon::now()->format('Ymd H:i:s');
+        $validatedData['Destinos_UsuarioID'] = $user->Personas_usuarioID;
 
         try {
             // 3. Crear y guardar el nuevo destino

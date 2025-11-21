@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { Dialog } from '@headlessui/react';
+
+import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
 // Importamos Sonner
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
-
+import { useEffect, useState } from "react";
 import request from "@/utils";
-// Supongo que `route` y `validateInputs` existen en tu entorno.
 
 // DUMMY FUNCTIONS (Reemplazar con tus implementaciones reales)
 const route = (name, params = {}) => {
@@ -55,10 +54,8 @@ const initialUnitData = {
     Unidades_ano: "", // Almacenado como string
     Unidades_placa: "",
     Unidades_kilometraje: 0, // Podría ser un número
-    Unidades_mantenimiento: false, // Booleano
-    Unidades_estatus: "Disponible", // Ejemplo: 'Disponible', 'En Viaje', 'Taller'
-    Unidades_fechaCreacion: "", // Puede no usarse en el formulario
-    Unidades_usuarioID: null, // Si se asigna a un usuario
+    Unidades_mantenimiento: 0, // Booleano
+    Unidades_estatus: "1", // Ejemplo: 'Disponible', 'En Viaje', 'Taller'
 };
 
 // Componente del Formulario de Unidad (Modal de Headless UI)
@@ -75,7 +72,7 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
                     ...unitToEdit,
                     // Aseguramos valores por defecto para campos que pueden ser null
                     Unidades_kilometraje: unitToEdit.Unidades_kilometraje || 0,
-                    Unidades_mantenimiento: !!unitToEdit.Unidades_mantenimiento,
+                    Unidades_mantenimiento: unitToEdit.Unidades_mantenimiento,
                     Unidades_ano: unitToEdit.Unidades_ano ? String(unitToEdit.Unidades_ano) : "",
                 }
                 : initialUnitData;
@@ -85,22 +82,16 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
     }, [isOpen, unitToEdit]);
 
 
-    // Función genérica para manejar los cambios en los inputs
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+        const finalValue = type === 'checkbox' ? (checked ? "1" : "0") : value;
+
         setUnitData(prevData => ({
             ...prevData,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: finalValue
         }));
 
-        // Limpiar error al cambiar el campo
-        if (errors[name]) {
-            setErrors(prevErrors => {
-                const newErrors = { ...prevErrors };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -128,18 +119,19 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
 
             {/* Contenedor del Modal */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
-                <Dialog.Panel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
+                <DialogPanel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl relative">
 
                     {/* Indicador de carga */}
                     {loading && <LoadingDiv />}
 
-                    <Dialog.Title className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
+                    <DialogTitle className="text-2xl font-bold mb-4 text-gray-900 border-b pb-2">
                         {dialogTitle}
-                    </Dialog.Title>
+                    </DialogTitle>
 
-                    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-                        {/* Columna 1 */}
-                        <div className="space-y-3">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
+
+                        {/* Agrupación de campos principales (ya en una sola columna) */}
+                        <div className="space-y-2">
                             {/* Input Número Económico */}
                             <label className="block">
                                 <span className="text-sm font-medium text-gray-700">No. Económico: <span className="text-red-500">*</span></span>
@@ -191,60 +183,71 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
                             </label>
                         </div>
 
-                        {/* Columna 2 */}
-                        <div className="space-y-3">
-                            {/* Input Placa */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Placa:</span>
-                                <input
-                                    type="text"
-                                    name="Unidades_placa"
-                                    value={unitData.Unidades_placa}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </label>
-                            {/* Input Kilometraje */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Kilometraje:</span>
-                                <input
-                                    type="number"
-                                    name="Unidades_kilometraje"
-                                    value={unitData.Unidades_kilometraje}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </label>
-                            {/* Input Estatus */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Estatus:</span>
-                                <select
-                                    name="Unidades_estatus"
-                                    value={unitData.Unidades_estatus}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                >
-                                    <option value="Disponible">Disponible</option>
-                                    <option value="En Viaje">En Viaje</option>
-                                    <option value="Taller">En Taller</option>
-                                    <option value="Inactivo">Inactivo</option>
-                                </select>
-                            </label>
-                            {/* Checkbox Mantenimiento */}
-                            <label className="flex items-center pt-2">
+                        {/* Input Placa (continuación de la columna) */}
+                        <label className="block">
+                            <span className="text-sm font-medium text-gray-700">Placa:</span>
+                            <input
+                                type="text"
+                                name="Unidades_placa"
+                                value={unitData.Unidades_placa}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                        </label>
+
+                        {/* Input Kilometraje (continuación de la columna) */}
+                        <label className="block">
+                            <span className="text-sm font-medium text-gray-700">Kilometraje:</span>
+                            <input
+                                type="number"
+                                name="Unidades_kilometraje"
+                                value={unitData.Unidades_kilometraje}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                        </label>
+
+                        <label className="block">
+                            <span className="text-sm font-medium text-gray-700">Mantenimiento:</span>
+                            <input
+                                type="text"
+                                name="Unidades_mantenimiento"
+                                value={unitData.Unidades_mantenimiento}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                        </label>
+
+                        {/* Checkbox Estatus (centrado) */}
+                        <div className="flex justify-center w-full">
+                            <label className="flex items-center space-x-2">
                                 <input
                                     type="checkbox"
-                                    name="Unidades_mantenimiento"
-                                    checked={unitData.Unidades_mantenimiento}
+                                    name="Unidades_estatus"
+                                    checked={unitData.Unidades_estatus == 1} // Usamos == para manejar 1 o '1'
                                     onChange={handleChange}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
-                                <span className="ml-2 text-sm font-medium text-gray-700">¿Requiere Mantenimiento?</span>
+                                <span className="text-sm font-medium text-gray-700">Estatus</span>
                             </label>
                         </div>
 
-                        {/* Botones */}
-                        <div className="col-span-2 flex justify-end gap-3 pt-4 border-t mt-4">
+                        {/* <div className="flex justify-center w-full">
+                            <label className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    name="Unidades_mantenimiento"
+                                    checked={unitData.Unidades_mantenimiento == 1} // Usamos == para manejar 1 o '1'
+                                    onChange={handleChange}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Mantenimiento</span>
+                            </label>
+                        </div> */}
+
+
+                        {/* Botones (se eliminó col-span-2) */}
+                        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
                             <button
                                 type="button"
                                 onClick={closeModal}
@@ -262,7 +265,7 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
                             </button>
                         </div>
                     </form>
-                </Dialog.Panel>
+                </DialogPanel>
             </div>
         </Dialog>
     )
@@ -278,6 +281,7 @@ export default function Unidades() {
     const [action, setAction] = useState('create'); // 'create' o 'edit'
     const [unitData, setUnitData] = useState(initialUnitData); // Cambiado a unitData
     const [errors, setErrors] = useState({}); // Errores de validación
+    const [isLoading, setIsLoading] = useState(true);
 
     // Función para abrir modal en modo creación
     const openCreateModal = () => {
@@ -320,10 +324,10 @@ export default function Unidades() {
         }
 
         // 2. RUTAS Y MÉTODO: Usa Unidades_ID para la actualización
-        const isEdit = data.Unidades_ID;
+        const isEdit = data.Unidades_unidadID;
         // La ID que se pasa a route debe ser la de la Unidad
         const ruta = isEdit
-            ? route("unidades.update", data.Unidades_ID) // Cambiado a 'units.update'
+            ? route("unidades.update", data.Unidades_unidadID) // Cambiado a 'units.update'
             : route("unidades.store"); // Cambiado a 'units.store'
 
         const method = isEdit ? "PUT" : "POST";
@@ -343,15 +347,25 @@ export default function Unidades() {
         }
     };
 
-    const getUnits = async () => { // Cambiado a getUnits
+    const getUnits = async () => {
+        setIsLoading(true);
+
         try {
-            // Simulación: Si request no está definido para GET, usamos fetch
-            const data = await fetch(route("unidades.index")).then(res => res.json()); // Cambiado a 'units.index'
-            setUnits(data); // Cambiado a setUnits
+            const response = await fetch(route("unidades.index"));
+
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.statusText} (${response.status})`);
+            }
+
+            const data = await response.json();
+            setUnits(data);
+
         } catch (error) {
             console.error('Error al obtener las unidades:', error);
+        } finally {
+            setIsLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
         getUnits() // Llamar a getUnits al montar
@@ -361,7 +375,7 @@ export default function Unidades() {
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
 
             <div className="flex justify-between items-center p-3 border-b mb-4">
-                <h2 className="text-3xl font-bold text-gray-800">Gestión de Unidades 🚚</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Gestión de Unidades </h2>
                 <button
                     onClick={openCreateModal}
                     className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
@@ -370,38 +384,46 @@ export default function Unidades() {
                 </button>
             </div>
 
+            {isLoading ? (
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
 
-            <Datatable
-                data={units}
-                virtual={true}
-                columns={[
-                    { header: 'No. Económico', accessor: 'Unidades_numeroEconomico' },
-                    { header: 'Modelo', accessor: 'Unidades_modelo' },
-                    { header: 'Año', accessor: 'Unidades_ano' },
-                    { header: 'Placa', accessor: 'Unidades_placa' },
-                    { header: 'Estatus', accessor: 'Unidades_estatus' },
-                    {
-                        header: 'Mantenimiento',
-                        accessor: 'Unidades_mantenimiento',
-                        cell: (eprops) => (
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${eprops.item.Unidades_mantenimiento ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                {eprops.item.Unidades_mantenimiento ? 'Sí' : 'No'}
-                            </span>
-                        )
-                    },
-                    {
-                        header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
-                            <button
-                                onClick={() => openEditModal(eprops.item)}
-                                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
-                            >
-                                Editar
-                            </button>
-                        </>)
-                    },
-                ]}
-            />
+            ) : (
+                <Datatable
+                    data={units}
+                    virtual={true}
+                    columns={[
+                        {
+                            header: "Estatus",
+                            accessor: "Unidades_estatus",
+                            width: '20%',
+                            cell: ({ item: { Unidades_estatus } }) => {
+                                const color = String(Unidades_estatus) === "1"
+                                    ? "bg-green-300" // Si es "1"
+                                    : "bg-red-300";  // Si NO es "1" (incluyendo "2", "0", null, etc.)
 
+                                return (
+                                    <span className={`inline-flex items-center justify-center rounded-full ${color} w-4 h-4`} />
+                                );
+                            },
+                        },
+                        { header: 'No. Económico', accessor: 'Unidades_numeroEconomico' },
+                        { header: 'Modelo', accessor: 'Unidades_modelo' },
+                        { header: 'Año', accessor: 'Unidades_ano' },
+                        { header: 'Placa', accessor: 'Unidades_placa' },
+                        { header: 'Mantenimiento', accessor: 'Unidades_mantenimiento' },
+                        {
+                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                                <button
+                                    onClick={() => openEditModal(eprops.item)}
+                                    className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"
+                                >
+                                    Editar
+                                </button>
+                            </>)
+                        },
+                    ]}
+                />
+            )}
 
             {/* Componente Modal de Headless UI */}
             <UnitFormDialog // Cambiado de PersonFormDialog a UnitFormDialog

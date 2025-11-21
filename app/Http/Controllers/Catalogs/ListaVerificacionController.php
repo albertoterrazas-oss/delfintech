@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ConfiguracionCorreo;
 use Illuminate\Http\Request;
 use App\Models\Catalogos\ListaVerificacion; // Asegúrate de importar el modelo
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException; // Se recomienda usar la excepción específica
+use Illuminate\Support\Facades\Mail;
 
 class ListaVerificacionController extends Controller
 {
@@ -14,9 +16,9 @@ class ListaVerificacionController extends Controller
     // ¡IMPORTANTE! Las claves deben coincidir con las columnas del modelo ($fillable)
     private $validationRules = [
         'ListaVerificacion_nombre'       => 'required|string|max:255',
-        'ListaVerificacion_tipo'         => 'required|string|max:100',
+        'ListaVerificacion_tipo'         => 'required',
         'ListaVerificacion_observaciones' => 'required|string', // Cambiado a 'string'
-        'ListaVerificacion_usuarioID'    => 'required|integer', // Asumiendo que es un ID de usuario entero
+        // 'ListaVerificacion_usuarioID'    => 'required|integer', // Asumiendo que es un ID de usuario entero
     ];
 
     /**
@@ -40,10 +42,11 @@ class ListaVerificacionController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            // 1. Validar los datos de entrada
-            // El método validate() de Laravel lanza una ValidationException en caso de fallo,
-            // que es manejada automáticamente por Laravel para devolver una respuesta 422 JSON
+            $user = $request->user();
+
             $validatedData = $request->validate($this->validationRules);
+
+            $validatedData['ListaVerificacion_usuarioID'] = $user->Personas_usuarioID;
 
             // 2. Crear el nuevo registro (Mass Assignment seguro debido a $fillable)
             $lista = ListaVerificacion::create($validatedData);
@@ -131,5 +134,61 @@ class ListaVerificacionController extends Controller
     public function edit(string $id)
     {
         return response()->json(['message' => 'Ruta no implementada para APIs (solo para formularios web)'], 404);
+    }
+
+
+    /**
+     * Configura el servicio de correo con las credenciales de una empresa específica.
+     *
+     * @param object $empresa Objeto o array con los datos de la empresa.
+     * @return void
+     */
+    public function configEmail(): void
+    {
+        // 1. Obtener los valores de las variables de entorno.
+        // Usamos env() para leer el .env directamente.
+
+        $host = env('MAIL_HOST');
+        $port = (int) env('MAIL_PORT'); // Asegurar que sea entero
+        $username = env('MAIL_USERNAME');
+        $password = env('MAIL_PASSWORD');
+        // Laravel espera 'tls' o 'ssl' para encryption.
+        $encryption = env('MAIL_ENCRYPTION', 'ssl');
+
+        // 2. Obtener la plantilla de configuración actual para el mailer 'smtp'.
+        $config = config('mail.mailers.smtp');
+
+        // 3. Modificar los valores del mailer 'smtp' con los datos del .env.
+        $config['host'] = $host;
+        $config['port'] = $port;
+        $config['username'] = $username;
+        $config['password'] = $password;
+        $config['encryption'] = $encryption;
+
+        // 4. Crear el array de configuración del remitente ('from') desde el .env.
+        $from = [
+            'address' => env('MAIL_FROM_ADDRESS'),
+            'name' => env('MAIL_FROM_NAME', 'DELFIN'), // Usamos 'DELFIN' como valor por defecto si no está en el .env
+        ];
+
+        // 5. Inyectar la configuración dinámica.
+
+        // A. Sobrescribir el mailer 'smtp'
+        config(['mail.mailers.smtp' => $config]);
+
+        // B. Sobrescribir la dirección 'from' global
+        config(['mail.from' => $from]);
+    }
+    public function testcorreo(Request $request)
+    {
+
+        $this->configEmail();
+        $Datos = (object) [
+            "Titulo" => "Test",
+            "Detalle" => "TEST: Envio de configuracion de correos",
+        ];
+        Mail::to("corpusj1493@gmail.com")->send(new ConfiguracionCorreo($Datos));
+
+        return response()->json(['message' => 'Se envio con exito el correo'], 200);
     }
 }

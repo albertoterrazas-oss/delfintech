@@ -531,13 +531,13 @@ const RegistroYSalidaUnificado = () => {
                     <Datatable
                         data={requests.UltimosMovimientos}
                         virtual={true}
-                        searcher={false}
+                        searcher={true}
 
                         columns={[
+                            { header: 'Tipo', accessor: 'Movimientos_tipoMovimiento' },
                             { header: 'Fecha', accessor: 'Movimientos_fecha' },
                             { header: 'Kilometraje', accessor: 'Movimientos_kilometraje' },
-                            { header: 'Chofer', accessor: 'Unidades_ano' },
-                            { header: 'Tipo', accessor: 'Movimientos_tipoMovimiento' },
+                            { header: 'Chofer', accessor: 'nombre_chofer' },
                         ]}
                     />
 

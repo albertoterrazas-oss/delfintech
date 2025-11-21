@@ -4,6 +4,7 @@
 
 use App\Http\Controllers\Auth\Admin\RolesController;
 use App\Http\Controllers\Auth\Admin\UserController;
+use App\Http\Controllers\Catalogs\CorreosController;
 use App\Http\Controllers\Catalogs\DepartamentoController;
 use App\Http\Controllers\Catalogs\DestinosController;
 use App\Http\Controllers\Catalogs\ListaVerificacionController;
@@ -18,6 +19,7 @@ use App\Models\Catalogos\Unidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Admin\User;
+use App\Models\Catalogos\ListaVerificacion;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 /*
@@ -112,9 +114,12 @@ Route::middleware('jwt')->group(function () {
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
     Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
     Route::get('QuienconQuienControl', [UnidadesController::class, 'QuienconQuienControl'])->name('QuienconQuienControl');
+    Route::get('DashboardUnidad', [UnidadesController::class, 'DashboardUnidad'])->name('DashboardUnidad');
+
+    Route::post('ReporteMovimientos', [UnidadesController::class, 'ReporteMovimientos'])->name('ReporteMovimientos');
 
 
-    
+
 
 
     Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
@@ -132,6 +137,13 @@ Route::middleware('jwt')->group(function () {
         'store', // POST /api/admin/roles
         'update' // PUT/PATCH /api/admin/roles/{role}
     ]);
+
+    Route::resource('correos', CorreosController::class)->only([
+        'index', // GET /api/admin/roles
+        'store', // POST /api/admin/roles
+        'update' // PUT/PATCH /api/admin/roles/{role}
+    ]);
+
 
     Route::post('/changesswho',  [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
 
@@ -154,6 +166,7 @@ Route::post('rolesxmenu/usersPerRole', [RolesController::class, 'usersPerRole'])
 Route::post('usuarioxmenu', [UserController::class, 'getUsuarioMenu'])->name('usuarioxmenu.index');
 Route::put('usuarioxmenu/{id}', [UserController::class, 'usuarioxmenu'])->name('usuarioxmenu.update');
 
+Route::get('testcorreo', [ListaVerificacionController::class, 'testcorreo'])->name('testcorreo');
 
 Route::get('jwt', function () {
     $users = User::first();

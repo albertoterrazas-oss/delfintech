@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
 use App\Models\Catalogos\ChoferUnidadAsignar;
+use App\Models\Catalogos\IncidenciasMovimiento;
+use App\Models\Catalogos\Movimientos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Catalogos\Unidades; // Importar el modelo de Unidades
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UnidadesController extends Controller
 {
@@ -224,10 +227,157 @@ class UnidadesController extends Controller
 
     public function DashboardUnidad(Request $request)
     {
-        $ultimas5Unidades = Unidades::latest()->limit(5)->get();
+        // Fetch the last 5 units
+        $ultimas5Unidades = Unidades::orderBy('Unidades_fechaCreacion', 'desc')->limit(5)->get();
+        // Obtener el total de unidades (para el total general, no solo las 5)
+        $totalUnidades = Unidades::count();
+
+        // Obtener movimientos de hoy
+        $movimientosDeHoy = Movimientos::whereDate('Movimientos_fecha', Carbon::today())->get();
+        $totalMovimientosHoy = $movimientosDeHoy->count(); // Total de movimientos de hoy
+
+        // Obtener todas las incidencias
+        $incidencias = IncidenciasMovimiento::get();
+        $totalIncidencias = $incidencias->count(); // Total de incidencias
+
+        // Prepare the data array
+        $data = [
+            'ultimas5Unidades' => $ultimas5Unidades,
+            'totalUnidades' => $totalUnidades, // Total general de unidades en la BD
+            'movimientosDeHoy' => $movimientosDeHoy,
+            'totalMovimientosHoy' => $totalMovimientosHoy, // Total de movimientos de hoy
+            'incidencias' => $incidencias,
+            'totalIncidencias' => $totalIncidencias, // Total de incidencias
+        ];
+
+        // Return the data as a JSON response
+        return response()->json($data);
     }
 
 
+    public function ReporteMovimientos(Request $request)
+    {
+        // 1. Iniciar la consulta y seleccionar los campos necesarios
+        $query = DB::table('dbo.Movimientos')
+            ->select(
+                'Movimientos.Movimientos_fecha',
+                'Movimientos.Movimientos_tipoMovimiento',
+                'Movimientos.Movimientos_kilometraje',
+                'Movimientos.Movimientos_combustible',
+
+                'Movimientos.Movimientos_usuarioID',
+                DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
+                'Unidades.Unidades_placa',
+                'Unidades.Unidades_modelo',
+                'Unidades.Unidades_numeroEconomico',
+                'Motivos.Motivos_nombre',
+                'Destinos.Destinos_Nombre'
+            )
+            ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
+            ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
+            ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+            ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
+            ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
+            ->orderBy('Movimientos.Movimientos_fecha', 'DESC');
+
+        // 2. Filtrar por Rango de Fechas (Solo si ambas fechas están presentes y NO son nulas)
+        // Esto corrige el problema de enviar [null, null] al whereBetween.
+        if ($request->filled('fechaInicio') && $request->filled('fechaFin')) {
+            $fechaInicio = $request->input('fechaInicio');
+            $fechaFin = $request->input('fechaFin');
+
+            $query->whereBetween('Movimientos.Movimientos_fecha', [$fechaInicio, $fechaFin]);
+        }
+
+        // 3. Filtrar por Tipo de Movimiento (Opcional, solo si el campo está lleno)
+        if ($request->filled('tipoMovimiento')) {
+            $query->where('Movimientos.Movimientos_tipoMovimiento', $request->input('tipoMovimiento'));
+        }
+
+        // 4. Filtrar por Usuario (Opcional, solo si el campo está lleno)
+        if ($request->filled('usuarioID')) {
+            $query->where('Movimientos.Movimientos_usuarioID', $request->input('usuarioID'));
+        }
+
+        // 5. Ejecutar la consulta
+        $movimientosFiltrados = $query->get();
+
+        // 6. Calcular totales
+        // Se puede hacer esto de forma eficiente usando colecciones después de obtener los datos.
+        $totalSalidas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'SALIDA')->count();
+        $totalEntradas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'ENTRADA')->count();
+
+        // 7. Preparar la respuesta
+        $data = [
+            'movimientos' => $movimientosFiltrados,
+            'totalMovimientos' => $movimientosFiltrados->count(),
+            'totalSalidas' => $totalSalidas,
+            'totalEntradas' => $totalEntradas,
+        ];
+
+        return response()->json($data);
+    }
+    // public function ReporteMovimientos(Request $request)
+    // {
+    //     // 1. Iniciar la consulta y seleccionar los campos necesarios
+    //     $query = DB::table('dbo.Movimientos')
+    //         ->select(
+    //             'Movimientos.Movimientos_fecha',
+    //             'Movimientos.Movimientos_tipoMovimiento',
+    //             'Movimientos.Movimientos_usuarioID',
+    //             DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
+    //             'Unidades.Unidades_placa',
+    //             'Unidades.Unidades_modelo',
+    //             'Unidades.Unidades_numeroEconomico',
+    //             'Motivos.Motivos_nombre',
+    //             'Destinos.Destinos_Nombre'
+    //         )
+    //         ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
+    //         ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
+    //         ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+    //         ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
+    //         ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
+
+    //         // **ERROR CORREGIDO:** Ordenar por una columna existente (Movimientos_fecha)
+    //         ->orderBy('Movimientos.Movimientos_fecha', 'DESC');
+
+    //     // 2. Filtrar por Rango de Fechas (Obligatorio en este caso)
+    //     if ($request->has('fechaInicio') && $request->has('fechaFin')) {
+    //         $fechaInicio = $request->input('fechaInicio');
+    //         $fechaFin = $request->input('fechaFin');
+
+    //         // **ERROR CORREGIDO:** Usar el nombre de columna correcto 'Movimientos.Movimientos_fecha'
+    //         // NOTA: Si necesitas incluir el día completo, podrías usar Carbon para modificar $fechaFin a las 23:59:59.
+    //         $query->whereBetween('Movimientos.Movimientos_fecha', [$fechaInicio, $fechaFin]);
+    //     }
+
+    //     // 3. Filtrar por Tipo de Movimiento (Opcional)
+    //     if ($request->has('tipoMovimiento')) {
+    //         $query->where('Movimientos.Movimientos_tipoMovimiento', $request->input('tipoMovimiento'));
+    //     }
+
+    //     // 4. Filtrar por Usuario (Opcional)
+    //     if ($request->has('usuarioID')) {
+    //         $query->where('Movimientos.Movimientos_usuarioID', $request->input('usuarioID'));
+    //     }
+
+    //     // 5. Ejecutar la consulta
+    //     $movimientosFiltrados = $query->get();
+
+    //     $totalSalidas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'SALIDA')->count();
+
+    //     $totalEntradas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'ENTRADA')->count();
+
+    //     // 6. Preparar la respuesta
+    //     $data = [
+    //         'movimientos' => $movimientosFiltrados,
+    //         'totalMovimientos' => $movimientosFiltrados->count(),
+    //         'totalSalidas' => $totalSalidas, // ⬅️ Añadido
+    //         'totalEntradas' => $totalEntradas, // ⬅️ Añadido
+    //     ];
+
+    //     return response()->json($data);
+    // }
     public function QuienconQuienUnidades(Request $request)
     {
         // Obtiene la fecha actual en formato 'Y-m-d'

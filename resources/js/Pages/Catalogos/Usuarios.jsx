@@ -447,7 +447,7 @@ export default function Usuarios() {
                     virtual={true}
                     columns={[
                         // { header: 'ID', accessor: 'id' },
-                        { header: 'Nombre', accessor: 'Personas_nombres' },
+                        { header: 'Nombre', accessor: 'nombre_completo' },
                         { header: 'Usuario', accessor: 'Personas_usuario' },
                         { header: 'Correo', accessor: 'Personas_correo' },
                         {
@@ -475,7 +475,7 @@ export default function Usuarios() {
                 setErrors={setErrors} // Pasamos el setter de errores
             />
 
-             <PermissionTreeTable initialData={menus} />;
+             {/* <PermissionTreeTable initialData={menus} />; */}
 
         </div>
     );

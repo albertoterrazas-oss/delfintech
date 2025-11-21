@@ -64,12 +64,18 @@ const routes = [
         path: "/QuienConQuienTransporte",
         import: lazy(() => import('./Catalogos/QuienConQuienTransporte'))
     },
- {
+    {
         path: "/roles",
         import: lazy(() => import('./Catalogos/Roles'))
     },
+    {
+        path: "/correosnotificaciones",
+        import: lazy(() => import('./Catalogos/Correos'))
+    },
 
-    
+
+
+
 
 
 

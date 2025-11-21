@@ -92,7 +92,7 @@ export default function QuienConQuienTransporte() {
         try {
             const response = await fetch(route('changesswho'), {
                 method: "POST",
-                body: JSON.stringify({quienconquien:states.quienConQuien}),
+                body: JSON.stringify({ quienconquien: states.quienConQuien }),
                 headers: { "Content-Type": "application/json" }
             });
 
@@ -116,7 +116,10 @@ export default function QuienConQuienTransporte() {
 
     return (
         <div className="relative h-[98%] pb-4 px-3 overflow-auto blue-scroll">
-            {states.loading && <LoadingDiv />}
+            {states.loading &&
+                <div className='flex items-center justify-center h-[100%] w-full'> <LoadingDiv /> </div>
+
+            }
             {!states.loading &&
                 <div className="flex flex-col h-full">
 
@@ -126,7 +129,7 @@ export default function QuienConQuienTransporte() {
                             onClick={submit}
                             className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
                         >
-                            Registrar Salida
+                           Guardar quien con quien
                         </button>
                     </div>
 
@@ -165,8 +168,6 @@ export default function QuienConQuienTransporte() {
                                 //         valueExpr: "Personas_usuarioID",
                                 //     },
                                 // },
-
-
                                 {
                                     header: 'Motivos',
                                     accessor: 'CUA_motivoID',

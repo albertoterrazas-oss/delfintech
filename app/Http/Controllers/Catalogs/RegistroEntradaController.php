@@ -129,7 +129,7 @@ class RegistroEntradaController extends Controller
             // $unidad->CUA_motivoID = null;
 
             $datosAsignacion = [
-                'CUA_unidadID'             => $asignacion->CUA_unidadID, 
+                'CUA_unidadID'             => $asignacion->CUA_unidadID,
                 'CUA_choferID'             => null,
                 'CUA_ayudanteID'        => null,
                 'CUA_motivoID'             => null,
@@ -272,10 +272,37 @@ class RegistroEntradaController extends Controller
             }
 
             // 2. Obtener los últimos 5 movimientos relacionados con esas asignaciones
-            $movimientos = Movimientos::whereIn('Movimientos_asignacionID', $assignmentIds)
-                ->orderBy('Movimientos_fecha', 'desc')
+            // $movimientos = Movimientos::whereIn('Movimientos_asignacionID', $assignmentIds)
+            //     ->orderBy('Movimientos_fecha', 'desc')
+            //     ->limit(5)
+            //     ->get();
+
+            $movimientos = DB::table('dbo.Movimientos')
+                ->select(
+                    'Movimientos.Movimientos_fecha',
+                    'Movimientos.Movimientos_tipoMovimiento',
+                    'Movimientos.Movimientos_kilometraje',
+                    'Movimientos.Movimientos_combustible',
+
+                    'Movimientos.Movimientos_usuarioID',
+                    DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
+                    'Unidades.Unidades_placa',
+                    'Unidades.Unidades_modelo',
+                    'Unidades.Unidades_numeroEconomico',
+                    'Motivos.Motivos_nombre',
+                    'Destinos.Destinos_Nombre'
+                )
+                ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
+                ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
+                ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
+                ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
+                ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
+                ->orderBy('Movimientos.Movimientos_fecha', 'DESC')
+
+                ->whereIn('Movimientos_asignacionID', $assignmentIds)
                 ->limit(5)
                 ->get();
+
 
             return response()->json($movimientos, 200);
         } catch (\Exception $e) {

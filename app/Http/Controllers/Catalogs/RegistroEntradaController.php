@@ -200,46 +200,55 @@ class RegistroEntradaController extends Controller
 
     public function changesswho(Request $request)
     {
-        // 1. Corrección: Reemplazar isset($request->input(...)) por !is_null($request->input(...))
-        // Esto verifica que el array 'quienconquien' existe y que es efectivamente un array.
+        // 1. Obtener los datos del request
         $quienConQuien = $request->input('quienconquien');
 
         if (!is_null($quienConQuien) && is_array($quienConQuien)) {
 
             // 2. Iterar sobre la lista de unidades
-            // Usamos $quienConQuien que ya está guardado en una variable
             foreach ($quienConQuien as $unidad) {
 
                 // 3. Extraer los datos necesarios del arreglo actual
-                // Los datos de asignación están prefijados con 'CUA_'
                 $unidadID = $unidad['CUA_unidadID'];
 
-                // Usamos el operador de fusión de null (??) para simplificar la verificación de existencia
+                // Usamos el operador de fusión de null (??)
                 $choferID = $unidad['CUA_choferID'] ?? null;
                 $destino = $unidad['CUA_destino'] ?? null;
                 $motivoID = $unidad['CUA_motivoID'] ?? null;
-
                 $ayudanteID = null;
 
-                // 4. Crear el arreglo de datos para la asignación
+                // 🌟 4. VERIFICACIÓN DE EXISTENCIA 
+                // Buscar una asignación existente y activa (CUA_estatus = 1) para esta unidad.
+                $asignacionExistente = ChoferUnidadAsignar::where('CUA_unidadID', $unidadID)
+                    ->where('CUA_estatus', 1)
+                    ->first();
+
+                 // Si se encuentra una asignación activa, se omite y pasa a la siguiente unidad.
+                if ($asignacionExistente) {
+                    // Puedes agregar un log aquí si deseas registrar las unidades omitidas
+                    // \Log::info("Asignación activa ya existe para la Unidad ID: " . $unidadID);
+                    continue; // Salta al siguiente elemento del bucle `foreach`
+                }
+
+                // Si no hay una asignación activa, procede a crear la nueva.
+
+                // 5. Crear el arreglo de datos para la asignación
                 $datosAsignacion = [
-                    'CUA_unidadID'             => $unidadID,
-                    'CUA_choferID'             => $choferID,
-                    'CUA_ayudanteID'        => $ayudanteID,
-                    'CUA_motivoID'             => $motivoID,
-                    'CUA_destino'             => $destino,
-                    'CUA_estatus'             => 1, // Asumiendo que 1 es 'ACTIVO'
-                    'CUA_fechaAsignacion'     => Carbon::now()->format('Ymd H:i:s'),
+                    'CUA_unidadID'           => $unidadID,
+                    'CUA_choferID'           => $choferID,
+                    'CUA_ayudanteID'         => $ayudanteID,
+                    'CUA_motivoID'           => $motivoID,
+                    'CUA_destino'            => $destino,
+                    'CUA_estatus'            => 1, // Asumiendo que 1 es 'ACTIVO'
+                    'CUA_fechaAsignacion'    => Carbon::now()->format('Ymd H:i:s'),
                 ];
 
-                // 5. Guardar en la base de datos
-                // Asegúrate de que ChoferUnidadAsignar::create() maneje bien los valores 'null'
-                // y de que el modelo tenga el array $fillable configurado
+                // 6. Guardar en la base de datos
                 ChoferUnidadAsignar::create($datosAsignacion);
             }
 
             // Devolver una respuesta JSON de éxito al final de la iteración
-            return response()->json(['success' => true, 'message' => 'Asignaciones procesadas correctamente.']);
+            return response()->json(['success' => true, 'message' => 'Asignaciones procesadas correctamente. Las unidades con asignaciones activas existentes fueron omitidas.']);
         } else {
             // Devolver una respuesta JSON de error
             return response()->json(['success' => false, 'message' => 'No se encontró la clave "quienconquien" o no es un arreglo válido.'], 400);

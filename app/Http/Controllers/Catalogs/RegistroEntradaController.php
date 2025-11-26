@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ConfiguracionCorreo;
 use App\Models\Admin\User;
 use App\Models\Catalogos\ChoferUnidadAsignar;
+use App\Models\Catalogos\CorreoNotificacion;
 use App\Models\Catalogos\IncidenciasMovimiento;
+use App\Models\Catalogos\ListaVerificacion;
 use App\Models\Catalogos\Movimientos;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class RegistroEntradaController extends Controller
 {
@@ -74,6 +78,7 @@ class RegistroEntradaController extends Controller
     //         ], 500);
     //     }
     // }
+
     public function store(Request $request)
     {
         try {
@@ -105,43 +110,77 @@ class RegistroEntradaController extends Controller
 
             $movimiento = Movimientos::create($datosMovimiento);
 
-            // 3. Crea las Incidencias del Movimiento
-            foreach ($request->checklist as $list) {
 
+            // $incidenciasGuardadas = [];
+            // foreach ($request->checklist as $list) {
+            //     $datosIncidencia = [
+            //         'IncidenciasMovimiento_movimientoID'  => $movimiento->Movimientos_movimientoID,
+            //         'IncidenciasMovimiento_listaID'       => $list['id'],
+            //         'IncidenciasMovimiento_usuarioID'     => $user->Personas_usuarioID,
+            //         'IncidenciasMovimiento_observaciones' => $list['observacion'],
+            //     ];
+
+            //     $Incedencia = IncidenciasMovimiento::create($datosIncidencia);
+
+
+            //     $lista = ListaVerificacion::find($list['id']);
+            //     dd($lista);
+
+            //     $Incedencia = $lista
+            //     // $ListaVerificacion
+            //     $incidenciasGuardadas[] = $Incedencia;
+            // }
+
+            $incidenciasGuardadas = [];
+            foreach ($request->checklist as $list) {
+                // 1. Prepara los datos para la nueva incidencia
                 $datosIncidencia = [
                     'IncidenciasMovimiento_movimientoID'  => $movimiento->Movimientos_movimientoID,
-                    'IncidenciasMovimiento_listaID'       => $list['id'],
-                    // Se cambió 'IncidenciasMovimiento_usuarioID' a $user->Personas_usuarioID, asumiendo que el usuario actual es quien registra.
-                    'IncidenciasMovimiento_usuarioID'     => $user->Personas_usuarioID,
+                    'IncidenciasMovimiento_listaID'      => $list['id'],
+                    'IncidenciasMovimiento_usuarioID'    => $user->Personas_usuarioID,
                     'IncidenciasMovimiento_observaciones' => $list['observacion'],
                 ];
 
-                $Incedencias = IncidenciasMovimiento::create($datosIncidencia);
+                $incidencia = IncidenciasMovimiento::create($datosIncidencia);
+                $lista = ListaVerificacion::find($list['id']);
+                $incidencia->listaVerificacion = $lista;
+                $incidenciasGuardadas[] = $incidencia;
             }
 
-            // 4. **ACTUALIZACIÓN CLAVE: Cambia el estatus de la asignación a 0**
-            $asignacion->update(['CUA_estatus' => 0]);
+            $this->configEmail();
 
+            $Correos = CorreoNotificacion::all(); // Obtiene los correos de notificación
 
-            // $unidad->CUA_unidadID = $unidad->Unidades_unidadID;
-            // $unidad->CUA_choferID = null;
-            // $unidad->CUA_destino = null;
-            // $unidad->CUA_motivoID = null;
-
-            $datosAsignacion = [
-                'CUA_unidadID'             => $asignacion->CUA_unidadID,
-                'CUA_choferID'             => null,
-                'CUA_ayudanteID'        => null,
-                'CUA_motivoID'             => null,
-                'CUA_destino'             => null,
-                'CUA_estatus'             => 1, // Asumiendo que 1 es 'ACTIVO'
-                'CUA_fechaAsignacion'     => Carbon::now()->format('Ymd H:i:s'),
+            $Datos = (object) [
+                "Titulo" => "CORREO DE INCIDENCIAS",
+                "Incidencias" => $incidenciasGuardadas,
             ];
 
-            // 5. Guardar en la base de datos
-            // Asegúrate de que ChoferUnidadAsignar::create() maneje bien los valores 'null'
-            // y de que el modelo tenga el array $fillable configurado
-            ChoferUnidadAsignar::create($datosAsignacion);
+            foreach ($Correos as $correo) {
+                $destinatario = $correo->correoNotificaciones_correo;
+                Mail::to($destinatario)->send(new ConfiguracionCorreo($Datos));
+            }
+
+
+            if ($request->movementType == "ENTRADA") {
+                $asignacion->update([
+                    'CUA_estatus' => 0 // 0 = INACTIVO/FINALIZADO
+                ]);
+
+                // Si realmente quieres crear un registro para la 'Entrada' con estatus 1:
+                $datosAsignacion = [
+                    'CUA_unidadID'        => $asignacion->CUA_unidadID, // Usar la ID de la asignación anterior
+                    'CUA_choferID'        => null,
+                    'CUA_ayudanteID'      => null,
+                    'CUA_motivoID'        => null,
+                    'CUA_destino'         => null,
+                    'CUA_estatus'         => 1, // 1 = ACTIVO/EN PATIO/DISPONIBLE
+                    'CUA_fechaAsignacion' => Carbon::now()->format('Ymd H:i:s')
+                ];
+
+                // Ejemplo de cómo guardar esta nueva asignación de 'Entrada' si usas un modelo:
+                ChoferUnidadAsignar::create($datosAsignacion);
+            }
 
             // 5. **Respuesta Exitosa**
             return response()->json([
@@ -163,6 +202,130 @@ class RegistroEntradaController extends Controller
             ], 500);
         }
     }
+
+
+    public function configEmail(): void
+    {
+        // 1. Obtener los valores de las variables de entorno.
+        // Usamos env() para leer el .env directamente.
+
+        $host = env('MAIL_HOST');
+        $port = (int) env('MAIL_PORT'); // Asegurar que sea entero
+        $username = env('MAIL_USERNAME');
+        $password = env('MAIL_PASSWORD');
+        // Laravel espera 'tls' o 'ssl' para encryption.
+        $encryption = env('MAIL_ENCRYPTION', 'ssl');
+
+        // 2. Obtener la plantilla de configuración actual para el mailer 'smtp'.
+        $config = config('mail.mailers.smtp');
+
+        // 3. Modificar los valores del mailer 'smtp' con los datos del .env.
+        $config['host'] = $host;
+        $config['port'] = $port;
+        $config['username'] = $username;
+        $config['password'] = $password;
+        $config['encryption'] = $encryption;
+
+        // 4. Crear el array de configuración del remitente ('from') desde el .env.
+        $from = [
+            'address' => env('MAIL_FROM_ADDRESS'),
+            'name' => env('MAIL_FROM_NAME', 'DELFIN'), // Usamos 'DELFIN' como valor por defecto si no está en el .env
+        ];
+
+        // 5. Inyectar la configuración dinámica.
+
+        // A. Sobrescribir el mailer 'smtp'
+        config(['mail.mailers.smtp' => $config]);
+
+        // B. Sobrescribir la dirección 'from' global
+        config(['mail.from' => $from]);
+    }
+    // public function store(Request $request)
+    // {
+    //     try {
+    //         $user = $request->user();
+
+    //         // 1. Obtiene la asignación activa (estatus 1)
+    //         $asignacion = ChoferUnidadAsignar::where('CUA_estatus', 1)
+    //             ->latest('CUA_fechaAsignacion')
+    //             ->where('CUA_unidadID', $request->unit)
+    //             ->first();
+
+    //         // **Añadir una verificación para $asignacion para evitar un error si no se encuentra**
+    //         if (!$asignacion) {
+    //             return response()->json([
+    //                 'message' => 'No se encontró una asignación de unidad y chófer activa (CUA_estatus = 1).',
+    //             ], 404);
+    //         }
+
+    //         // 2. Prepara y crea el Movimiento
+    //         $datosMovimiento = [
+    //             'Movimientos_fecha'          => Carbon::now()->format('Ymd H:i:s'),
+    //             'Movimientos_tipoMovimiento' => $request->movementType,
+    //             'Movimientos_asignacionID'   => $asignacion->CUA_asignacionID, // ID de la Asignación
+    //             'Movimientos_kilometraje'    => $request->kilometers,
+    //             'Movimientos_combustible'    => $request->combustible,
+    //             'Movimientos_observaciones'  => $request->observation,
+    //             'Movimientos_usuarioID'      => $user->Personas_usuarioID,
+    //         ];
+
+    //         $movimiento = Movimientos::create($datosMovimiento);
+
+    //         // 3. Crea las Incidencias del Movimiento
+    //         foreach ($request->checklist as $list) {
+
+    //             $datosIncidencia = [
+    //                 'IncidenciasMovimiento_movimientoID'  => $movimiento->Movimientos_movimientoID,
+    //                 'IncidenciasMovimiento_listaID'       => $list['id'],
+    //                 'IncidenciasMovimiento_usuarioID'     => $user->Personas_usuarioID,
+    //                 'IncidenciasMovimiento_observaciones' => $list['observacion'],
+    //             ];
+
+    //             $Incedencias = IncidenciasMovimiento::create($datosIncidencia);
+    //         }
+
+
+
+    //         if ($request->movementType == "ENTRADA") {
+    //             $asignacion->update([
+    //                 'CUA_estatus' => 0 // 0 = INACTIVO/FINALIZADO
+    //             ]);
+
+    //             // Si realmente quieres crear un registro para la 'Entrada' con estatus 1:
+    //             $datosAsignacion = [
+    //                 'CUA_unidadID'        => $asignacion->CUA_unidadID, // Usar la ID de la asignación anterior
+    //                 'CUA_choferID'        => null,
+    //                 'CUA_ayudanteID'      => null,
+    //                 'CUA_motivoID'        => null,
+    //                 'CUA_destino'         => null,
+    //                 'CUA_estatus'         => 1, // 1 = ACTIVO/EN PATIO/DISPONIBLE
+    //                 'CUA_fechaAsignacion' => Carbon::now()->format('Y-m-d H:i:s'), // Formato estándar de MySQL
+    //             ];
+
+    //             // Ejemplo de cómo guardar esta nueva asignación de 'Entrada' si usas un modelo:
+    //             ChoferUnidadAsignar::create($datosAsignacion);
+    //         }
+
+    //         // 5. **Respuesta Exitosa**
+    //         return response()->json([
+    //             'message' => 'Movimiento creado exitosamente y asignación de unidad y chófer finalizada.',
+    //             'asignacion' => $asignacion,
+    //             'movimiento' => $movimiento
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         // Manejo de error para detectar el problema de fecha
+    //         $errorMessage = $e->getMessage();
+
+    //         if (strpos($errorMessage, 'SQLSTATE[22007]') !== false) {
+    //             $errorMessage = 'Error de formato de fecha/hora. La base de datos no aceptó el valor para la columna de fecha. Por favor, verifique el formato.';
+    //         }
+
+    //         return response()->json([
+    //             'message' => 'Ocurrió un error al intentar guardar el movimiento y finalizar la asignación.',
+    //             'error' => $errorMessage
+    //         ], 500);
+    //     }
+    // }
 
     // public function changesswho(Request $request)
     // {
@@ -200,61 +363,104 @@ class RegistroEntradaController extends Controller
 
     public function changesswho(Request $request)
     {
-        // 1. Obtener los datos del request
         $quienConQuien = $request->input('quienconquien');
+        $unidadesProcesadas = 0;
+        $unidadesActualizadas = 0;
+        $unidadesCreadas = 0;
+        $unidadesIgnoradas = 0; // Contador para las unidades que no requieren cambio
 
         if (!is_null($quienConQuien) && is_array($quienConQuien)) {
 
-            // 2. Iterar sobre la lista de unidades
             foreach ($quienConQuien as $unidad) {
 
-                // 3. Extraer los datos necesarios del arreglo actual
                 $unidadID = $unidad['CUA_unidadID'];
-
-                // Usamos el operador de fusión de null (??)
                 $choferID = $unidad['CUA_choferID'] ?? null;
                 $destino = $unidad['CUA_destino'] ?? null;
                 $motivoID = $unidad['CUA_motivoID'] ?? null;
-                $ayudanteID = null;
+                $ayudanteID = $unidad['CUA_ayudanteID'] ?? null; // Asumiendo que ahora puede venir en el request
 
-                // 🌟 4. VERIFICACIÓN DE EXISTENCIA 
-                // Buscar una asignación existente y activa (CUA_estatus = 1) para esta unidad.
+                // 1. Buscar la asignación ACTIVA existente para esta unidad.
                 $asignacionExistente = ChoferUnidadAsignar::where('CUA_unidadID', $unidadID)
                     ->where('CUA_estatus', 1)
                     ->first();
 
-                 // Si se encuentra una asignación activa, se omite y pasa a la siguiente unidad.
-                if ($asignacionExistente) {
-                    // Puedes agregar un log aquí si deseas registrar las unidades omitidas
-                    // \Log::info("Asignación activa ya existe para la Unidad ID: " . $unidadID);
-                    continue; // Salta al siguiente elemento del bucle `foreach`
+                // 2. Si NO existe una asignación activa, la creamos directamente.
+                if (!$asignacionExistente) {
+                    $datosAsignacion = [
+                        'CUA_unidadID'           => $unidadID,
+                        'CUA_choferID'           => $choferID,
+                        'CUA_ayudanteID'         => $ayudanteID,
+                        'CUA_motivoID'           => $motivoID,
+                        'CUA_destino'            => $destino,
+                        'CUA_fechaAsignacion'    => Carbon::now()->format('Ymd H:i:s'),
+                        'CUA_estatus'            => 1,
+                    ];
+                    ChoferUnidadAsignar::create($datosAsignacion);
+                    $unidadesCreadas++;
+                } else {
+                    // 3. Si SÍ existe, verificamos si los datos entrantes son IDÉNTICOS.
+
+                    // Convertimos los campos de la asignación existente a los tipos de datos correctos para la comparación, 
+                    // asegurando que sean del mismo tipo que los entrantes (pueden ser strings o integers/nulls).
+                    $choferExistente = (string)$asignacionExistente->CUA_choferID;
+                    $destinoExistente = (string)$asignacionExistente->CUA_destino;
+                    $motivoExistente = (string)$asignacionExistente->CUA_motivoID;
+                    $ayudanteExistente = (string)$asignacionExistente->CUA_ayudanteID;
+
+                    $datosEntrantes = [
+                        'chofer' => (string)$choferID,
+                        'destino' => (string)$destino,
+                        'motivo' => (string)$motivoID,
+                        'ayudante' => (string)$ayudanteID,
+                    ];
+
+                    $datosActuales = [
+                        'chofer' => $choferExistente,
+                        'destino' => $destinoExistente,
+                        'motivo' => $motivoExistente,
+                        'ayudante' => $ayudanteExistente,
+                    ];
+
+                    // 4. Comparación: si los datos son iguales, ignoramos la unidad.
+                    if ($datosEntrantes === $datosActuales) {
+                        $unidadesIgnoradas++;
+                        $unidadesProcesadas++;
+                        continue; // Salta al siguiente elemento del bucle
+                    }
+
+                    // 5. Si los datos son diferentes, procedemos a actualizar la asignación existente.
+                    // Si quieres crear un nuevo registro (desactivar y crear), usa la lógica del ejemplo anterior.
+                    // Para mantener la lógica de tu código original (solo actualizar):
+                    $asignacionExistente->update([
+                        'CUA_choferID'           => $choferID,
+                        'CUA_ayudanteID'         => $ayudanteID,
+                        'CUA_motivoID'           => $motivoID,
+                        'CUA_destino'            => $destino,
+                        // Opcional: Actualizar la fecha para marcar el cambio
+                        'CUA_fechaAsignacion'    => Carbon::now()->format('Ymd H:i:s'),
+                    ]);
+                    $unidadesActualizadas++;
                 }
 
-                // Si no hay una asignación activa, procede a crear la nueva.
-
-                // 5. Crear el arreglo de datos para la asignación
-                $datosAsignacion = [
-                    'CUA_unidadID'           => $unidadID,
-                    'CUA_choferID'           => $choferID,
-                    'CUA_ayudanteID'         => $ayudanteID,
-                    'CUA_motivoID'           => $motivoID,
-                    'CUA_destino'            => $destino,
-                    'CUA_estatus'            => 1, // Asumiendo que 1 es 'ACTIVO'
-                    'CUA_fechaAsignacion'    => Carbon::now()->format('Ymd H:i:s'),
-                ];
-
-                // 6. Guardar en la base de datos
-                ChoferUnidadAsignar::create($datosAsignacion);
+                $unidadesProcesadas++;
             }
 
             // Devolver una respuesta JSON de éxito al final de la iteración
-            return response()->json(['success' => true, 'message' => 'Asignaciones procesadas correctamente. Las unidades con asignaciones activas existentes fueron omitidas.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Asignaciones procesadas. Las unidades con datos idénticos fueron ignoradas.',
+                'resumen' => [
+                    'total_procesadas' => $unidadesProcesadas,
+                    'actualizadas' => $unidadesActualizadas,
+                    'creadas' => $unidadesCreadas,
+                    'ignoradas' => $unidadesIgnoradas,
+                ]
+            ]);
         } else {
             // Devolver una respuesta JSON de error
             return response()->json(['success' => false, 'message' => 'No se encontró la clave "quienconquien" o no es un arreglo válido.'], 400);
         }
     }
-
 
     public function getUltimosMovimientosUnidad(Request $request)
     {

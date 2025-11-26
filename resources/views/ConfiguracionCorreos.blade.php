@@ -60,23 +60,32 @@
     <div class="factura-container">
         <div class="header">
 
-            {{-- <img class="circle" src="{{ $message->embed(public_path() . '/storage/enterpriseLogo.jpeg') }}" /> --}}
-            {{-- <img class="circle" src="{{ $message->embed($Imagen) }}" /> --}}
-
-
             <div class="title">
                 <h1> DELFIN TECNOLOGYS</h1>
-                <h2>INCIDENCIAS DE PRUEBA BELLAKO</h2>
+                <h2>CORREO DE INCIDENCIAS</h2>
             </div>
         </div>
         <div class="details">
-            <h1>Configuración de Correo</h1>
-            {{-- <p><strong>Correo:</strong> {{ $configEmail['from']['address'] }}</p>
-            <p><strong>Host:</strong> {{ $configEmail['host'] }}</p>
-            <p><strong>Puerto:</strong> {{ $configEmail['port'] }}</p>
-            <p><strong>Usuario:</strong> {{ $configEmail['username'] }}</p>
-            <p><strong>SSL/TLS:</strong> {{ $configEmail['encryption'] }}</p>
-            <p><strong>Motivo:</strong> {{ $information->Detalle }}</p> --}}
+            <h1>LISTADO</h1>
+
+
+            @if ($datos->Incidencias->isEmpty())
+                <p>No se encontraron incidencias guardadas.</p>
+            @else
+                <!-- 
+                    Iteramos sobre la colección de Incidencias y solo mostramos el nombre de la Lista.
+                -->
+                @foreach ($datos->Incidencias as $incidencia)
+                    <div class="list-item">
+                        <!-- 
+                                Acceso directo al nombre de la lista de verificación:
+                                $incidencia->listaVerificacion->ListaVerificacion_nombre
+                            -->
+                        <strong>{{ $incidencia->listaVerificacion->ListaVerificacion_nombre ?? 'Lista No Disponible' }}</strong>
+                    </div>
+                @endforeach
+            @endif
+
         </div>
     </div>
 </body>

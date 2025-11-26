@@ -3,6 +3,7 @@ import Datatable from "@/Components/Datatable";
 
 import SelectInput from "@/components/SelectInput";
 
+import { toast } from 'sonner';
 
 
 const RegistroYSalidaUnificado = () => {
@@ -48,7 +49,7 @@ const RegistroYSalidaUnificado = () => {
                 AyudantesData,
                 DestinosData,
                 ListasData,
-                QuienconQuienControl,
+                // QuienconQuienControl,
             ] = await Promise.all([
                 fetchData("motivos.index"),
                 fetchData("unidades.index"),
@@ -56,7 +57,7 @@ const RegistroYSalidaUnificado = () => {
                 fetchData("users.index"), // Rutas asumidas
                 fetchData("destinos.index"),
                 fetchData("listaverificacion.index"),
-                fetchData("QuienconQuienControl"),
+                // fetchData("QuienconQuienControl", { id: 2 })
             ]);
 
             // **2. Una única llamada a setRequests con todos los datos**
@@ -68,7 +69,7 @@ const RegistroYSalidaUnificado = () => {
                 Ayudantes: AyudantesData,
                 Destinos: DestinosData,
                 ListasVerificacion: ListasData,
-                QuienconQuienControl: QuienconQuienControl,
+                // QuienconQuienControl: QuienconQuienControl,
 
             }));
 
@@ -80,7 +81,10 @@ const RegistroYSalidaUnificado = () => {
 
     useEffect(() => {
         loadAllData();
+
     }, []);
+
+
 
 
 
@@ -100,14 +104,7 @@ const RegistroYSalidaUnificado = () => {
 
     const [form, setForm] = useState(initialFormState);
 
-    // const [isCriticalAlertActive, setIsCriticalAlertActive] = useState(false);
-
-
     useEffect(() => { if (form.unit) { fetchUltimosMovimientos(form.unit); } }, [form.unit]);
-
-
-
-
 
     const fetchUltimosMovimientos = async (e) => {
         try {
@@ -142,15 +139,27 @@ const RegistroYSalidaUnificado = () => {
             });
 
             if (!response.ok) {
-                throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                // Maneja el error de respuesta HTTP aquí también
+                const errorText = await response.text();
+                // console.error('Error en la respuesta del servidor:', errorText);
+
+                // Lanza un error para que sea capturado por el bloque catch
+                toast.error(errorText);
+
             }
 
             const data = await response.json();
-
-            fetchUltimosMovimientos();
-            // }));
+            toast.success("Se ha creado un movimiento con exito");
+            setForm(initialFormState);
+            getAllData();
+            setRequests(prevRequests => ({
+                ...prevRequests,
+                UltimosMovimientos: [],
+            }));
         } catch (err) {
-            console.error('Error al obtener movimientos:', err);
+            // console.error('Error al obtener movimientos:', err);
+            // ⭐ Agregamos el toast de error aquí
+            toast.error("Ocurrió un error al crear el movimiento.");
         }
     };
 
@@ -254,6 +263,44 @@ const RegistroYSalidaUnificado = () => {
         });
 
     }, [form.unit, form.driver]);
+
+    const getAllData = async () => {
+        try {
+            const quien = await fetch(route("QuienconQuienControl", { id: form.movementType })).then(res => res.json());
+            // setForm(currentForm => ({
+            //     // 1. Mantenemos las propiedades que NO queremos resetear:
+
+            //     // (Añade aquí cualquier otra propiedad que quieras mantener)
+
+            //     // 2. Reseteamos el resto de las propiedades que SÍ queremos cambiar:
+
+            // }));
+
+            setForm(prevRequests => ({
+                ...prevRequests,
+                kilometers: 0,
+                motive: '',
+                observation: '',
+                combustible: '',
+                checklist: [],
+                authorizationCode: '',
+                unit: '',
+                driver: '',
+                destination: '',
+            }));
+            setRequests(prevRequests => ({
+                ...prevRequests,
+                QuienconQuienControl: quien,
+            }));
+        } catch (error) {
+            console.error("Error al obtener los datos:", error);
+        }
+    };
+
+    // --- Implementación de useEffect para el cambio ---
+    useEffect(() => {
+        getAllData();
+    }, [form.movementType]); // <--- DEPENDENCIA: Elige qué valor monitorear
 
 
 
@@ -532,7 +579,6 @@ const RegistroYSalidaUnificado = () => {
                         data={requests.UltimosMovimientos}
                         virtual={true}
                         searcher={true}
-
                         columns={[
                             { header: 'Tipo', accessor: 'Movimientos_tipoMovimiento' },
                             { header: 'Fecha', accessor: 'Movimientos_fecha' },

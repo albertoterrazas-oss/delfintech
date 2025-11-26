@@ -308,7 +308,6 @@ export default function Motivos() {
                         {
                             header: "Estatus",
                             accessor: "Motivos_estatus",
-                            width: '20%',
                             cell: ({ item: { Motivos_estatus } }) => {
                                 const color = String(Motivos_estatus) === "1"
                                     ? "bg-green-300" // Si es "1"
@@ -323,7 +322,7 @@ export default function Motivos() {
                         { header: 'Tipo', accessor: 'Motivos_tipo' },
                         { header: 'Descripción', accessor: 'Motivos_descripcion' },
                         {
-                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                            header: "Acciones", accessor: "Acciones",  cell: (eprops) => (<>
                                 <button
                                     onClick={() => openEditModal(eprops.item)}
                                     className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"

@@ -15,20 +15,33 @@ class CorreosController extends Controller
      */
     public function index()
     {
-        // Recupera todos los correos de notificación
-        $correos = CorreoNotificacion::all();
-        
-        return response()->json($correos, 200);
+        // 1. Recupera todos los correos de notificación junto con su usuario
+        $correos = CorreoNotificacion::with('usuario')->get();
+
+        // 2. Mapea la colección para agregar el nombre completo del usuario a cada correo
+        $correosConNombreCompleto = $correos->map(function ($correo) {
+
+            // Verifica si la relación 'usuario' existe y está cargada
+            if ($correo->relationLoaded('usuario') && $correo->usuario) {
+                $usuario = $correo->usuario;
+
+                // Agregamos el nombre completo como un nuevo atributo en el objeto $correo
+                $correo->usuario_nombre_completo = $usuario->Personas_nombres . ' ' .
+                    $usuario->Personas_apPaterno . ' ' .
+                    $usuario->Personas_apMaterno;
+            }
+
+            return $correo;
+        });
+
+        // 3. Retorna la colección modificada
+        return response()->json($correosConNombreCompleto, 200);
     }
 
     /**
      * Muestra el formulario para crear un nuevo recurso (usualmente para vistas).
      */
-    public function create()
-    {
-        // En una API REST, este método suele dejarse vacío o se omite.
-        return response()->json(['message' => 'Not implemented for API'], 501);
-    }
+
 
     /**
      * Almacena un recurso recién creado en el almacenamiento (BD).
@@ -37,7 +50,7 @@ class CorreosController extends Controller
     {
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
-            'correoNotificaciones_correo'     => 'required|email|max:255|unique:dbo.correoNotificaciones,correoNotificaciones_correo',
+            'correoNotificaciones_correo'     => 'required|email',
             'correoNotificaciones_idUsuario'  => 'required|integer',
             'correoNotificaciones_estatus'    => 'sometimes|boolean', // 'sometimes' permite que sea opcional, pero si se envía, debe ser booleano
         ]);
@@ -52,7 +65,7 @@ class CorreosController extends Controller
         try {
             // 2. Crear el nuevo registro
             $correo = CorreoNotificacion::create($validator->validated());
-            
+
             return response()->json([
                 'message' => 'Correo de notificación creado exitosamente',
                 'data' => $correo
@@ -99,7 +112,7 @@ class CorreosController extends Controller
         // 1. Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             // El correo debe ser único, excluyendo el registro actual
-            'correoNotificaciones_correo'     => 'required|email|max:255|unique:dbo.correoNotificaciones,correoNotificaciones_correo,' . $id . ',correoNotificaciones_id',
+            'correoNotificaciones_correo'     => 'required|email|max:255',
             'correoNotificaciones_idUsuario'  => 'sometimes|integer', // 'sometimes' para permitir actualizaciones parciales
             'correoNotificaciones_estatus'    => 'sometimes|boolean',
         ]);
@@ -117,11 +130,11 @@ class CorreosController extends Controller
         if (!$correo) {
             return response()->json(['message' => 'Correo de notificación no encontrado'], 404);
         }
-        
+
         try {
             // 3. Actualizar el registro
             $correo->update($validator->validated());
-            
+
             return response()->json([
                 'message' => 'Correo de notificación actualizado exitosamente',
                 'data' => $correo

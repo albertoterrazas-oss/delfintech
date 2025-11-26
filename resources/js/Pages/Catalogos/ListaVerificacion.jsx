@@ -340,7 +340,7 @@ export default function ListaVerificacion() {
                         { header: 'Observaciones', accessor: 'ListaVerificacion_observaciones' },
                         { header: 'Usuario', accessor: 'usuario.Personas_nombres' },
                         {
-                            header: "Acciones", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                            header: "Acciones", accessor: "Acciones", cell: (eprops) => (<>
                                 <button
                                     onClick={() => openEditModal(eprops.item)}
                                     className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"

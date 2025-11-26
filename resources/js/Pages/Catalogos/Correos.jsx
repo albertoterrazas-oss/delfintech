@@ -13,6 +13,9 @@ const route = (name, params = {}) => {
     const id = params.correoNotificaciones_id;
     const routeMap = {
         "correos.index": "/api/correos",
+
+        "users.index": "/api/users",
+
         "correos.store": "/api/correos",
         "correos.update": `/api/correos/${id}`,
         "correos.destroy": `/api/correos/${id}`,
@@ -127,7 +130,8 @@ function CorreoFormDialog({ isOpen, closeModal, onSubmit, correoToEdit, action, 
         }
     };
 
-     const getUsers = async () => {
+
+    const getUsers = async () => {
         try {
             // Simulación: Si request no está definido para GET, usamos fetch
             const data = await fetch(route("users.index")).then(res => res.json());
@@ -136,6 +140,12 @@ function CorreoFormDialog({ isOpen, closeModal, onSubmit, correoToEdit, action, 
             console.error('Error al obtener los usuarios:', error);
         }
     }
+
+
+    useEffect(() => {
+        getUsers() // Llamar a getUnits al montar
+    }, [])
+
 
     const dialogTitle = action === 'create' ? 'Crear Nuevo Correo' : 'Editar Correo';
 
@@ -166,19 +176,7 @@ function CorreoFormDialog({ isOpen, closeModal, onSubmit, correoToEdit, action, 
                                 {errors.correoNotificaciones_correo && <p className="text-red-500 text-xs mt-1">{errors.correoNotificaciones_correo}</p>}
                             </label>
 
-                            {/* Input ID Usuario */}
-                            {/* <label className="block">
-                                <span className="text-sm font-medium text-gray-700">ID de Usuario Asociado: <span className="text-red-500">*</span></span>
-                                <input
-                                    type="text"
-                                    name="correoNotificaciones_idUsuario"
-                                    value={correoData.correoNotificaciones_idUsuario || ''}
-                                    onChange={handleNumericChange}
-                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.correoNotificaciones_idUsuario ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                    placeholder="Solo números"
-                                />
-                                {errors.correoNotificaciones_idUsuario && <p className="text-red-500 text-xs mt-1">{errors.correoNotificaciones_idUsuario}</p>}
-                            </label> */}
+                           
 
 
                             <SelectInput
@@ -189,7 +187,6 @@ function CorreoFormDialog({ isOpen, closeModal, onSubmit, correoToEdit, action, 
                                 placeholder="Seleccionar usuario"
                                 valueKey="Personas_usuarioID"
                                 labelKey="nombre_completo"
-                                disabled={true}
                             />
 
 
@@ -329,7 +326,7 @@ export default function Correos() {
     return (
         <div className="relative h-[100%] pb-4 px-3 overflow-auto blue-scroll">
             <div className="flex justify-between items-center p-3 border-b mb-4">
-                <h2 className="text-3xl font-bold text-gray-800">✉️ Gestión de Correos de Notificación</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Gestión de Correos de Notificación</h2>
                 <button
                     onClick={openCreateModal}
                     className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
@@ -364,9 +361,10 @@ export default function Correos() {
                             },
                         },
                         { header: 'Correo', accessor: 'correoNotificaciones_correo' },
-                        { header: 'ID Usuario', accessor: 'correoNotificaciones_idUsuario' },
+                        { header: 'Usuario', accessor: 'usuario_nombre_completo' },
+                        
                         {
-                            header: "Acciones", accessor: "Acciones", width: '10%', cell: (eprops) => (
+                            header: "Acciones", accessor: "Acciones", cell: (eprops) => (
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={() => openEditModal(eprops.item)}

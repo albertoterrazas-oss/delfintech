@@ -48,6 +48,7 @@ const initialMenuData = {
 function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, errors, setErrors }) {
     const [menuData, setMenuData] = useState(initialMenuData);
     const [loading, setLoading] = useState(false);
+    const [menus2, setMenus2] = useState();
 
     // Sincroniza los datos al abrir el modal o cambiar el menú a editar
     useEffect(() => {
@@ -69,22 +70,61 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
     }, [isOpen, menuToEdit]);
 
 
-    // Función genérica para manejar los cambios en los inputs
-    const handleChange = (e) => {
-        const { name, value, type } = e.target;
+    // // Función genérica para manejar los cambios en los inputs
+    // const handleChange = (e) => {
+    //     const { name, value, type } = e.target;
 
-        // Manejo especial para menu_idPadre (debe ser null o un número)
-        let newValue = value;
+    //     // Manejo especial para menu_idPadre (debe ser null o un número)
+    //     let newValue = value;
+    //     if (name === 'menu_idPadre') {
+    //         newValue = value === "" ? null : Number(value);
+    //     }
+
+    //     //  setPositionData(prevData => ({
+    //     //     ...prevData,
+    //     //     [name]: type === 'checkbox' ? (checked ? "1" : "0") : value
+    //     // }));
+
+    //     setMenuData(prevData => ({
+    //         ...prevData,
+    //         [name]: type === 'checkbox' ? (checked ? "1" : "0") : value
+    //     }));
+
+    //     // Limpiar error al cambiar el campo
+    //     if (errors[name]) {
+    //         setErrors(prevErrors => {
+    //             const newErrors = { ...prevErrors };
+    //             delete newErrors[name];
+    //             return newErrors;
+    //         });
+    //     }
+    // };
+
+    const handleChange = (e) => {
+        // 1. Extraer 'checked' (para checkboxes) junto con 'name', 'value' y 'type'
+        const { name, value, type, checked } = e.target;
+
+        let finalValue = value;
+
+        // 2. Manejo especial para menu_idPadre (debe ser null o un número)
         if (name === 'menu_idPadre') {
-            newValue = value === "" ? null : Number(value);
+            // Asignar null si está vacío, o convertir a número
+            finalValue = value === "" ? null : Number(value);
         }
 
+        // 3. Manejo especial para checkboxes (convierte boolean a "1" o "0")
+        if (type === 'checkbox') {
+            finalValue = checked ? "1" : "0";
+        }
+
+        // 4. Actualizar el estado con el valor final calculado
         setMenuData(prevData => ({
             ...prevData,
-            [name]: newValue
+            // Usamos 'finalValue' que ya ha sido procesado para menu_idPadre y checkboxes
+            [name]: finalValue
         }));
 
-        // Limpiar error al cambiar el campo
+        // 5. Limpiar error al cambiar el campo (si existe)
         if (errors[name]) {
             setErrors(prevErrors => {
                 const newErrors = { ...prevErrors };
@@ -107,6 +147,17 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
             setLoading(false);
         }
     };
+
+    const fetchdata = async () => {
+        const response = await fetch(route("menus.index"));
+        const data = await response.json();
+        setMenus2([{ menu_id: 0, menu_nombre: "Raiz" }].concat(data))
+
+    };
+    useEffect(() => {
+        fetchdata();
+
+    }, [])
 
     const dialogTitle = action === 'create' ? 'Crear Nuevo Elemento de Menú' : 'Editar Elemento de Menú';
 
@@ -154,19 +205,33 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
                                 {errors.menu_url && <p className="text-red-500 text-xs mt-1">{errors.menu_url}</p>}
                             </label>
 
-                            {/* Input ID Padre (Ejemplo: podría ser un Select real con IDs) */}
                             <label className="block">
-                                <span className="text-sm font-medium text-gray-700">ID del Menú Padre:</span>
-                                <input
-                                    type="number"
-                                    name="menu_idPadre"
-                                    // Convierte a string para el input y maneja null como cadena vacía
-                                    value={menuData.menu_idPadre === null ? "" : menuData.menu_idPadre}
-                                    onChange={handleChange}
-                                    placeholder="Dejar vacío para menú principal"
-                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Opcional. Si lo dejas vacío, será un menú de nivel superior.</p>
+                                <span className="text-sm font-medium text-gray-700">Menu padre: <span className="text-red-500">*</span></span>
+                                <select
+                                    name="menu"
+                                    value={menuData.menu_idPadre || ''}
+                                    onChange={(event) => { setMenuData({ ...menuData, menu_idPadre: event.target.value }); }}
+                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.menu_idPadre ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                >
+                                    <option value="" disabled>Selecciona un menu</option>
+                                    {/* Usamos (menus2 ?? []) para asegurar que sea un array antes de mapear */}
+                                    {(menus2 ?? []).map((menu) => {
+
+                                        // Construye el nombre jerárquico del menú
+                                        const nombreJerarquico = `${menu.menu_padre?.menu_padre?.menu_nombre ? '/ ' + menu.menu_padre?.menu_padre?.menu_nombre : ''} ${menu.menu_padre?.menu_nombre ? '/ ' + menu.menu_padre?.menu_nombre : ''} ${'/ ' + menu.menu_nombre}`;
+
+                                        return (
+                                            <option
+                                                key={menu.menu_id} // Usa el menu_id como key
+                                                value={menu.menu_id} // Usa el menu_id como valor
+                                            >
+                                                {/* Muestra el nombre jerárquico */}
+                                                {nombreJerarquico}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                {errors.menu_idPadre && <p className="text-red-500 text-xs mt-1">{errors.menu_idPadre}</p>}
                             </label>
 
                             {/* Input Tooltip */}
@@ -181,20 +246,19 @@ function MenuFormDialog({ isOpen, closeModal, onSubmit, menuToEdit, action, erro
                                 />
                             </label>
 
-                            {/* Input Estatus */}
-                            <label className="block">
-                                <span className="text-sm font-medium text-gray-700">Estatus: <span className="text-red-500">*</span></span>
-                                <select
-                                    name="estatus"
-                                    value={menuData.estatus}
-                                    onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.estatus ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                                >
-                                    <option value="Activo">Activo</option>
-                                    <option value="Inactivo">Inactivo</option>
-                                </select>
-                                {errors.estatus && <p className="text-red-500 text-xs mt-1">{errors.estatus}</p>}
-                            </label>
+                            <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="estatus"
+                                        checked={menuData.estatus == 1} // Usamos == para manejar 1 o '1'
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Estatus</span>
+                                </label>
+                            </div>
+
                         </div>
 
                         {/* Botones */}
@@ -338,7 +402,7 @@ export default function Menus() {
                         {
                             header: "Estatus",
                             accessor: "menu_estatus",
-                            width: '20%',
+                            // width: '20%',
                             cell: ({ item: { menu_estatus } }) => {
                                 const color = String(menu_estatus) === "1"
                                     ? "bg-green-300" // Si es "1"
@@ -353,8 +417,8 @@ export default function Menus() {
                         { header: 'ID Padre', accessor: 'menu_idPadre' },
                         { header: 'URL', accessor: 'menu_url' },
                         { header: 'Tooltip', accessor: 'menu_tooltip' },
-                         {
-                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                        {
+                            header: "Acciones", accessor: "Acciones", cell: (eprops) => (<>
                                 <button
                                     onClick={() => openEditModal(eprops.item)}
                                     className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"

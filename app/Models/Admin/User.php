@@ -37,6 +37,7 @@ class User extends Authenticatable implements JWTSubject
         'Personas_usuario',
         'Personas_contrasena',
         'Personas_esEmpleado',
+        'usuario_idRol'
     ];
 
 

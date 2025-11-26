@@ -232,19 +232,6 @@ function UnitFormDialog({ isOpen, closeModal, onSubmit, unitToEdit, action, erro
                             </label>
                         </div>
 
-                        {/* <div className="flex justify-center w-full">
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    name="Unidades_mantenimiento"
-                                    checked={unitData.Unidades_mantenimiento == 1} // Usamos == para manejar 1 o '1'
-                                    onChange={handleChange}
-                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Mantenimiento</span>
-                            </label>
-                        </div> */}
-
 
                         {/* Botones (se eliminó col-span-2) */}
                         <div className="flex justify-end gap-3 pt-4 border-t mt-4">
@@ -395,7 +382,7 @@ export default function Unidades() {
                         {
                             header: "Estatus",
                             accessor: "Unidades_estatus",
-                            width: '20%',
+                            // width: '20%',
                             cell: ({ item: { Unidades_estatus } }) => {
                                 const color = String(Unidades_estatus) === "1"
                                     ? "bg-green-300" // Si es "1"
@@ -412,7 +399,7 @@ export default function Unidades() {
                         { header: 'Placa', accessor: 'Unidades_placa' },
                         { header: 'Mantenimiento', accessor: 'Unidades_mantenimiento' },
                         {
-                            header: "Editar", accessor: "Acciones", width: '10%', cell: (eprops) => (<>
+                            header: "Acciones", accessor: "Acciones", cell: (eprops) => (<>
                                 <button
                                     onClick={() => openEditModal(eprops.item)}
                                     className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition"

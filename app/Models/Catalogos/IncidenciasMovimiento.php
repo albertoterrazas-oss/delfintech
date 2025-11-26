@@ -17,4 +17,9 @@ class IncidenciasMovimiento extends Model
         'IncidenciasMovimiento_usuarioID',
         'IncidenciasMovimiento_observaciones',
     ];
+
+    public function listaVerificacion()
+    {
+        return $this->belongsTo(ListaVerificacion::class, 'IncidenciasMovimiento_listaID', 'ListaVerificacion_listaID');
+    }
 }

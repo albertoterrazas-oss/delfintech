@@ -25,7 +25,7 @@ class Menu extends Model
         'menu_idPadre',
         'menu_url',
         'menu_tooltip',
-        'estatus',
+        'menu_estatus',
     ];
 
     public function roles(): BelongsToMany

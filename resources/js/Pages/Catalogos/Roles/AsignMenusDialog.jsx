@@ -316,16 +316,16 @@ export default function AsignMenusDialog(props) {
                             </DialogTitle>
 
                             <div className=" mt-4 flex flex-col justify-content-center gap-4 blue-scroll">
-                                <SelectComp
+                                {/* <SelectComp
                                     data={"label"}
                                     value={state.mainMenuSelected || ''}
                                     onChangeFunc={(e) => setState({ ...state, mainMenuSelected: e })}
                                     valueKey={"key"}
                                     options={state.mainMenuList}
-                                    disabled={state.mainMenuList.length === 0}
+                                    // disabled={state.mainMenuList.length === 0}
                                     virtual={true}
                                     label={'Selecciona el menu de inicio para este rol'}
-                                />
+                                /> */}
                                 {/* Componente Tree de PrimeReact */}
                                 <Tree
                                     value={allMenus}
@@ -371,7 +371,7 @@ export default function AsignMenusDialog(props) {
                                     }}
                                 />
                                 {/* Diálogo de Confirmación (Headless UI) */}
-                                {/* <Transition appear show={state.showConfirmDialog} as={Fragment}>
+                                <Transition appear show={state.showConfirmDialog} as={Fragment}>
                                         <Dialog as="div" className="relative z-20 w-full" onClose={() => setState({ ...state, showConfirmDialog: false, confirmSave: false, updateUsers: false, usersList: [] })}>
                                            
 
@@ -426,7 +426,7 @@ export default function AsignMenusDialog(props) {
                                                 </div>
                                             </div>
                                         </Dialog>
-                                    </Transition> */}
+                                    </Transition>
                             </div>
 
                             <div className="mt-6 flex justify-end space-x-2">

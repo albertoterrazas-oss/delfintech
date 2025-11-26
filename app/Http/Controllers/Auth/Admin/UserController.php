@@ -53,6 +53,10 @@ class UserController extends Controller
             'Personas_contrasena' => 'required|string|min:8',
             // VALIDACIÓN UNIQUE REMOVIDA
             'Personas_usuario' => 'required|string|max:255',
+
+            'usuario_idRol' => 'required',
+
+
         ]);
 
         if ($validator->fails()) {
@@ -74,6 +78,8 @@ class UserController extends Controller
             'Personas_usuario' => $request->Personas_usuario,
             // La contraseña se hasheará automáticamente por la propiedad 'casts' del modelo
             'Personas_contrasena' => $request->Personas_contrasena,
+            'usuario_idRol' => $request->usuario_idRol,
+
             'Personas_esEmpleado' => $request->Personas_esEmpleado ?? false, // Default to false if not provided
         ]);
 
@@ -124,6 +130,9 @@ class UserController extends Controller
             // VALIDACIÓN UNIQUE REMOVIDA
             'Personas_usuario' => 'sometimes|required|string|max:255',
             'Personas_contrasena' => 'sometimes|nullable|string|min:8',
+
+            'usuario_idRol'  => 'required',
+
         ]);
 
         if ($validator->fails()) {
@@ -170,7 +179,7 @@ class UserController extends Controller
     public function menus(Request $request)
     {
         $user = $request->user();
-    
+
         $user = User::where('Personas_usuarioID', $user->Personas_usuarioID)
             ->with('menus') // <--- Aquí estaba el error: se necesita usar ()
             ->first();

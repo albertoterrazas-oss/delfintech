@@ -4,6 +4,7 @@ import LoadingDiv from "@/components/LoadingDiv";
 import request from "@/utils";
 import { Button } from "devextreme-react";
 import { useEffect, useState } from "react";
+import { toast } from 'sonner';
 
 export default function QuienConQuienTransporte() {
     const [modData, setModData] = useState([]);
@@ -98,6 +99,8 @@ export default function QuienConQuienTransporte() {
 
             if (response.ok) {
                 setStates({ ...states, open: false });
+                toast.success("Se ha actualizado correctamente el quienconquien");
+
                 getWho();
                 // showNotification('Actualización exitosa', 'success', 'metroui', 'bottomRight', 5000);
             } else {
@@ -129,7 +132,7 @@ export default function QuienConQuienTransporte() {
                             onClick={submit}
                             className="flex items-center px-4 py-2 text-base font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
                         >
-                           Guardar quien con quien
+                            Guardar quien con quien
                         </button>
                     </div>
 
@@ -145,7 +148,7 @@ export default function QuienConQuienTransporte() {
                                 {
                                     header: 'Unidad',
                                     accessor: 'Unidades_numeroEconomico',
-                                    width: '20%',
+                                    // width: '20%',
                                     alignment: 'start',
                                     editable: false
                                 },

@@ -53,7 +53,7 @@ class RolesController extends Controller
         $rol->update(['roles_menuInicio' => $menuInicio]);
         if ($updateUsers) {
             foreach ($usersList as $user) {
-                $mUser = User::find($user['Personas_usuarioID']);
+                $mUser = User::find($user['idUser']);
                 $menus = [];
                 foreach ($menus_ids as $menu) {
                     $menus[$menu] =
@@ -81,13 +81,12 @@ class RolesController extends Controller
 
     public function usersPerRole(Request $request)
     {
-        // $rol = Roles::find($request->id);
         $users = User::where('usuario_idRol', $request->idRol)->get();
         $res = [];
 
         foreach ($users as $user) {
             $res[] = [
-                'idUser' => $user->usuario_idUsuario,
+                'idUser' => $user->Personas_usuarioID,
                 'idRol' => $user->usuario_idRol
             ];
         }

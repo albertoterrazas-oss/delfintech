@@ -31,6 +31,16 @@ class ChoferUnidadAsignar extends Model
         'CUA_estatus',
     ];
 
+
+    public function ultimoMovimiento()
+    {
+        // 'Movimientos_asignacionID' es la foreign key en la tabla de Movimientos
+        // 'CUA_asignacionID' es la local key en la tabla de Asignaciones (debe ser la PK)
+        return $this->hasOne(Movimientos::class, 'Movimientos_asignacionID', 'CUA_asignacionID')
+            ->latest('Movimientos_fecha') // Ordena por fecha descendente
+            ->latest('Movimientos_movimientoID'); // Desempata con el ID si las fechas son iguales
+    }
+
     public function chofer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'CUA_choferID', 'Personas_usuarioID');

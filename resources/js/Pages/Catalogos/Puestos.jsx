@@ -275,7 +275,7 @@ export default function Puestos() {
         {
             header: "Estatus",
             accessor: "Puestos_estatus",
-            width: '20%',
+            // width: '20%',
             cell: ({ item: { Puestos_estatus } }) => {
                 const color = String(Puestos_estatus) === "1"
                     ? "bg-green-300" // Si es "1"

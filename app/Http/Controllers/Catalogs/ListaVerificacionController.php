@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Catalogs;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ConfiguracionCorreo;
+use App\Models\Catalogos\CorreoNotificacion;
 use Illuminate\Http\Request;
 use App\Models\Catalogos\ListaVerificacion; // Asegúrate de importar el modelo
 use Illuminate\Http\JsonResponse;
@@ -182,13 +183,35 @@ class ListaVerificacionController extends Controller
     public function testcorreo(Request $request)
     {
 
-        $this->configEmail();
+
+
+        // $Correos = CorreoNotificacion::all();
+        // return response()->json([
+        //     'data' => $Correos,
+        //     'message' => 'Correos recuperados exitosamente'
+        // ], 200);
+        // $this->configEmail();
         $Datos = (object) [
             "Titulo" => "Test",
             "Detalle" => "TEST: Envio de configuracion de correos",
         ];
-        Mail::to("corpusj1493@gmail.com")->send(new ConfiguracionCorreo($Datos));
+        Mail::to("guzmaan.edgar@gmail.com")->send(new ConfiguracionCorreo($Datos));
 
         return response()->json(['message' => 'Se envio con exito el correo'], 200);
     }
+
+    // public function CorreoIncidencias(Request $request)
+    // {
+
+    //     $this->configEmail();
+    //     $Datos = (object) [
+    //         "Titulo" => "CORREO INCIDENCIAS",
+    //         "incidencias" => "CORREO INCIDENCIAS",
+
+    //         // "Detalle" => "TEST: Envio de configuracion de correos",
+    //     ];
+    //     Mail::to("guzmaan.edgar@gmail.com")->send(new ConfiguracionCorreo($Datos));
+
+    //     return response()->json(['message' => 'Se envio con exito el correo'], 200);
+    // }
 }

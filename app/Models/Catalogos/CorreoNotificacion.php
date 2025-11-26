@@ -2,8 +2,10 @@
 
 namespace App\Models\Catalogos;
 
+use App\Models\Admin\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CorreoNotificacion extends Model
 {
@@ -18,4 +20,9 @@ class CorreoNotificacion extends Model
         'correoNotificaciones_idUsuario',
         'correoNotificaciones_estatus',
     ];
+
+     public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'correoNotificaciones_idUsuario', 'Personas_usuarioID');
+    }
 }

@@ -39,7 +39,7 @@ class MenuController extends Controller
             'menu_idPadre' => 'required|integer',
             'menu_url' => 'required',
             'menu_tooltip' => 'required',
-            'estatus' => 'required',
+            'menu_estatus' => 'required',
         ]);
         if (!$validator->fails()) {
 
@@ -73,7 +73,7 @@ class MenuController extends Controller
             'menu_idPadre' => 'required|integer',
             'menu_url' => 'required',
             'menu_tooltip' => 'required',
-            'estatus' => 'required',
+            'menu_estatus' => 'required',
         ]);
         if (!$validator->fails()) {
 
@@ -82,7 +82,7 @@ class MenuController extends Controller
             $menu->menu_idPadre = $request->menu_idPadre;
             $menu->menu_url = $request->menu_url;
             $menu->menu_tooltip = $request->menu_tooltip;
-            $menu->estatus = $request->estatus;
+            $menu->menu_estatus = $request->menu_estatus;
             $menu->save();
 
             $allMenus = Menu::select('menu_id')->get()->map(fn($m) => $m->menu_id);
@@ -159,7 +159,7 @@ class MenuController extends Controller
 
                     $node['children'][] = $childNode;
                 }
-
+ 
                 $tree[] = $node;
             }
         }

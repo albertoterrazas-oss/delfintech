@@ -4,10 +4,12 @@ import { Dialog, DialogPanel, DialogTitle, Transition } from '@headlessui/react'
 import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
+import AsignMenusDialog from "./Roles/AsignMenusDialog";
 
 import request from "@/utils";
 
 import PermissionTreeTable from "./PermissionTreeTable";
+import SelectInput from "@/components/SelectInput";
 
 PermissionTreeTable
 // Supongo que `route` y `validateInputs` existen en tu entorno.
@@ -16,6 +18,8 @@ PermissionTreeTable
 const route = (name, params = {}) => {
     const routeMap = {
         "users.index": "/api/users",
+        "roles.index": "/api/roles",
+
         "menus-tree": "/api/menus-tree",
         "users.store": "/api/users",
         "users.update": `/api/users/${params}`,
@@ -29,6 +33,10 @@ const validateInputs = (validations, data) => {
     // Validación de prueba básica:
     if (validations.Personas_nombres && !data.Personas_nombres?.trim()) formErrors.Personas_nombres = 'El nombre es obligatorio.';
     if (validations.Personas_usuario && !data.Personas_usuario?.trim()) formErrors.Personas_usuario = 'El usuario es obligatorio.';
+    if (validations.usuario_idRol && !data.usuario_idRol?.trim()) formErrors.usuario_idRol = 'El rol es obligatorio.';
+
+
+
 
     // Corrección para usar la validación condicional de la contraseña:
     const isPasswordRequired = typeof validations.Personas_contrasena === 'function'
@@ -52,6 +60,7 @@ const userValidations = {
     // Contraseña solo es obligatoria si no existe un ID (creación)
     Personas_contrasena: (data) => !data.Personas_usuarioID,
     Personas_correo: true,
+    usuario_idRol: true
 };
 
 
@@ -69,7 +78,8 @@ const initialPersonData = {
     Personas_vigenciaLicencia: "", // Formato 'YYYY-MM-DD'
     Personas_usuario: "",
     Personas_contrasena: "",
-    Personas_esEmpleado: true
+    Personas_esEmpleado: true,
+    usuario_idRol: ''
 };
 
 // Componente del Formulario de Persona (Modal de Headless UI)
@@ -78,7 +88,7 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
     // Inicializa el estado con los datos a editar o con el estado inicial
     const [personData, setPersonData] = useState(initialPersonData);
     const [loading, setLoading] = useState(false);
-    // Los errores se manejan en el padre (Usuarios)
+    const [roles, setRoles] = useState([]);
 
     // Sincroniza los datos al abrir el modal o cambiar la persona a editar
     useEffect(() => {
@@ -131,6 +141,23 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
             setLoading(false);
         }
     };
+
+
+    const getRoles = async () => {
+        try {
+            // Simulación: Si request no está definido para GET, usamos fetch
+            const data = await fetch(route("roles.index")).then(res => res.json());
+            setRoles(data);
+        } catch (error) {
+            console.error('Error al obtener los usuarios:', error);
+        }
+    }
+    // const [roles, setRoles] = useState([]);
+
+
+    useEffect(() => {
+        getRoles() // Llamar a getUnits al montar
+    }, [])
 
     const dialogTitle = action === 'create' ? 'Crear Nuevo Usuario/Persona' : 'Editar Usuario/Persona';
 
@@ -294,6 +321,40 @@ function PersonFormDialog({ isOpen, closeModal, onSubmit, personToEdit, action, 
                                 />
                             </label>
 
+                            {/* <SelectInput
+                                label="Rol"
+                                value={personData.usuario_idRol}
+                                onChange={(event) => { setPersonData({ ...personData, usuario_idRol: event.target.value }); }}
+                                options={roles}
+                                placeholder="Selecciona rol"
+                                valueKey="roles_id"
+                                labelKey="roles_descripcion"
+                            /> */}
+
+                            <label className="block">
+                                <span className="text-sm font-medium text-gray-700">Rol: <span className="text-red-500">*</span></span>
+                                <select
+                                    name="Rol"
+                                    value={personData.usuario_idRol || ''}
+                                    // onChange={handleChange}
+                                    onChange={(event) => { setPersonData({ ...personData, usuario_idRol: event.target.value }); }}
+
+                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.usuario_idRol ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                >
+                                    <option value="" disabled>Selecciona un rol</option>
+                                    {roles.map((dept) => (
+                                        <option
+                                            key={dept.roles_id}
+                                            value={dept.roles_id}
+                                        >
+                                            {dept.roles_descripcion}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.roles_id && <p className="text-red-500 text-xs mt-1">{errors.roles_id}</p>}
+                            </label>
+
+
                             {/* Botones */}
                             <div className="col-span-2 flex justify-end gap-3 pt-4 border-t mt-4">
                                 <button
@@ -446,12 +507,11 @@ export default function Usuarios() {
                     data={users}
                     virtual={true}
                     columns={[
-                        // { header: 'ID', accessor: 'id' },
                         { header: 'Nombre', accessor: 'nombre_completo' },
                         { header: 'Usuario', accessor: 'Personas_usuario' },
                         { header: 'Correo', accessor: 'Personas_correo' },
                         {
-                            header: "Editar", accessor: "Acciones", cell: (eprops) => (<>
+                            header: "Acciones", accessor: "Acciones", cell: (eprops) => (<>
                                 <button
                                     onClick={() => openEditModal(eprops.item)}
                                     className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 "
@@ -475,7 +535,14 @@ export default function Usuarios() {
                 setErrors={setErrors} // Pasamos el setter de errores
             />
 
-             {/* <PermissionTreeTable initialData={menus} />; */}
+
+            {/* <AsignMenusDialog
+                assignMenu={assignMenu}
+                assignMenuHandler={setAssignMenu}
+                user={data}
+            /> */}
+
+            {/* <PermissionTreeTable initialData={menus} />; */}
 
         </div>
     );

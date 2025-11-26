@@ -21,11 +21,13 @@ class DepartamentoController extends Controller
      */
     public function index()
     {
-        // Se recomienda usar 'paginate' para grandes volúmenes de datos.
         $departamentos = Departamento::all();
+        return response()->json($departamentos);
+    }
 
-        // dd($departamentos);
-
+      public function DepartamentosActivos()
+    {
+        $departamentos = Departamento::where('Departamentos_estatus',true)->get();
         return response()->json($departamentos);
     }
 

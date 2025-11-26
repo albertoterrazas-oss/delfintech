@@ -79,42 +79,11 @@ class UnidadesController extends Controller
         return response()->json($unidades);
     }
 
-    /**
-     * Almacena un recurso recién creado en el almacenamiento.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    // public function store(Request $request)
-    // {
-    //     $rules = $this->getValidationRules();
-    //     $messages = $this->getValidationMessages();
-    //     $user = $request->user();
-
-    //     $validator = Validator::make($request->all(), $rules, $messages);
-    //     $validatedData['Unidades_usuarioID'] = $user->Personas_usuarioID;
-
-    //     if ($validator->fails()) {
-    //         return response()->json($validator->errors(), 400);
-    //     }
-
-    //     try {
-    //         // Obtenemos todos los datos (incluyendo, si es necesario, 'Unidades_usuarioID')
-    //         $data = $request->all();
-
-    //         $unidad = Unidades::create($data);
-
-    //         return response()->json([
-    //             'message' => 'Unidad creada exitosamente',
-    //             'unidad' => $unidad
-    //         ], 201);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Error al guardar la unidad. Verifique los tipos de datos.',
-    //             'error_detail' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
+    public function UnidadesQuiencQuien()
+    {
+        $unidades = Unidades::where('Unidades_estatus', true)->get();
+        return response()->json($unidades);
+    }
 
     public function store(Request $request)
     {
@@ -317,67 +286,7 @@ class UnidadesController extends Controller
 
         return response()->json($data);
     }
-    // public function ReporteMovimientos(Request $request)
-    // {
-    //     // 1. Iniciar la consulta y seleccionar los campos necesarios
-    //     $query = DB::table('dbo.Movimientos')
-    //         ->select(
-    //             'Movimientos.Movimientos_fecha',
-    //             'Movimientos.Movimientos_tipoMovimiento',
-    //             'Movimientos.Movimientos_usuarioID',
-    //             DB::raw("CONCAT(Personas.Personas_nombres, ' ', Personas.Personas_apPaterno) AS nombre_chofer"),
-    //             'Unidades.Unidades_placa',
-    //             'Unidades.Unidades_modelo',
-    //             'Unidades.Unidades_numeroEconomico',
-    //             'Motivos.Motivos_nombre',
-    //             'Destinos.Destinos_Nombre'
-    //         )
-    //         ->join('dbo.ChoferUnidadAsignada', 'Movimientos.Movimientos_asignacionID', '=', 'ChoferUnidadAsignada.CUA_asignacionID')
-    //         ->join('dbo.Personas', 'ChoferUnidadAsignada.CUA_choferID', '=', 'Personas.Personas_usuarioID')
-    //         ->join('dbo.Unidades', 'ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
-    //         ->join('dbo.Motivos', 'ChoferUnidadAsignada.CUA_motivoID', '=', 'Motivos.Motivos_motivoID')
-    //         ->join('dbo.Destinos', 'ChoferUnidadAsignada.CUA_destino', '=', 'Destinos.Destinos_Id')
 
-    //         // **ERROR CORREGIDO:** Ordenar por una columna existente (Movimientos_fecha)
-    //         ->orderBy('Movimientos.Movimientos_fecha', 'DESC');
-
-    //     // 2. Filtrar por Rango de Fechas (Obligatorio en este caso)
-    //     if ($request->has('fechaInicio') && $request->has('fechaFin')) {
-    //         $fechaInicio = $request->input('fechaInicio');
-    //         $fechaFin = $request->input('fechaFin');
-
-    //         // **ERROR CORREGIDO:** Usar el nombre de columna correcto 'Movimientos.Movimientos_fecha'
-    //         // NOTA: Si necesitas incluir el día completo, podrías usar Carbon para modificar $fechaFin a las 23:59:59.
-    //         $query->whereBetween('Movimientos.Movimientos_fecha', [$fechaInicio, $fechaFin]);
-    //     }
-
-    //     // 3. Filtrar por Tipo de Movimiento (Opcional)
-    //     if ($request->has('tipoMovimiento')) {
-    //         $query->where('Movimientos.Movimientos_tipoMovimiento', $request->input('tipoMovimiento'));
-    //     }
-
-    //     // 4. Filtrar por Usuario (Opcional)
-    //     if ($request->has('usuarioID')) {
-    //         $query->where('Movimientos.Movimientos_usuarioID', $request->input('usuarioID'));
-    //     }
-
-    //     // 5. Ejecutar la consulta
-    //     $movimientosFiltrados = $query->get();
-
-    //     $totalSalidas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'SALIDA')->count();
-
-    //     $totalEntradas = $movimientosFiltrados->where('Movimientos_tipoMovimiento', 'ENTRADA')->count();
-
-    //     // 6. Preparar la respuesta
-    //     $data = [
-    //         'movimientos' => $movimientosFiltrados,
-    //         'totalMovimientos' => $movimientosFiltrados->count(),
-    //         'totalSalidas' => $totalSalidas, // ⬅️ Añadido
-    //         'totalEntradas' => $totalEntradas, // ⬅️ Añadido
-    //     ];
-
-    //     return response()->json($data);
-    // }
     public function QuienconQuienUnidades(Request $request)
     {
         // Obtiene la fecha actual en formato 'Y-m-d'
@@ -432,33 +341,6 @@ class UnidadesController extends Controller
         return response()->json($unidadesDeHoy);
     }
 
-
-    // public function QuienconQuienControl(Request $request)
-    // {
-    //     $today = now()->toDateString();
-    //     $id = $request->query('id');
-    //     $unidadesCompletasDeHoy = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
-    //         // Agregamos las condiciones whereNotNull para forzar que las columnas tengan valor
-    //         ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_choferID')
-    //         ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_destino')
-    //         ->whereNotNull('dbo.ChoferUnidadAsignada.CUA_motivoID')
-
-    //         // Resto de tu consulta
-    //         ->join('dbo.Unidades', 'dbo.ChoferUnidadAsignada.CUA_unidadID', '=', 'Unidades.Unidades_unidadID')
-    //         ->select(
-    //             'dbo.ChoferUnidadAsignada.CUA_unidadID',
-    //             'dbo.ChoferUnidadAsignada.CUA_choferID',
-    //             'dbo.ChoferUnidadAsignada.CUA_destino',
-    //             'dbo.ChoferUnidadAsignada.CUA_motivoID',
-    //             'dbo.ChoferUnidadAsignada.CUA_fechaAsignacion',
-    //             'Unidades.Unidades_numeroEconomico'
-    //         )
-    //         ->where('dbo.ChoferUnidadAsignada.CUA_estatus', 1)
-    //         ->get(); // Solo se obtienen las unidades completas
-
-    //     return $unidadesCompletasDeHoy;
-    // }
-
     public function QuienconQuienControl(Request $request)
     {
         $today = now()->toDateString();
@@ -491,65 +373,28 @@ class UnidadesController extends Controller
 
             $unidad->ultimoMovimiento = $Movimiento;
 
-            // Lógica para determinar el 'type' ACTUAL (basado en el último movimiento).
             if ($Movimiento) {
                 $unidad->type = $Movimiento->Movimientos_tipoMovimiento;
             } else {
-                // Si NO hay movimiento, el tipo es 'SALIDA' (es el movimiento inicial que espera)
                 $unidad->type = 'SALIDA';
             }
         }
 
-        // 3. 🏁 APLICAR EL FILTRO FINAL POR 'type' (Corregido para excluir unidades nuevas del filtro ENTRADA)
         if ($filterType) {
             $unidadesCompletasDeHoy = $unidadesCompletasDeHoy->filter(function ($unidad) use ($filterType) {
-
-                // LÓGICA DE FILTRO INVERTIDA:
-                // Se muestran las unidades que están esperando el movimiento $filterType.
-
-                // Si el filtro solicitado es 'ENTRADA'
                 if ($filterType === 'ENTRADA') {
-                    // Buscamos unidades que hayan tenido SALIDA como último movimiento
-                    // Y DEBEN HABER TENIDO UN MOVIMIENTO PREVIO (es decir, no son unidades nuevas).
                     return $unidad->type === 'SALIDA' && $unidad->ultimoMovimiento !== null;
                 }
 
-                // Si el filtro solicitado es 'SALIDA'
                 if ($filterType === 'SALIDA') {
-                    // Buscamos unidades que hayan tenido ENTRADA como último movimiento
-                    // O unidades NUEVAS sin movimiento (donde type='SALIDA' y ultimoMovimiento es null)
                     return $unidad->type === 'ENTRADA' || ($unidad->type === 'SALIDA' && $unidad->ultimoMovimiento === null);
                 }
 
-                // Si el filtro es otro valor no esperado.
                 return false;
             })->values(); // Re-indexa el array después de filtrar
         }
 
         return $unidadesCompletasDeHoy;
     }
-    //    public function QuienconQuienControl(Request $request)
-    // {
-    //     $today = now()->toDateString();
-
-    //     // Get the ID from the request (e.g., from query string "?id=42")
-    //     // $id = $request->input('id'); // Or $request->get('id')
-    //     $id = $request->query('id');
-
-    //     dd($id);
-    //     // ... your existing query ...
-
-    //     $query = ChoferUnidadAsignar::whereDate('CUA_fechaAsignacion', $today)
-    //         // ... (other whereNotNull and joins) ...
-    //         ->where('dbo.ChoferUnidadAsignada.CUA_estatus', 1);
-
-    //     // Add a condition to filter by the passed ID if it exists
-    //     if ($id) {
-    //         $query->where('dbo.ChoferUnidadAsignada.CUA_choferID', $id); // Assuming you want to filter by CUA_choferID
-    //     }
-
-    //     $unidadesCompletasDeHoy = $query->get();
-
-    //     return $unidadesCompletasDeHoy;
-    // }
+    
 }

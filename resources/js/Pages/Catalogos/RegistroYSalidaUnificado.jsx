@@ -51,11 +51,11 @@ const RegistroYSalidaUnificado = () => {
                 ListasData,
                 // QuienconQuienControl,
             ] = await Promise.all([
-                fetchData("motivos.index"),
-                fetchData("unidades.index"),
+                fetchData("MotivosQuiencQuien"),
+                fetchData("UnidadesQuiencQuien"),
                 fetchData("users.index"), // Rutas asumidas
                 fetchData("users.index"), // Rutas asumidas
-                fetchData("destinos.index"),
+                fetchData("DestinosQuiencQuien"),
                 fetchData("listaverificacion.index"),
                 // fetchData("QuienconQuienControl", { id: 2 })
             ]);
@@ -81,13 +81,7 @@ const RegistroYSalidaUnificado = () => {
 
     useEffect(() => {
         loadAllData();
-
     }, []);
-
-
-
-
-
 
     const initialFormState = {
         movementType: 'ENTRADA',
@@ -267,14 +261,6 @@ const RegistroYSalidaUnificado = () => {
     const getAllData = async () => {
         try {
             const quien = await fetch(route("QuienconQuienControl", { id: form.movementType })).then(res => res.json());
-            // setForm(currentForm => ({
-            //     // 1. Mantenemos las propiedades que NO queremos resetear:
-
-            //     // (Añade aquí cualquier otra propiedad que quieras mantener)
-
-            //     // 2. Reseteamos el resto de las propiedades que SÍ queremos cambiar:
-
-            // }));
 
             setForm(prevRequests => ({
                 ...prevRequests,

@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import Datatable from "@/Components/Datatable";
 import LoadingDiv from "@/Components/LoadingDiv";
 import request from "@/utils";
-import SelectInput from "@/components/SelectInput";
 
 // --- DUMMY FUNCTIONS (Ajustar a tu backend) ---
 // Función para simular las rutas de la API (ACTUALIZADAS PARA CORREOS)
@@ -176,19 +175,26 @@ function CorreoFormDialog({ isOpen, closeModal, onSubmit, correoToEdit, action, 
                                 {errors.correoNotificaciones_correo && <p className="text-red-500 text-xs mt-1">{errors.correoNotificaciones_correo}</p>}
                             </label>
 
-                           
-
-
-                            <SelectInput
-                                label="Usuario"
-                                value={correoData.correoNotificaciones_idUsuario}
-                                onChange={(event) => { setCorreoData({ ...correoData, correoNotificaciones_idUsuario: event.target.value }); }}
-                                options={users}
-                                placeholder="Seleccionar usuario"
-                                valueKey="Personas_usuarioID"
-                                labelKey="nombre_completo"
-                            />
-
+                            <label className="block">
+                                <span className="text-sm font-medium text-gray-700">Usuario: <span className="text-red-500">*</span></span>
+                                <select
+                                    name="correoNotificaciones_idUsuario"
+                                    value={correoData.correoNotificaciones_idUsuario || ''}
+                                    onChange={(event) => { setCorreoData({ ...correoData, correoNotificaciones_idUsuario: event.target.value }); }}
+                                    className={`mt-1 block w-full rounded-md border p-2 text-sm ${errors.correoNotificaciones_idUsuario ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                >
+                                    <option value="" disabled>Selecciona un Usuario</option>
+                                    {users.map((dept) => (
+                                        <option
+                                            key={dept.Personas_usuarioID}
+                                            value={dept.Personas_usuarioID}
+                                        >
+                                            {dept.nombre_completo}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.correoNotificaciones_idUsuario && <p className="text-red-500 text-xs mt-1">{errors.correoNotificaciones_idUsuario}</p>}
+                            </label>
 
                             <div className="flex justify-center w-full mt-2">
                                 <label className="flex items-center space-x-2">
@@ -362,7 +368,7 @@ export default function Correos() {
                         },
                         { header: 'Correo', accessor: 'correoNotificaciones_correo' },
                         { header: 'Usuario', accessor: 'usuario_nombre_completo' },
-                        
+
                         {
                             header: "Acciones", accessor: "Acciones", cell: (eprops) => (
                                 <div className="flex space-x-2">

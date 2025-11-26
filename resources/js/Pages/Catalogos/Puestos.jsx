@@ -10,6 +10,7 @@ const route = (name, params = {}) => {
     const id = params.Puestos_id; // Ahora usa Puestos_id
     const routeMap = {
         "puestos.index": "/api/puestos",
+        "DepartamentosActivos": "/api/DepartamentosActivos",
         "puestos.store": "/api/puestos",
         "puestos.update": `/api/puestos/${id}`,
         "departamentos.index": "/api/departamentos", // Nueva ruta para obtener departamentos
@@ -132,12 +133,12 @@ function PositionFormDialog({ isOpen, closeModal, onSubmit, positionToEdit, acti
                                 {errors.Puestos_idDepartamento && <p className="text-red-500 text-xs mt-1">{errors.Puestos_idDepartamento}</p>}
                             </label>
 
-                              <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
+                            <div className="flex justify-center w-full"> {/* <-- Contenedor agregado y clases de centrado */}
                                 <label className="flex items-center space-x-2">
                                     <input
                                         type="checkbox"
                                         name="Puestos_estatus"
-                                    checked={positionData.Puestos_estatus == 1} // Usamos == para manejar 1 o '1'
+                                        checked={positionData.Puestos_estatus == 1} // Usamos == para manejar 1 o '1'
                                         onChange={handleChange}
                                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
@@ -243,7 +244,7 @@ export default function Puestos() {
     const getDepartments = async () => {
         try {
             // Obtenemos todos los departamentos para el <select>
-            const data = await fetch(route("departamentos.index")).then(res => res.json());
+            const data = await fetch(route("DepartamentosActivos")).then(res => res.json());
             setDepartments(data);
         } catch (error) {
             console.error('Error al obtener los departamentos:', error);
@@ -275,7 +276,6 @@ export default function Puestos() {
         {
             header: "Estatus",
             accessor: "Puestos_estatus",
-            // width: '20%',
             cell: ({ item: { Puestos_estatus } }) => {
                 const color = String(Puestos_estatus) === "1"
                     ? "bg-green-300" // Si es "1"

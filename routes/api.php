@@ -42,15 +42,11 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 Route::middleware('jwt')->group(function () {
 
-    // RUTA PROTEGIDA CON TOKEN: Destinos
-    // Para que funcione en Insomnia/Postman, debes enviar el token en el encabezado 'Authorization: Bearer [TOKEN]'
     Route::resource('destinos', DestinosController::class)->only([
         'index',    // (GET /api/destinos)
         'store',    // (POST /api/destinos)
         'update'    // (PUT/PATCH /api/destinos/{destino})
     ]);
-
-
 
     // Esto crea automáticamente las 5 rutas: index, store, show, update, destroy
     Route::resource('unidades', UnidadesController::class)->only([
@@ -61,13 +57,10 @@ Route::middleware('jwt')->group(function () {
         'destroy'
     ]);
 
-
-
     Route::resource('motivos', MotivosController::class)->only([
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
-        // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
 
@@ -75,7 +68,6 @@ Route::middleware('jwt')->group(function () {
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
-        // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
 
@@ -83,14 +75,12 @@ Route::middleware('jwt')->group(function () {
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
-        // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
     Route::resource('departamentos', DepartamentoController::class)->only([
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
-        // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
 
@@ -98,31 +88,23 @@ Route::middleware('jwt')->group(function () {
         'index',  // Registra el método index (GET)
         'store',  // Registra el método store (POST)
         'update'  // Registra el método update (PUT/PATCH)
-        // No incluyas 'show', 'destroy', 'create', 'edit'
     ]);
 
     Route::get('menus-tree', [MenuController::class, 'getTree'])->name('menus-tree');
-
-
-
-    // Opcional: Ruta para obtener el usuario autenticado
-    // Route::get('/user', function (Request $request) {
-    //     return $request->user();
-    // });
-
-
     Route::get('user/menus', [UserController::class, 'menus'])->name('user.menus');
     Route::get('QuienconQuienUnidades', [UnidadesController::class, 'QuienconQuienUnidades'])->name('QuienconQuienUnidades');
     Route::get('QuienconQuienControl', [UnidadesController::class, 'QuienconQuienControl'])->name('QuienconQuienControl');
     Route::get('DashboardUnidad', [UnidadesController::class, 'DashboardUnidad'])->name('DashboardUnidad');
-
+    Route::get('UnidadesQuiencQuien', [UnidadesController::class, 'UnidadesQuiencQuien'])->name('UnidadesQuiencQuien');
     Route::post('ReporteMovimientos', [UnidadesController::class, 'ReporteMovimientos'])->name('ReporteMovimientos');
 
-
-
-
+    Route::get('DestinosQuiencQuien', [DestinosController::class, 'DestinosQuiencQuien'])->name('DestinosQuiencQuien');
+    Route::get('MotivosQuiencQuien', [MotivosController::class, 'MotivosQuiencQuien'])->name('MotivosQuiencQuien');
+    Route::get('DepartamentosActivos', [DepartamentoController::class, 'DepartamentosActivos'])->name('DepartamentosActivos');
 
     Route::post('/asignaciones', [RegistroEntradaController::class, 'store'])->name('asignaciones.store');
+    Route::post('/changesswho',  [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
+    Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 
     Route::resource('users', UserController::class)->only([
         'index', // GET /api/admin/users
@@ -143,20 +125,7 @@ Route::middleware('jwt')->group(function () {
         'store', // POST /api/admin/roles
         'update' // PUT/PATCH /api/admin/roles/{role}
     ]);
-
-
-    Route::post('/changesswho',  [RegistroEntradaController::class, 'changesswho'])->name('changesswho');
-
-    // Route::get('/{unidadID}/ultimos-movimientos', action: [RegistroEntradaController::class, 'getUltimosMovimientosUnidad']);
-    // Ejemplo en routes/api.php
-    Route::post('ultimos-movimientos-unidad', [RegistroEntradaController::class, 'getUltimosMovimientosUnidad'])->name('ultimos-movimientos-unidad');
 });
-
-
-// Route::middleware(['authWeb'])->group(function () {
-// La ruta que falta
-
-// });
 
 
 Route::get('rolesxmenu', [RolesController::class, 'getAllRolesMenu'])->name('rolesxmenu.index');
@@ -171,7 +140,6 @@ Route::get('testcorreo', [ListaVerificacionController::class, 'testcorreo'])->na
 Route::get('jwt', function () {
     $users = User::first();
 
-    // $users[0]->setCompany(User::DEFAULT_COMPANY);
     $token = JWTAuth::fromUser($users);
     return response()->json([
         "token" => $token

@@ -20,19 +20,24 @@ class MotivosController extends Controller
         return response()->json($motivos);
     }
 
-    /**
-     * Show the form for creating a new resource (GET /motivos/create).
-     * Generalmente usado para retornar una vista.
-     */
-    public function create()
+
+    public function MotivosQuiencQuien()
     {
-        // Este método se deja vacío ya que se asume una API o se manejan las vistas en el frontend.
+        try {
+            // Obtener todos los destinos
+            $motivos = Motivos::where('Motivos_estatus', true)->get();
+
+            return response()->json($motivos);
+        } catch (\Exception $e) {
+            // Log::error("Error al obtener la lista de destinos: " . $e->getMessage());
+            return response()->json([
+                'message' => 'Error interno al obtener los motivos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage (POST /motivos).
-     * Valida la data y crea un nuevo motivo.
-     */
+
     public function store(Request $request)
     {
         // Reglas de validación para los campos
@@ -41,7 +46,7 @@ class MotivosController extends Controller
             'Motivos_tipo' => 'required',
             'Motivos_descripcion' => 'nullable',
             // Asumiendo que 'Motivos_estatus' es un booleano (0 o 1)
-            'Motivos_estatus' => 'required', 
+            'Motivos_estatus' => 'required',
         ]);
 
         // Crear el nuevo registro en la base de datos

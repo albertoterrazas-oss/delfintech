@@ -1,8 +1,6 @@
-// import { ButtonComp } from "@/components/ButtonComp";
 import Datatable from "@/components/Datatable";
 import LoadingDiv from "@/components/LoadingDiv";
 import request from "@/utils";
-import { Button } from "devextreme-react";
 import { useEffect, useState } from "react";
 import { toast } from 'sonner';
 
@@ -14,7 +12,6 @@ export default function QuienConQuienTransporte() {
         choferes: [],
         destinos: [],
         motivos: [],
-        // configuraciones: [],
         quienConQuien: [],
         tipo: ''
     });
@@ -22,19 +19,15 @@ export default function QuienConQuienTransporte() {
 
     const getWho = async () => {
         const [
-            unidades,
             destinos,
             motivos,
             choferes,
             Qconquien
         ] = await Promise.all([
-            request(route('unidades.index')),
-            request(route('destinos.index')),
-            request(route('motivos.index')),
+            request(route('DestinosQuiencQuien')),
+            request(route('MotivosQuiencQuien')),
             request(route('users.index')),
             request(route('QuienconQuienUnidades')),
-
-
         ]);
 
         setStates(prev => ({
@@ -89,7 +82,6 @@ export default function QuienConQuienTransporte() {
 
 
     const submit = async () => {
-        // console.log('Submitting changes:', states.quienConQuien);
         try {
             const response = await fetch(route('changesswho'), {
                 method: "POST",
@@ -148,7 +140,6 @@ export default function QuienConQuienTransporte() {
                                 {
                                     header: 'Unidad',
                                     accessor: 'Unidades_numeroEconomico',
-                                    // width: '20%',
                                     alignment: 'start',
                                     editable: false
                                 },

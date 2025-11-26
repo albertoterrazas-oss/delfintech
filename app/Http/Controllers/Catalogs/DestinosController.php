@@ -18,8 +18,30 @@ class DestinosController extends Controller
 
             // Devolver respuesta JSON
             return response()->json(
-              $destinos
-            , 200);
+                $destinos,
+                200
+            );
+        } catch (\Exception $e) {
+            // Log::error("Error al obtener la lista de destinos: " . $e->getMessage());
+            return response()->json([
+                'message' => 'Error interno al obtener los destinos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function DestinosQuiencQuien()
+    {
+        try {
+            // Obtener todos los destinos
+            $destinos = Destinos::where('Destinos_Estatus', true)->get();
+
+            // Devolver respuesta JSON
+            return response()->json(
+                $destinos,
+                200
+            );
         } catch (\Exception $e) {
             // Log::error("Error al obtener la lista de destinos: " . $e->getMessage());
             return response()->json([

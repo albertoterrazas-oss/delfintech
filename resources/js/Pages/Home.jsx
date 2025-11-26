@@ -74,11 +74,6 @@ const routes = [
     },
 
 
-
-
-
-
-
 ]
 
 export default function Home({ auth, token }) {

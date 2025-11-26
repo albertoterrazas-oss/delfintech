@@ -149,7 +149,7 @@ class RegistroEntradaController extends Controller
 
             $this->configEmail();
 
-            $Correos = CorreoNotificacion::all(); // Obtiene los correos de notificación
+            $Correos = CorreoNotificacion::where('correoNotificaciones_estatus', true)->get(); // Obtiene los correos de notificación
 
             $Datos = (object) [
                 "Titulo" => "CORREO DE INCIDENCIAS",
